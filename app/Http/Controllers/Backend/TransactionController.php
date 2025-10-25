@@ -26,7 +26,7 @@ class TransactionController extends Controller
             'items.*.unit' => 'nullable|string',
             'items.*.sell_price' => 'nullable|numeric',
             'paid' => 'nullable|numeric',
-            'cash_account_id' => 'nullable|integer',
+            'cash_account_id' => 'required|integer',
         ]);
 
         $sale = $this->service->createSale($data);

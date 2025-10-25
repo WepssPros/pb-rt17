@@ -95,12 +95,14 @@ $(function () {
                     targets: -1, // Actions
                     orderable: false,
                     searchable: false,
-                    render: function () {
-                        return (
-                            "" +
-                            '<a href="javascript:;" class="btn btn-icon item-edit me-1"><i class="bx bx-edit bx-md"></i></a>' +
-                            '<a href="javascript:;" class="btn btn-icon item-delete text-danger"><i class="bx bx-trash bx-md"></i></a>'
-                        );
+                    render: function (data, type, row) {
+                        return `
+                        <a href="javascript:;" class="btn btn-icon item-edit me-1" data-id="${row.id}">
+                            <i class="bx bx-edit bx-md"></i>
+                        </a>
+                        <a href="javascript:;" class="btn btn-icon item-delete text-danger" data-id="${row.id}">
+                            <i class="bx bx-trash bx-md"></i>
+                        </a>`;
                     },
                 },
             ],
@@ -156,7 +158,7 @@ $(function () {
         });
 
         $("div.head-label").html(
-            '<h5 class="card-title mb-0">Product DataTable with Buttons</h5>'
+            '<h5 class="card-title mb-0">Produk Persatuan Bulutangkis RT 17 Kasamba</h5>'
         );
 
         // Delete Record
@@ -269,9 +271,20 @@ $(function () {
         });
 
         // --- Tombol Edit Product ---
-        $(".datatables-basic tbody").on("click", ".item-edit", function () {
-            let rowData = dt_basic.row($(this).parents("tr")).data();
 
+        $(document).on("click", ".item-edit", function () {
+            let id = $(this).data("id"); // ambil data-id
+            let rowData = dt_basic
+                .rows()
+                .data()
+                .toArray()
+                .find((r) => r.id == id);
+            if (!rowData) return;
+
+            // Tutup semua modal yang sedang terbuka
+            $(".modal.show").modal("hide");
+
+            // Set data modal
             $("#productModal .modal-title").text("Edit Produk");
             $('#productModal input[name="product_id"]').val(rowData.id);
             $('#productModal input[name="name"]').val(rowData.product_name);
@@ -291,8 +304,14 @@ $(function () {
         });
 
         // --- Tombol Delete Product ---
-        $(".datatables-basic tbody").on("click", ".item-delete", function () {
-            let rowData = dt_basic.row($(this).parents("tr")).data();
+        $(document).on("click", ".item-delete", function () {
+            let id = $(this).data("id"); // ambil data-id
+            let rowData = dt_basic
+                .rows()
+                .data()
+                .toArray()
+                .find((r) => r.id == id);
+            if (!rowData) return;
 
             Swal.fire({
                 title: `Hapus "${rowData.product_name}"?`,
@@ -316,7 +335,7 @@ $(function () {
                         success: function (res) {
                             if (res.success) {
                                 dt_basic.ajax.reload(); // reload datatable
-                                showToast(res.message, "success"); // toast custom sukses
+                                showToast(res.message, "success");
                             } else {
                                 showToast(
                                     res.message || "Gagal menghapus data.",
@@ -329,7 +348,7 @@ $(function () {
                             let msg =
                                 err.responseJSON?.message ||
                                 "Terjadi kesalahan saat menghapus data.";
-                            showToast(msg, "error"); // toast custom error
+                            showToast(msg, "error");
                         },
                     });
                 }

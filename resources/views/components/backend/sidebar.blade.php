@@ -16,8 +16,8 @@
 
     <ul class="menu-inner py-1">
         <!-- Dashboard -->
-        <li class="menu-item">
-            <a href="#" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{route('dashboard')}}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-home"></i>
                 <div class="text-truncate">Dashboard</div>
             </a>
@@ -34,8 +34,8 @@
 
         <!-- Transaksi -->
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Transaksi</span></li>
-        <li class="menu-item">
-            <a href="#" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('penjualan.index') ? 'active' : '' }}">
+            <a href="{{route('penjualan.index')}}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-cart"></i>
                 <div class="text-truncate">Penjualan</div>
             </a>

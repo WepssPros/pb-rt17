@@ -1,4 +1,6 @@
 @extends('layouts.admin')
+@section('title')
+    <title>Produk Shuttlecock - PB RT 17 KASAMBA</title>
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
 

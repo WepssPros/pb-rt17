@@ -9,6 +9,8 @@ export default defineConfig({
                 "resources/js/app.js",
                 "resources/js/product.js",
                 "resources/js/penjualan.js",
+                "resources/js/pembelian.js",
+                "resources/js/cash.js",
             ],
             refresh: true,
         }),

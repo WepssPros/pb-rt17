@@ -40,8 +40,8 @@
                 <div class="text-truncate">Penjualan</div>
             </a>
         </li>
-        <li class="menu-item">
-            <a href="#" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('pembelian.index') ? 'active' : '' }}">
+            <a href="{{route('pembelian.index')}}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-package"></i>
                 <div class="text-truncate">Pembelian</div>
             </a>
@@ -49,8 +49,8 @@
 
         <!-- Keuangan -->
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Keuangan</span></li>
-        <li class="menu-item">
-            <a href="#" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('cash.accounts') ? 'active' : '' }} ">
+            <a href="{{route('cash.accounts')}}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-wallet"></i>
                 <div class="text-truncate">Kas & Transaksi</div>
             </a>

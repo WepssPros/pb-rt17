@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 @section('title')
-<title>Produk Shuttlecock - PB RT 17 KASAMBA</title>
+<title>Penjualan Shuttlecock - PB RT 17 KASAMBA</title>
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -18,7 +18,7 @@
                         <th>Total</th> <!-- total -->
                         <th>Terbayar</th> <!-- paid -->
                         <th>Jumlah Item</th> <!-- items_count -->
-                        <th>Aksi</th> <!-- Actions (edit/delete) -->
+
                     </tr>
                 </thead>
             </table>
@@ -44,11 +44,11 @@
                     <input type="hidden" name="sale_id" value="">
 
                     <div class="col-12 col-md-6">
-                        <label class="form-label" for="invoiceNo">No. Invoice</label>
+                        <label class="form-label" for="invoice">No. Invoice</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class='bx bx-receipt'></i></span>
-                            <input type="text" id="invoiceNo" name="invoice_no" class="form-control"
-                                placeholder="No. Invoice">
+                            <input type="text" id="invoice" name="invoice_no" class="form-control" readonly
+                                placeholder="Otomatis terisi">
                         </div>
                     </div>
 
@@ -118,6 +118,7 @@
 
 
 @push('scripts')
+
 <script>
     let rowId = 0;
    $("#addSaleItem").on("click", function () {
@@ -148,15 +149,18 @@
                 <input type="hidden" class="subtotalRaw" name="items[${rowId}][line_total]">
             </div>
             <div class="col-md-2">
-                <button type="button" class="btn btn-danger removeRow">Hapus</button>
+               
+                <a class="btn btn-icon  text-danger removeRow" >
+                    <i class="bx bx-trash bx-md"></i>
+                </a>
             </div>
         </div>
     </div>`;
     $("#saleItemsWrapper").append(newRow);
 });
-
-
 </script>
+
+
 
 @vite('resources/js/penjualan.js')
 

@@ -5,17 +5,17 @@ $(function () {
     var dt_basic_table = $(".datatables-basic"),
         dt_basic;
 
-    // --- DataTable Penjualan ---
+    // --- DataTable Pembelian ---
     if (dt_basic_table.length) {
         dt_basic = dt_basic_table.DataTable({
-            ajax: "/penjualan/data",
+            ajax: "/pembelian/data", // ✅ endpoint pembelian
             columns: [
                 { data: "" },
                 { data: "id" },
                 { data: "id" },
-                { data: "invoice_no" },
-                { data: "sale_date" },
-                { data: "customer" },
+                { data: "reference_no" },
+                { data: "purchase_date" }, // ✅ dari purchase_date
+                { data: "supplier" }, // ✅ supplier
                 { data: "total" },
                 { data: "paid" },
                 { data: "items_count" },
@@ -50,7 +50,7 @@ $(function () {
                 '<"card-header flex-column flex-md-row pb-0"<"head-label text-center"><"dt-action-buttons text-end pt-6 pt-md-0"B>>' +
                 '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end mt-n6 mt-md-0"f>>' +
                 't<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
-            displayLength: 25,
+            displayLength: 7,
             lengthMenu: [7, 10, 25, 50, 75, 100],
             language: {
                 paginate: {
@@ -60,15 +60,15 @@ $(function () {
             },
             buttons: [
                 {
-                    text: '<i class="bx bx-plus bx-sm me-sm-2"></i> <span class="d-none d-sm-inline-block">Tambah Penjualan</span>',
-                    className: "create-new-sale btn btn-primary",
+                    text: '<i class="bx bx-plus bx-sm me-sm-2"></i> <span class="d-none d-sm-inline-block">Tambah Pembelian</span>',
+                    className: "create-new-purchase btn btn-primary",
                 },
             ],
             responsive: {
                 details: {
                     display: $.fn.dataTable.Responsive.display.modal({
                         header: (row) =>
-                            "Detail Penjualan #" + row.data().invoice_no,
+                            "Detail Pembelian #" + row.data().reference_no,
                     }),
                     type: "column",
                     renderer: (api, rowIdx, columns) => {
@@ -86,7 +86,7 @@ $(function () {
         });
 
         $("div.head-label").html(
-            '<h5 class="card-title mb-0">Daftar Penjualan</h5>'
+            '<h5 class="card-title mb-0">Daftar Pembelian</h5>'
         );
     }
 
@@ -97,18 +97,16 @@ $(function () {
         },
     });
 
-    // --- Modal Tambah Penjualan ---
-    $(document).on("click", ".create-new-sale", function () {
-        $("#saleForm")[0].reset();
-        $("#saleItemsWrapper").html(""); // sesuaikan dengan modal input baru
-        $("#saleModalTitle").text("Tambah Penjualan Baru");
-        $('#saleModal input[name="sale_id"]').val("");
-        $("#saleModal").modal("show");
+    // --- Modal Tambah Pembelian ---
+    $(document).on("click", ".create-new-purchase", function () {
+        $("#purchaseForm")[0].reset();
+        $("#purchaseItemsWrapper").html("");
+        $("#purchaseModalTitle").text("Tambah Pembelian Baru");
+        $('#purchaseModal input[name="purchase_id"]').val("");
+        $("#purchaseModal").modal("show");
     });
 
-    // --- Dinamis Tambah Produk ---
-
-    // --- Pilih produk → otomatis harga & subtotal ---
+    // --- Dinamis Tambah Barang ---
     $(document).on("change", ".productSelect", function () {
         let selected = $(this).find("option:selected");
         let price = parseInt(selected.data("price")) || 0;
@@ -122,7 +120,6 @@ $(function () {
         updateTotal();
     });
 
-    // --- Ubah qty → update subtotal ---
     $(document).on("input", ".qtyInput", function () {
         let $row = $(this).closest("[data-row]");
         let qty = parseInt($(this).val()) || 1;
@@ -132,7 +129,6 @@ $(function () {
         updateTotal();
     });
 
-    // --- Hapus baris produk ---
     $(document).on("click", ".removeRow", function () {
         $(this).closest("[data-row]").remove();
         updateTotal();
@@ -145,7 +141,7 @@ $(function () {
             let val = $(this).val().replace(/\./g, "");
             total += parseInt(val) || 0;
         });
-        $("#totalSale").text(formatRupiah(total.toString()));
+        $("#totalPurchase").text(formatRupiah(total.toString()));
     }
 
     // --- Format Rupiah ---
@@ -162,13 +158,13 @@ $(function () {
     }
 
     $("#paidAmount").on("keyup", function () {
-        let val = $(this).val().replace(/\./g, ""); // hapus titik
-        $("#paidAmountRaw").val(val); // kirim angka murni
-        this.value = formatRupiah(val); // tetap tampil format rupiah
+        let val = $(this).val().replace(/\./g, "");
+        $("#paidAmountRaw").val(val);
+        this.value = formatRupiah(val);
     });
 
-    // --- Submit Form Penjualan ---
-    $("#saleForm").on("submit", function (e) {
+    // --- Submit Form Pembelian ---
+    $("#purchaseForm").on("submit", function (e) {
         e.preventDefault();
         let formData = $(this).serialize();
 
@@ -177,16 +173,16 @@ $(function () {
             type: "POST",
             data: formData,
             success: function (res) {
-                $("#saleModal").modal("hide");
+                $("#purchaseModal").modal("hide");
                 dt_basic.ajax.reload();
                 Swal.fire(
                     "Berhasil!",
-                    "Transaksi penjualan berhasil disimpan.",
+                    "Transaksi pembelian berhasil disimpan.",
                     "success"
                 );
             },
             error: function (err) {
-                console.group("🧩 ERROR DETAIL PENJUALAN");
+                console.group("🧩 ERROR DETAIL PEMBELIAN");
                 console.error("Status:", err.status);
                 console.error("Status Text:", err.statusText);
                 console.error("Response Text:", err.responseText);
@@ -196,18 +192,18 @@ $(function () {
                 Swal.fire(
                     "Gagal!",
                     err.responseJSON?.message ||
-                        "Terjadi kesalahan saat menyimpan penjualan.",
+                        "Terjadi kesalahan saat menyimpan pembelian.",
                     "error"
                 );
             },
         });
     });
 
-    // --- Hapus Penjualan ---
+    // --- Hapus Pembelian ---
     $(document).on("click", ".item-delete", function () {
         let id = $(this).data("id");
         Swal.fire({
-            title: `Hapus penjualan ini?`,
+            title: `Hapus pembelian ini?`,
             text: "Data yang dihapus tidak dapat dikembalikan!",
             icon: "warning",
             showCancelButton: true,
@@ -216,21 +212,21 @@ $(function () {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `/penjualan/${id}`,
+                    url: `/pembelian/${id}`,
                     type: "POST",
                     data: { _method: "DELETE" },
                     success: function () {
                         dt_basic.ajax.reload();
                         Swal.fire(
                             "Terhapus!",
-                            "Penjualan berhasil dihapus.",
+                            "Pembelian berhasil dihapus.",
                             "success"
                         );
                     },
                     error: function () {
                         Swal.fire(
                             "Gagal!",
-                            "Gagal menghapus penjualan.",
+                            "Gagal menghapus pembelian.",
                             "error"
                         );
                     },
@@ -240,8 +236,9 @@ $(function () {
     });
 });
 
+// --- Nomor Referensi Otomatis ---
 document.addEventListener("DOMContentLoaded", function () {
-    function generateInvoiceNumber() {
+    function generateReferenceNumber() {
         const now = new Date();
         const hari = String(now.getDate()).padStart(2, "0");
         const bulan = String(now.getMonth() + 1).padStart(2, "0");
@@ -249,16 +246,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const jam = String(now.getHours()).padStart(2, "0");
         const menit = String(now.getMinutes()).padStart(2, "0");
         const detik = String(now.getSeconds()).padStart(2, "0");
-        const kodeProduk = "SHTCOCK";
-        return `INV-${hari}${bulan}${tahun}-${jam}${menit}${detik}-${kodeProduk}`;
+        const kode = "BUY"; // kode unik untuk pembelian
+        return `REF-${hari}${bulan}${tahun}-${jam}${menit}${detik}-${kode}`;
     }
 
-    const saleModal = document.getElementById("saleModal");
-    saleModal.addEventListener("shown.bs.modal", function () {
-        const invoiceInput = document.getElementById("invoice");
-        if (invoiceInput) {
-            const invoiceNumber = generateInvoiceNumber();
-            invoiceInput.value = invoiceNumber;
+    const purchaseModal = document.getElementById("purchaseModal");
+    purchaseModal.addEventListener("shown.bs.modal", function () {
+        const referenceInput = document.getElementById("referenceNo");
+        if (referenceInput) {
+            const referenceNumber = generateReferenceNumber();
+            referenceInput.value = referenceNumber; // ✅ nilai masuk ke input
+            console.log("Nomor Referensi Otomatis:", referenceNumber);
         }
     });
 });

@@ -11,6 +11,7 @@ export default defineConfig({
                 "resources/js/penjualan.js",
                 "resources/js/pembelian.js",
                 "resources/js/cash.js",
+                "resources/js/stock.js",
             ],
             refresh: true,
         }),

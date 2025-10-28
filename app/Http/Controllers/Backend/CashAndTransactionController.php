@@ -43,18 +43,15 @@ class CashAndTransactionController extends Controller
             // Ambil transaksi dari paling lama → paling baru untuk hitung saldo
             $transactions = $account->transactions()->orderBy('created_at', 'asc')->get();
 
-            $runningBalance = 0;
+            $runningBalance = 0; // mulai dari 0
             $runningBalances = [];
 
             foreach ($transactions as $tx) {
-                if ($tx->type === 'in') {
-                    $runningBalance += $tx->amount;
-                } else { // out
-                    $runningBalance -= $tx->amount;
-                }
-                // simpan saldo per transaksi id
+                $runningBalance += $tx->type === 'in' ? $tx->amount : -$tx->amount;
                 $runningBalances[$tx->id] = $runningBalance;
             }
+
+
 
             // Balik urutan untuk tampil di datatable: terbaru di atas
             $transactions = $transactions->reverse();
@@ -114,7 +111,7 @@ class CashAndTransactionController extends Controller
     {
         $data = $request->validate([
             'cash_account_id' => 'required|exists:cash_accounts,id',
-            'type' => 'required|in:masuk,keluar',
+            'type' => 'required|in:in,out',
             'amount' => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'reference_type' => 'nullable|string',
@@ -125,7 +122,7 @@ class CashAndTransactionController extends Controller
 
         // update saldo akun secara realtime
         $account = CashAccount::find($data['cash_account_id']);
-        if ($data['type'] === 'masuk') {
+        if ($data['type'] === 'in') {
             $account->balance += $data['amount'];
         } else {
             $account->balance -= $data['amount'];

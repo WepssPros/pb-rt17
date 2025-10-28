@@ -7,7 +7,7 @@
                     document.write(new Date().getFullYear());
                 </script>
                 , made with ❤️ by
-                <a href="https://themeselection.com" target="_blank" class="footer-link">ThemeSelection</a>
+                <a href="https://themeselection.com" target="_blank" class="footer-link">Persatuan Bulutangkis RT 17 KASAMBA </a>
             </div>
             <div class="d-none d-lg-inline-block">
                 <a href="https://themeselection.com/license/" class="footer-link me-4" target="_blank">License</a>

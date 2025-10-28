@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Backend\CashAndTransactionController;
+use App\Http\Controllers\Backend\JournalController;
 use App\Http\Controllers\Backend\PembelianController;
 use App\Http\Controllers\Backend\PenjualanController;
 use App\Http\Controllers\Backend\ProductController;
+use App\Http\Controllers\Backend\ReportController;
 use App\Http\Controllers\Backend\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +53,14 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
         Route::post('/transactions', [CashAndTransactionController::class, 'storeTransaction'])->name('transactions.store');
     });
 
+    Route::prefix('accounting')->group(function () {
+        Route::get('/', [JournalController::class, 'index'])->name('journals.index');
+        Route::get('/journals/data', [JournalController::class, 'data'])->name('journals.data');
+
+        // routes/web.php
+        Route::get('/journals/{id}', [JournalController::class, 'show'])->name('journals.show');
+        Route::get('/journals/{id}/lines', [JournalController::class, 'linesData'])->name('journals.lines.data');
+    });
 
     Route::prefix('products')->name('products.')->group(function () {
         Route::get('/', [ProductController::class, 'index'])->name('index');          // halaman datatable + modal
@@ -59,5 +69,16 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
         Route::put('/{product}', [ProductController::class, 'update'])->name('update'); // update product
         Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy'); // hapus product
 
+    });
+
+
+
+    Route::prefix('reports')->name('reports.')->group(function () {
+
+        Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
+
+        // datatables ajax
+
+        Route::get('/stock/data', [ReportController::class, 'stockData'])->name('stock.data');
     });
 });

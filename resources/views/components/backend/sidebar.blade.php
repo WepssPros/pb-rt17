@@ -49,14 +49,14 @@
 
         <!-- Keuangan -->
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Keuangan</span></li>
-        <li class="menu-item {{ request()->routeIs('cash.accounts') ? 'active' : '' }} ">
+        <li class="menu-item {{ request()->routeIs('cash.*') ? 'active' : '' }} ">
             <a href="{{route('cash.accounts')}}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-wallet"></i>
                 <div class="text-truncate">Kas & Transaksi</div>
             </a>
         </li>
-        <li class="menu-item">
-            <a href="#" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('journals.*') ? 'active' : '' }}">
+            <a href="{{ route('journals.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-transfer-alt"></i>
                 <div class="text-truncate">Jurnal Umum</div>
             </a>
@@ -64,14 +64,8 @@
 
         <!-- Laporan -->
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Laporan</span></li>
-        <li class="menu-item">
-            <a href="#" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-bar-chart"></i>
-                <div class="text-truncate">Laporan Keuangan</div>
-            </a>
-        </li>
-        <li class="menu-item">
-            <a href="#" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+            <a href="{{ route('reports.stock') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-archive"></i>
                 <div class="text-truncate">Rekap Stok</div>
             </a>

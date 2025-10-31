@@ -12,6 +12,8 @@ export default defineConfig({
                 "resources/js/pembelian.js",
                 "resources/js/cash.js",
                 "resources/js/stock.js",
+                "resources/js/roles.js",
+                "resources/js/register.js",
             ],
             refresh: true,
         }),

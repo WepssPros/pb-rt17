@@ -15,29 +15,24 @@ class User extends Authenticatable
 {
     use HasRoles;
     use HasApiTokens;
-
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
+        'phone_number',
+        'perumahan',
+        'blok_rumah',
+        'no_rumah',
+        'foto_rumah',
+        'foto_profile',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -45,20 +40,12 @@ class User extends Authenticatable
         'two_factor_secret',
     ];
 
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array<int, string>
-     */
     protected $appends = [
         'profile_photo_url',
+        'foto_profile',
+        'foto_rumah'
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -66,4 +53,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function getFotoRumahUrlAttribute()
+    {
+        return $this->foto_rumah
+            ? asset('storage/foto_rumah/' . $this->foto_rumah)
+            : null;
+    }
+
+    public function getFotoProfileUrlAttribute()
+    {
+        return $this->foto_profile
+            ? asset('storage/foto_profile/' . $this->foto_profile)
+            : null;
+    }   
 }

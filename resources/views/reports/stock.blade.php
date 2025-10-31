@@ -28,7 +28,7 @@
                         <th><i class="bx bx-grid me-1"></i> Stock Awal</th>
                         <th><i class="bx bx-down-arrow-alt me-1"></i> Masuk</th>
                         <th><i class="bx bx-up-arrow-alt me-1"></i> Keluar</th>
-                        <th><i class="bx bx-sync me-1"></i> Stock Akhir</th>
+                        <th><i class="bx bx-sync me-1"></i> Stock Sekarang</th>
                         <th><i class="bx bx-cog me-1"></i> Satuan</th>
                     </tr>
                 </thead>

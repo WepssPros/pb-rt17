@@ -128,6 +128,9 @@
 
 
         @stack('scripts')
+
+        <script src="../../be_view/assets/js/pages-auth-multisteps.js"></script>
+        <script src="../../be_view/assets/js/forms-file-upload.js"></script>
     </body>
 
 </html>

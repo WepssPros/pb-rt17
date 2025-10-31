@@ -6,8 +6,11 @@ use App\Http\Controllers\Backend\PembelianController;
 use App\Http\Controllers\Backend\PenjualanController;
 use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\ReportController;
+use App\Http\Controllers\Backend\RoleManagementController;
 use App\Http\Controllers\Backend\TransactionController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 Route::get('/', function () {
     return view('welcome');
@@ -27,7 +30,7 @@ Route::middleware([
     })->name('dashboard');
 });
 
-Route::middleware(['auth', 'role:administrator'])->group(function () {
+Route::middleware(['auth', 'roleAny'])->group(function () {
     //Transaction Routes
     Route::post('/sales', [TransactionController::class, 'createSale'])->name('sales.store');
     Route::post('/purchases', [TransactionController::class, 'createPurchase'])->name('purchases.store');
@@ -81,4 +84,16 @@ Route::middleware(['auth', 'role:administrator'])->group(function () {
 
         Route::get('/stock/data', [ReportController::class, 'stockData'])->name('stock.data');
     });
+
+    Route::prefix('roles')->name('roles.')->group(function () {
+        Route::get('/', [RoleManagementController::class, 'index'])->name('index');
+        Route::post('/', [RoleManagementController::class, 'store'])->name('store');
+        Route::put('/{role}', [RoleManagementController::class, 'update'])->name('update');
+        Route::delete('/{role}', [RoleManagementController::class, 'destroy'])->name('destroy');
+        // web.php
+        Route::post('/add-user', [RoleManagementController::class, 'addUser'])->name('addUser');
+
+        Route::get('/{role}/permissions', [RoleManagementController::class, 'getPermissions']);
+    });
 });
+

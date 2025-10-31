@@ -155,7 +155,7 @@ $(function () {
 
                
             ],
-            order: [[3, "asc"]],
+            order: [[2, "desc"]],
             dom:
                 '<"card-header flex-column flex-md-row pb-0"<"head-label text-center"><"dt-action-buttons text-end pt-6 pt-md-0"B>>' +
                 '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end mt-n6 mt-md-0"f>>' +

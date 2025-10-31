@@ -41,7 +41,10 @@ class CashAndTransactionController extends Controller
     {
         if ($request->ajax()) {
             // Ambil transaksi dari paling lama → paling baru untuk hitung saldo
-            $transactions = $account->transactions()->orderBy('created_at', 'asc')->get();
+            $transactions = $account->transactions()
+                ->orderBy('created_at', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
 
             $runningBalance = 0; // mulai dari 0
             $runningBalances = [];

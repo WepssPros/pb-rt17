@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Backend\CashAndTransactionController;
+use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\JournalController;
 use App\Http\Controllers\Backend\PembelianController;
 use App\Http\Controllers\Backend\PenjualanController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Backend\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,17 +23,14 @@ Route::get('/', function () {
 
 
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-});
+
 
 Route::middleware(['auth', 'roleAny'])->group(function () {
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('index');     // halaman datatable + modal
+        // untuk datatable AJAX
+    });
+
     //Transaction Routes
     Route::post('/sales', [TransactionController::class, 'createSale'])->name('sales.store');
     Route::post('/purchases', [TransactionController::class, 'createPurchase'])->name('purchases.store');

@@ -17,8 +17,8 @@
     <ul class="menu-inner py-1">
         <!-- Dashboard -->
         @can('akses dashboard')
-        <li class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <a href="{{ route('dashboard') }}" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('dashboard.*') ? 'active' : '' }}">
+            <a href="{{ route('dashboard.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-home"></i>
                 <div class="text-truncate">Dashboard</div>
             </a>

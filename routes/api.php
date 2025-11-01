@@ -18,18 +18,21 @@ Route::post('/tmp-upload/{type}', function (Request $request, $type) {
     }
 
     $folder = match ($type) {
-        'fotorumah' => 'tmp/foto_rumah',
-        'fotoprofile' => 'tmp/foto_profile',
-        default => 'tmp/other',
+        'fotorumah' => 'public/tmp/foto_rumah',
+        'fotoprofile' => 'public/tmp/foto_profile',
+        default => 'public/tmp/other',
     };
 
     $file = $request->file('file');
     $filename = $file->hashName();
     $file->storeAs($folder, $filename);
 
-    // 🚀 HARUS JSON OBJEK — bukan string
+    // 🚀 hasil path publik
+    $publicPath = asset(str_replace('public/', 'storage/', $folder) . '/' . $filename);
+
     return response()->json([
         'success' => true,
         'filename' => $filename,
+        'url' => $publicPath, // 👉 Dropzone bisa langsung tampilkan preview dari sini
     ]);
 });

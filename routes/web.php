@@ -5,6 +5,7 @@ use App\Http\Controllers\Backend\JournalController;
 use App\Http\Controllers\Backend\PembelianController;
 use App\Http\Controllers\Backend\PenjualanController;
 use App\Http\Controllers\Backend\ProductController;
+use App\Http\Controllers\Backend\ProjectTargetController;
 use App\Http\Controllers\Backend\ReportController;
 use App\Http\Controllers\Backend\RoleManagementController;
 use App\Http\Controllers\Backend\TransactionController;
@@ -85,6 +86,14 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         Route::get('/stock/data', [ReportController::class, 'stockData'])->name('stock.data');
     });
 
+    Route::prefix('projects')->name('projects.')->group(function () {
+        Route::get('/', [ProjectTargetController::class, 'index'])->name('index');
+        Route::get('/data', [ProjectTargetController::class, 'data'])->name('data');
+        Route::post('/', [ProjectTargetController::class, 'store'])->name('store');
+        Route::patch('/{id}', [ProjectTargetController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ProjectTargetController::class, 'destroy'])->name('destroy');
+    });
+
     Route::prefix('roles')->name('roles.')->group(function () {
         Route::get('/', [RoleManagementController::class, 'index'])->name('index');
         Route::post('/', [RoleManagementController::class, 'store'])->name('store');
@@ -96,4 +105,3 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         Route::get('/{role}/permissions', [RoleManagementController::class, 'getPermissions']);
     });
 });
-

@@ -40,7 +40,7 @@
         @endcan
 
         <!-- Transaksi -->
-        
+
         @can('akses penjualan')
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Transaksi</span></li>
         <li class="menu-item {{ request()->routeIs('penjualan.*') ? 'active' : '' }}">
@@ -60,9 +60,9 @@
         @endcan
 
         <!-- Keuangan -->
-        
+
         @can('akses kas transaksi')
-        <li class="menu-header small text-uppercase"><span class="menu-header-text">Keuangan</span></li>
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Keuangan & Proyek</span></li>
         <li class="menu-item {{ request()->routeIs('cash.*') ? 'active' : '' }}">
             <a href="{{ route('cash.accounts') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-wallet"></i>
@@ -79,6 +79,12 @@
         </li>
         @endcan
 
+        <li class="menu-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
+            <a href="{{ route('projects.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-target-lock"></i>
+                <div class="text-truncate">Target Proyek Umum</div>
+            </a>
+        </li>
         <!-- Laporan -->
         @can('akses laporan stok')
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Laporan</span></li>

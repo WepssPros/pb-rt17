@@ -53,8 +53,8 @@
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        <img src="{{Auth::user()->foto_profile}}" alt
-                                            class="w-px-40 h-auto rounded-circle" />
+                                        <img src="{{ asset('storage/foto_profile' . Auth::user()->foto_profile) }}"
+                                            alt="Foto Profil" class="w-px-40 h-auto rounded-circle" />
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">

@@ -14,6 +14,7 @@ export default defineConfig({
                 "resources/js/stock.js",
                 "resources/js/roles.js",
                 "resources/js/register.js",
+                "resources/js/projecttarget.js",
             ],
             refresh: true,
         }),

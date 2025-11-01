@@ -15,15 +15,16 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
+
+
+
+
+
+
+
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
-
-
-
-
-
-
 
 Route::middleware(['auth', 'roleAny'])->group(function () {
     Route::prefix('dashboard')->name('dashboard.')->group(function () {

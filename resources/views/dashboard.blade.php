@@ -21,7 +21,7 @@
 
 
 
-                    <a href="javascript:;" class="btn btn-sm btn-primary">Lakukan Penjualan</a>
+                    <a href="{{ route('penjualan.index') }}" class="btn btn-sm btn-primary">Lakukan Penjualan</a>
                 </div>
             </div>
         </div>

@@ -21,7 +21,10 @@ class PenjualanController extends Controller
 
     public function data()
     {
-        $sales = Sale::with('items');
+        $kasUtamaId = 1; // ganti dengan ID kas utama sesuai database
+        $sales = Sale::whereHas('cashTransactions', function ($q) use ($kasUtamaId) {
+            $q->where('cash_account_id', $kasUtamaId);
+        })->with('items');
 
         return datatables()->of($sales)
             ->addColumn('checkbox', fn($s) => '<input type="checkbox" class="dt-checkboxes form-check-input" value="' . $s->id . '">')

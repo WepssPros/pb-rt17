@@ -16,4 +16,8 @@ class Sale extends Model
     {
         return $this->hasMany(SaleItem::class);
     }
+    public function cashTransactions()
+    {
+        return $this->morphMany(CashTransaction::class, 'reference', 'reference_type', 'reference_id');
+    }
 }

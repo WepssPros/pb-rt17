@@ -8,7 +8,7 @@
 <div class="container-xxl flex-grow-1 container-p-y">
 
     <div class="mb-3">
-        <a href="{{ route('dashboard') }}" class="btn btn-info">
+        <a href="{{ route('dashboard.index') }}" class="btn btn-info">
             <i class="bx bx-arrow-back me-1"></i> Kembali
         </a>
     </div>

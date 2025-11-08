@@ -33,7 +33,7 @@ $(function () {
                     targets: 1,
                     orderable: false,
                     searchable: false,
-                    responsivePriority: 3,
+
                     checkboxes: true,
                     render: () =>
                         '<input type="checkbox" class="dt-checkboxes form-check-input">',
@@ -43,7 +43,7 @@ $(function () {
                     },
                 },
                 { targets: 2, searchable: false, visible: false },
-                { targets: 3, render: (data) => data },
+                { targets: 3, render: (data) => data, responsivePriority: 3 },
             ],
             order: [[2, "desc"]],
             dom:

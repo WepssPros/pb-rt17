@@ -23,12 +23,12 @@ class RoleManagementController extends Controller
 
     public function datatable(Request $request)
     {
-        $query = User::with('roles'); // kalau pakai Spatie Roles; kalau nggak, hapus aja with('roles')
+        $query = User::with('roles'); // pakai Spatie Roles
 
         // total sebelum filter
         $recordsTotal = $query->count();
 
-        // global search (kolom name & email misalnya)
+        // global search (name & email)
         if ($search = $request->input('search.value')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -43,15 +43,14 @@ class RoleManagementController extends Controller
         $orderColumnIndex = $request->input('order.0.column', 2); // default: kolom 2 (full_name)
         $orderDir         = $request->input('order.0.dir', 'asc');
 
-        // mapping index kolom → kolom DB sebenar
-        // sesuaikan dengan struktur kamu
+        // mapping index kolom → kolom DB
         $columns = [
-            0 => 'id',    // control (nggak kepake)
-            1 => 'id',    // checkbox (nggak kepake)
+            0 => 'id',    // control
+            1 => 'id',    // checkbox
             2 => 'name',  // full_name
-            3 => 'id',    // role (kalau mau lebih advance bisa join)
-            4 => 'id',    // current_plan
-            5 => 'id',    // billing
+            3 => 'id',    // role (boleh dibiarkan id utk sekarang)
+            4 => 'id',    // foto_profile (visual aja di JS)
+            5 => 'id',    // foto_rumah  (visual aja di JS)
             6 => 'id',    // status
         ];
 
@@ -68,21 +67,18 @@ class RoleManagementController extends Controller
         $users = $query->get();
 
         $data = $users->map(function ($user) {
-            // mapping ke field yang dipakai di JS kamu
-            $roleName = method_exists($user, 'roles') && $user->roles->count()
-                ? $user->roles->first()->name
-                : 'User';
+            $roleName = $user->roles->first()->name ?? 'User';
 
             return [
-                'id'           => $user->id,
-                'full_name'    => $user->name,           // ganti sesuai kolom kamu
-                'email'        => $user->email,          // biar bisa dipakai di render
-                'avatar'       => $user->avatar ?? null, // kalau nggak ada, boleh null
-                'role'         => $roleName,
-                'current_plan' => $user->current_plan ?? 'Free',  // sesuaikan
-                'billing'      => $user->billing ?? 'Monthly',    // sesuaikan
-                'status'       => $user->status ?? 2,             // 1=Pending,2=Active,3=Inactive
-                'actions'      => '', // kalau mau, bisa isi Blade partial tombol edit/delete
+                'id'              => $user->id,
+                'full_name'       => $user->name,
+                'email'           => $user->email,
+                // pakai accessor dari model User
+                'foto_profile_url' => $user->foto_profile_url,
+                'foto_rumah_url'  => $user->foto_rumah_url,
+                'role'            => $roleName,
+                'status'          => $user->status ?? 2, // contoh
+                'actions'         => '', // bisa isi HTML tombol di sini nanti
             ];
         });
 
@@ -93,6 +89,7 @@ class RoleManagementController extends Controller
             'data'            => $data,
         ]);
     }
+
 
     public function store(Request $request)
     {

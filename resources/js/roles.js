@@ -27,12 +27,12 @@ $(function () {
             },
             columns: [
                 // columns according to JSON
-                { data: "id" }, // 0: control (hidden, cuma buat responsive)
+                { data: "id" }, // 0: control (responsive)
                 { data: "id" }, // 1: checkbox
                 { data: "full_name" }, // 2: user + email
                 { data: "role" }, // 3: role
-                { data: "current_plan" }, // 4: plan
-                { data: "billing" }, // 5: billing
+                { data: "foto_profile_url" }, // 4: foto profile
+                { data: "foto_rumah_url" }, // 5: foto rumah
                 { data: "status" }, // 6: status
                 { data: "actions" }, // 7: actions (dari backend atau custom)
             ],
@@ -62,13 +62,13 @@ $(function () {
                     searchable: false,
                 },
                 {
-                    // User full name and email
+                    // User full name and email + avatar kecil
                     targets: 2,
                     responsivePriority: 4,
                     render: function (data, type, full, meta) {
                         var $name = full["full_name"],
                             $email = full["email"],
-                            $image = full["avatar"];
+                            $image = full["foto_profile_url"]; // <-- pakai accessor dari Laravel
 
                         var $output;
 
@@ -76,10 +76,8 @@ $(function () {
                             // For Avatar image
                             $output =
                                 '<img src="' +
-                                assetsPath +
-                                "img/avatars/" +
                                 $image +
-                                '" alt="Avatar" class="rounded-circle">';
+                                '" alt="Avatar" class="rounded-circle" style="width:32px;height:32px;object-fit:cover;">';
                         } else {
                             // For Avatar badge
                             var stateNum = Math.floor(Math.random() * 6) + 1;
@@ -105,7 +103,7 @@ $(function () {
                                 $initials +
                                 "</span>";
                         }
-                        // Creates full output for row
+
                         var $row_output =
                             '<div class="d-flex justify-content-left align-items-center">' +
                             '<div class="avatar-wrapper">' +
@@ -155,12 +153,30 @@ $(function () {
                     },
                 },
                 {
-                    // Plans
+                    // Foto Profile (kolom plan sebelumnya)
                     targets: 4,
                     render: function (data, type, full, meta) {
-                        var $plan = full["current_plan"];
+                        var url = full["foto_profile_url"];
+                        if (!url) return "-";
+
                         return (
-                            '<span class="text-heading">' + $plan + "</span>"
+                            '<img src="' +
+                            url +
+                            '" alt="Foto Profil" class="rounded" style="width:48px;height:48px;object-fit:cover;">'
+                        );
+                    },
+                },
+                {
+                    // Foto Rumah (kolom billing sebelumnya)
+                    targets: 5,
+                    render: function (data, type, full, meta) {
+                        var url = full["foto_rumah_url"];
+                        if (!url) return "-";
+
+                        return (
+                            '<img src="' +
+                            url +
+                            '" alt="Foto Rumah" class="rounded" style="width:64px;height:48px;object-fit:cover;">'
                         );
                     },
                 },
@@ -186,9 +202,7 @@ $(function () {
                     searchable: false,
                     orderable: false,
                     render: function (data, type, full, meta) {
-                        // kalau actions sudah disiapkan di backend, bisa langsung:
-                        // return full["actions"];
-                        // atau pakai HTML statis seperti ini:
+                        // kalau actions sudah disiapkan di backend: return full["actions"];
                         return (
                             '<div class="d-flex align-items-center">' +
                             '<a href="javascript:;" class="btn btn-icon delete-record"><i class="bx bx-trash bx-md"></i></a>' +
@@ -205,6 +219,7 @@ $(function () {
                     },
                 },
             ],
+
             order: [[2, "desc"]],
             dom:
                 '<"row"' +

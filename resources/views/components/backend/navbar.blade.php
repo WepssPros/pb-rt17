@@ -68,7 +68,7 @@
                         <div class="dropdown-divider my-1"></div>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="pages-profile-user.html">
+                        <a class="dropdown-item" href="{{route('roles.users.show', Auth::user()->id)}}">
                             <i class="bx bx-user bx-md me-3"></i><span>My Profile</span>
                         </a>
                     </li>

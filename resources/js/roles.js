@@ -14,7 +14,7 @@ $(function () {
             3: { title: "Inactive", class: "bg-label-secondary" },
         };
 
-    var userView = "app-user-view-account.html"; // bisa diarahkan ke route show user
+    var userView = "/roles/user/"; // sesuai route: /roles/user/{user}
 
     // Users List datatable
     if (dtUserTable.length) {
@@ -68,18 +68,16 @@ $(function () {
                     render: function (data, type, full, meta) {
                         var $name = full["full_name"],
                             $email = full["email"],
-                            $image = full["foto_profile_url"]; // <-- pakai accessor dari Laravel
+                            $image = full["foto_profile_url"];
 
                         var $output;
 
                         if ($image) {
-                            // For Avatar image
                             $output =
                                 '<img src="' +
                                 $image +
                                 '" alt="Avatar" class="rounded-circle" style="width:32px;height:32px;object-fit:cover;">';
                         } else {
-                            // For Avatar badge
                             var stateNum = Math.floor(Math.random() * 6) + 1;
                             var states = [
                                 "success",
@@ -104,6 +102,9 @@ $(function () {
                                 "</span>";
                         }
 
+                        // 🔥 di sini kita pakai id user buat URL
+                        var profileUrl = userView + full["id"];
+
                         var $row_output =
                             '<div class="d-flex justify-content-left align-items-center">' +
                             '<div class="avatar-wrapper">' +
@@ -113,7 +114,7 @@ $(function () {
                             "</div>" +
                             '<div class="d-flex flex-column">' +
                             '<a href="' +
-                            userView +
+                            profileUrl +
                             '" class="text-heading text-truncate"><span class="fw-medium">' +
                             $name +
                             "</span></a>" +
@@ -555,5 +556,3 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-
-

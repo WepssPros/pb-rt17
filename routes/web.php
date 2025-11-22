@@ -95,14 +95,32 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
     });
 
     Route::prefix('roles')->name('roles.')->group(function () {
+        // /roles  → roles.index
         Route::get('/', [RoleManagementController::class, 'index'])->name('index');
+
+        // /roles/datatable → roles.datatable
+        Route::get('/datatable', [RoleManagementController::class, 'datatable'])->name('datatable');
+
+        // CRUD role
         Route::post('/', [RoleManagementController::class, 'store'])->name('store');
         Route::put('/{role}', [RoleManagementController::class, 'update'])->name('update');
         Route::delete('/{role}', [RoleManagementController::class, 'destroy'])->name('destroy');
-        // web.php
+
+        // Tambah user ke role
         Route::post('/add-user', [RoleManagementController::class, 'addUser'])->name('addUser');
 
-        Route::get('/{role}/permissions', [RoleManagementController::class, 'getPermissions']);
-        Route::get('/datatable', [RoleManagementController::class, 'datatable'])->name('roles.datatable');
+        // Ambil permissions milik role
+        Route::get('/{role}/permissions', [RoleManagementController::class, 'getPermissions'])
+            ->name('permissions');
+
+        // Show profile user (LEBIH AMAN pakai prefix /user/)
+        Route::get('/user/{user}', [RoleManagementController::class, 'showProfile'])
+            ->name('users.show');
     });
+
+    Route::put('/users/{user}/profile', [RoleManagementController::class, 'updateProfile'])->name('users.updateProfile');
+    Route::put('/users/{user}/photo-profile', [RoleManagementController::class, 'updatePhotoProfile'])->name('users.updatePhotoProfile');
+    Route::put('/users/{user}/photo-house', [RoleManagementController::class, 'updatePhotoHouse'])->name('users.updatePhotoHouse');
+    // web.php
+
 });

@@ -7,6 +7,9 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
 
 class RoleManagementController extends Controller
 {
@@ -159,5 +162,94 @@ class RoleManagementController extends Controller
         return response()->json([
             'permissions' => $permissions
         ]);
+    }
+
+    public function showProfile(User $user)
+    {
+        // load semua roles user (tanpa filter guard)
+        $user->load('roles');
+
+        return view('roles.show', [
+            'user'  => $user,
+            'roles' => $user->roles, // kalau mau dipakai di view
+        ]);
+    }
+
+    public function updateProfile(Request $request, User $user)
+    {
+        $request->validate([
+            'name'         => 'required|string|max:255',
+            'username'     => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:255',
+            'perumahan'    => 'nullable|string|max:255',
+            'blok_rumah'   => 'nullable|string|max:255',
+            'no_rumah'     => 'nullable|string|max:255',
+        ]);
+
+        $user->update($request->only([
+            'name',
+            'username',
+            'phone_number',
+            'perumahan',
+            'blok_rumah',
+            'no_rumah',
+        ]));
+
+        return back()->with('success', 'Profil user berhasil diperbarui');
+    }
+
+    public function updatePhotoProfile(Request $request, User $user)
+    {
+        $request->validate([
+            'foto_profile' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($request->hasFile('foto_profile')) {
+            $file = $request->file('foto_profile');
+
+            // hapus foto lama kalau ada
+            if ($user->foto_profile) {
+                Storage::disk('public')->delete('foto_profile/' . $user->foto_profile);
+            }
+
+            // nama file baru (boleh pakai hashName / random)
+            $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+
+            // simpan ke storage/app/public/foto_profile
+            $file->storeAs('foto_profile', $filename, 'public');
+
+            // update kolom di database
+            $user->foto_profile = $filename;
+            $user->save();
+        }
+
+        return back()->with('success', 'Foto profil berhasil diperbarui.');
+    }
+    public function updatePhotoHouse(Request $request, User $user)
+    {
+        $request->validate([
+            'foto_rumah' => 'required|image|mimes:jpg,jpeg,png|max:4096',
+        ]);
+
+        if ($request->hasFile('foto_rumah')) {
+            $file = $request->file('foto_rumah');
+
+            // hapus foto lama kalau ada
+            if ($user->foto_rumah) {
+                Storage::disk('public')->delete('foto_rumah/' . $user->foto_rumah);
+            }
+
+            // nama file baru
+            $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+
+            // simpan ke storage/app/public/foto_rumah
+            $file->storeAs('foto_rumah', $filename, 'public');
+
+            // update kolom di database
+            $user->foto_rumah = $filename;
+            $user->save();
+        }
+
+        return back()->with('success', 'Foto rumah berhasil diperbarui.');
     }
 }

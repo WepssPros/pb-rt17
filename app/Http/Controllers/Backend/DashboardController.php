@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\CashAccount;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\CashTransaction;
@@ -14,6 +15,13 @@ class DashboardController extends Controller
     public function index()
     {
         $kasUtamaId = 1;
+
+        // ambil data kas utama
+        $cashAccount = CashAccount::find($kasUtamaId); // sama dengan where('id', ...)->first()
+
+        // kalau kolom saldo kamu namanya 'balance'
+        $currentCash = $cashAccount ? $cashAccount->balance : 0;
+
 
         $transactions = CashTransaction::where('cash_account_id', $kasUtamaId)->get();
 
@@ -71,7 +79,9 @@ class DashboardController extends Controller
             'profit',
             'totalTransactions',
             'salesPerMonth',
-            'projectTargets'
+            'projectTargets',
+            'currentCash'
+
         ));
     }
 }

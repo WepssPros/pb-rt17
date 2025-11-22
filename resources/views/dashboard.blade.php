@@ -58,11 +58,21 @@
             <div class="card h-100 overflow-hidden">
                 <!-- Header dengan logo/ikon -->
                 <div class="card-header d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0">Ringkasan Keuangan</h4>
+                    <h4 class="">Ringkasan Keuangan</h4>
                     <img src="../../be_view/assets/img/logopbrt.png" alt="Logo" style="height:58px;">
                 </div>
+                <div class=" d-flex flex-column align-items-center">
+                    <small class="text-muted d-block">Kas Sekarang</small>
+                    <h5 class="mb-0 fw-bold text-primary" style="font-size: 20px;">
 
+                        Rp {{ number_format($currentCash, 0, ',', '.') }}
+                    </h5>
+                </div>
                 <div class="card-body p-3">
+
+                    {{-- KAS SEKARANG --}}
+
+
                     <ul class="nav nav-pills nav-fill small" role="tablist">
                         <li class="nav-item">
                             <button class="nav-link active py-1 px-2 d-flex align-items-center justify-content-center"

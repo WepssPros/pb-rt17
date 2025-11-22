@@ -14,7 +14,9 @@ class RoleManagementController extends Controller
     {
         $roles = Role::withCount('users')->get(); // ambil semua role + jumlah user
         $permissions = Permission::all(); // ambil semua permission
-        $users = User::doesntHave('roles')->get(); // user tanpa role
+        $users = User::whereDoesntHave('roles', function ($q) {
+            $q->where('guard_name', 'userpbrt');
+        })->get();
 
         return view('roles.index', compact('roles', 'permissions', 'users'));
     }

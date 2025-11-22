@@ -19,6 +19,79 @@ class RoleManagementController extends Controller
         return view('roles.index', compact('roles', 'permissions', 'users'));
     }
 
+    public function datatable(Request $request)
+    {
+        $query = User::with('roles'); // kalau pakai Spatie Roles; kalau nggak, hapus aja with('roles')
+
+        // total sebelum filter
+        $recordsTotal = $query->count();
+
+        // global search (kolom name & email misalnya)
+        if ($search = $request->input('search.value')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // total sesudah filter
+        $recordsFiltered = $query->count();
+
+        // order
+        $orderColumnIndex = $request->input('order.0.column', 2); // default: kolom 2 (full_name)
+        $orderDir         = $request->input('order.0.dir', 'asc');
+
+        // mapping index kolom → kolom DB sebenar
+        // sesuaikan dengan struktur kamu
+        $columns = [
+            0 => 'id',    // control (nggak kepake)
+            1 => 'id',    // checkbox (nggak kepake)
+            2 => 'name',  // full_name
+            3 => 'id',    // role (kalau mau lebih advance bisa join)
+            4 => 'id',    // current_plan
+            5 => 'id',    // billing
+            6 => 'id',    // status
+        ];
+
+        $orderColumn = $columns[$orderColumnIndex] ?? 'name';
+        $query->orderBy($orderColumn, $orderDir);
+
+        // paging
+        $start  = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        if ($length > 0) {
+            $query->skip($start)->take($length);
+        }
+
+        $users = $query->get();
+
+        $data = $users->map(function ($user) {
+            // mapping ke field yang dipakai di JS kamu
+            $roleName = method_exists($user, 'roles') && $user->roles->count()
+                ? $user->roles->first()->name
+                : 'User';
+
+            return [
+                'id'           => $user->id,
+                'full_name'    => $user->name,           // ganti sesuai kolom kamu
+                'email'        => $user->email,          // biar bisa dipakai di render
+                'avatar'       => $user->avatar ?? null, // kalau nggak ada, boleh null
+                'role'         => $roleName,
+                'current_plan' => $user->current_plan ?? 'Free',  // sesuaikan
+                'billing'      => $user->billing ?? 'Monthly',    // sesuaikan
+                'status'       => $user->status ?? 2,             // 1=Pending,2=Active,3=Inactive
+                'actions'      => '', // kalau mau, bisa isi Blade partial tombol edit/delete
+            ];
+        });
+
+        return response()->json([
+            'draw'            => intval($request->input('draw')),
+            'recordsTotal'    => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data'            => $data,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

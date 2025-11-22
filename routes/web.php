@@ -103,5 +103,6 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         Route::post('/add-user', [RoleManagementController::class, 'addUser'])->name('addUser');
 
         Route::get('/{role}/permissions', [RoleManagementController::class, 'getPermissions']);
+        Route::get('/datatable', [RoleManagementController::class, 'datatable'])->name('roles.datatable');
     });
 });

@@ -14,22 +14,27 @@ $(function () {
             3: { title: "Inactive", class: "bg-label-secondary" },
         };
 
-    var userView = "app-user-view-account.html";
+    var userView = "app-user-view-account.html"; // bisa diarahkan ke route show user
 
     // Users List datatable
     if (dtUserTable.length) {
         dt_User = dtUserTable.DataTable({
-            ajax: assetsPath + "json/user-list.json", // JSON file to add data
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "/roles/datatable",
+                type: "GET",
+            },
             columns: [
                 // columns according to JSON
-                { data: "id" },
-                { data: "id" },
-                { data: "full_name" },
-                { data: "role" },
-                { data: "current_plan" },
-                { data: "billing" },
-                { data: "status" },
-                { data: "" },
+                { data: "id" }, // 0: control (hidden, cuma buat responsive)
+                { data: "id" }, // 1: checkbox
+                { data: "full_name" }, // 2: user + email
+                { data: "role" }, // 3: role
+                { data: "current_plan" }, // 4: plan
+                { data: "billing" }, // 5: billing
+                { data: "status" }, // 6: status
+                { data: "actions" }, // 7: actions (dari backend atau custom)
             ],
             columnDefs: [
                 {
@@ -64,9 +69,12 @@ $(function () {
                         var $name = full["full_name"],
                             $email = full["email"],
                             $image = full["avatar"];
+
+                        var $output;
+
                         if ($image) {
                             // For Avatar image
-                            var $output =
+                            $output =
                                 '<img src="' +
                                 assetsPath +
                                 "img/avatars/" +
@@ -85,11 +93,10 @@ $(function () {
                                 "secondary",
                             ];
                             var $state = states[stateNum],
-                                $name = full["full_name"],
-                                $initials = $name.match(/\b\w/g) || [];
-                            $initials = (
-                                ($initials.shift() || "") +
-                                ($initials.pop() || "")
+                                $initialsArr = $name.match(/\b\w/g) || [];
+                            var $initials = (
+                                ($initialsArr.shift() || "") +
+                                ($initialsArr.pop() || "")
                             ).toUpperCase();
                             $output =
                                 '<span class="avatar-initial rounded-circle bg-label-' +
@@ -134,9 +141,14 @@ $(function () {
                             Editor: '<i class="bx bx-pie-chart-alt text-info me-2"></i>',
                             Admin: '<i class="bx bx-desktop text-danger me-2"></i>',
                         };
+
+                        var $icon =
+                            roleBadgeObj[$role] ||
+                            '<i class="bx bx-user text-muted me-2"></i>';
+
                         return (
                             "<span class='text-truncate d-flex align-items-center text-heading'>" +
-                            roleBadgeObj[$role] +
+                            $icon +
                             $role +
                             "</span>"
                         );
@@ -147,7 +159,6 @@ $(function () {
                     targets: 4,
                     render: function (data, type, full, meta) {
                         var $plan = full["current_plan"];
-
                         return (
                             '<span class="text-heading">' + $plan + "</span>"
                         );
@@ -175,6 +186,9 @@ $(function () {
                     searchable: false,
                     orderable: false,
                     render: function (data, type, full, meta) {
+                        // kalau actions sudah disiapkan di backend, bisa langsung:
+                        // return full["actions"];
+                        // atau pakai HTML statis seperti ini:
                         return (
                             '<div class="d-flex align-items-center">' +
                             '<a href="javascript:;" class="btn btn-icon delete-record"><i class="bx bx-trash bx-md"></i></a>' +
@@ -183,7 +197,7 @@ $(function () {
                             '" class="btn btn-icon"><i class="bx bx-show bx-md"></i></a>' +
                             '<a href="javascript:;" class="btn btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-md"></i></a>' +
                             '<div class="dropdown-menu dropdown-menu-end m-0">' +
-                            '<a href="javascript:;"" class="dropdown-item">Edit</a>' +
+                            '<a href="javascript:;" class="dropdown-item">Edit</a>' +
                             '<a href="javascript:;" class="dropdown-item">Suspend</a>' +
                             "</div>" +
                             "</div>"
@@ -321,12 +335,12 @@ $(function () {
         });
     }
 
-    // Delete Record
+    // Delete Record (frontend-only remove; kalau mau ke backend tinggal ganti jadi AJAX)
     $(".datatables-users tbody").on("click", ".delete-record", function () {
         dt_User.row($(this).parents("tr")).remove().draw();
     });
+
     // Filter form control to default size
-    // ? setTimeout used for multilingual table initialization
     setTimeout(() => {
         $(".dataTables_filter .form-control").removeClass("form-control-sm");
         $(".dataTables_length .form-select").removeClass("form-select-sm");

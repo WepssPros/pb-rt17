@@ -160,9 +160,15 @@ $(function () {
                         if (!url) return "-";
 
                         return (
+                            '<a href="javascript:;" class="js-img-preview" data-title="Foto Profil ' +
+                            full["full_name"] +
+                            '" data-src="' +
+                            url +
+                            '">' +
                             '<img src="' +
                             url +
-                            '" alt="Foto Profil" class="rounded" style="width:48px;height:48px;object-fit:cover;">'
+                            '" alt="Foto Profil" class="rounded" style="width:48px;height:48px;object-fit:cover; cursor:pointer;">' +
+                            "</a>"
                         );
                     },
                 },
@@ -174,12 +180,19 @@ $(function () {
                         if (!url) return "-";
 
                         return (
+                            '<a href="javascript:;" class="js-img-preview" data-title="Foto Rumah ' +
+                            full["full_name"] +
+                            '" data-src="' +
+                            url +
+                            '">' +
                             '<img src="' +
                             url +
-                            '" alt="Foto Rumah" class="rounded" style="width:64px;height:48px;object-fit:cover;">'
+                            '" alt="Foto Rumah" class="rounded" style="width:64px;height:48px;object-fit:cover; cursor:pointer;">' +
+                            "</a>"
                         );
                     },
                 },
+
                 {
                     // User Status
                     targets: 6,
@@ -542,3 +555,5 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+

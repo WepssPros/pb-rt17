@@ -351,6 +351,20 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imagePreviewTitle">Preview Gambar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="imagePreviewImg" src="" alt="Preview" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 
@@ -365,7 +379,11 @@
     window.addEventListener('load', () => {
         toastr.success("{{ session('success') }}");
     });
+
+    // Event klik gambar (delegated karena datanya dari DataTables)
+
 </script>
+
 
 @endif
 

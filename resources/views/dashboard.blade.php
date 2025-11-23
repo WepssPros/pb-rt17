@@ -17,7 +17,7 @@
                     <p class="card-subtitle mb-2 text-muted">Monitoring Kas PBRT 17</p>
 
                     <!-- Nama User -->
-                    <h6 class="text-primary mb-2">Reyhan Dwi</h6>
+                    <h6 class="text-primary mb-2">Bapak. {{Auth::user->name}}</h6>
 
 
 

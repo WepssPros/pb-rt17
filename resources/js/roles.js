@@ -1,137 +1,112 @@
-/**
- * App user list
- */
-
 "use strict";
 
-// Datatable (jquery)
 $(function () {
-    var dtUserTable = $(".datatables-users"),
-        dt_User,
-        statusObj = {
-            1: { title: "Pending", class: "bg-label-warning" },
-            2: { title: "Active", class: "bg-label-success" },
-            3: { title: "Inactive", class: "bg-label-secondary" },
-        };
+    // ====== Bootstrap Tooltip init (untuk avatar tooltip) ======
+    if (window.bootstrap) {
+        document
+            .querySelectorAll('[data-bs-toggle="tooltip"]')
+            .forEach((el) => {
+                new bootstrap.Tooltip(el);
+            });
+    }
 
-    var userView = "/roles/user/"; // sesuai route: /roles/user/{user}
+    // ====== DataTable ======
+    const dtUserTable = $(".datatables-users");
+    let dt_User = null;
 
-    // Users List datatable
+    // Route base (sesuaikan kalau route kamu beda)
+    const userViewBase = "/roles/user/"; // /roles/user/{id}
+
+    // Status mapping aman (fallback)
+    const statusObj = {
+        1: { title: "Pending", class: "bg-label-warning" },
+        2: { title: "Active", class: "bg-label-success" },
+        3: { title: "Inactive", class: "bg-label-secondary" },
+    };
+
     if (dtUserTable.length) {
         dt_User = dtUserTable.DataTable({
             processing: true,
             serverSide: true,
-            ajax: {
-                url: "/roles/datatable",
-                type: "GET",
-            },
+            ajax: { url: "/roles/datatable", type: "GET" },
+
             columns: [
-                // columns according to JSON
-                { data: "id" }, // 0: control (responsive)
-                { data: "id" }, // 1: checkbox
-                { data: "full_name" }, // 2: user + email
-                { data: "role" }, // 3: role
-                { data: "foto_profile_url" }, // 4: foto profile
-                { data: "foto_rumah_url" }, // 5: foto rumah
-                { data: "status" }, // 6: status
-                { data: "actions" }, // 7: actions (dari backend atau custom)
+                { data: "id" }, // 0 control
+                { data: "id" }, // 1 checkbox
+                { data: "full_name" }, // 2 user
+                { data: "role" }, // 3 role
+                { data: "foto_profile_url" }, // 4 foto profil
+                { data: "foto_rumah_url" }, // 5 foto rumah
+                { data: "status" }, // 6 status
+                { data: "actions", orderable: false, searchable: false }, // 7 actions
             ],
+
             columnDefs: [
                 {
-                    // For Responsive
                     className: "control",
                     orderable: false,
                     searchable: false,
                     responsivePriority: 2,
                     targets: 0,
-                    render: function (data, type, full, meta) {
-                        return "";
-                    },
+                    render: () => "",
                 },
                 {
-                    // For Checkboxes
                     targets: 1,
                     orderable: false,
+                    searchable: false,
                     checkboxes: {
                         selectAllRender:
                             '<input type="checkbox" class="form-check-input">',
                     },
-                    render: function () {
-                        return '<input type="checkbox" class="dt-checkboxes form-check-input" >';
-                    },
-                    searchable: false,
+                    render: () =>
+                        '<input type="checkbox" class="dt-checkboxes form-check-input">',
                 },
                 {
-                    // User full name and email + avatar kecil
+                    // User (avatar + nama + email)
                     targets: 2,
                     responsivePriority: 4,
-                    render: function (data, type, full, meta) {
-                        var $name = full["full_name"],
-                            $email = full["email"],
-                            $image = full["foto_profile_url"];
+                    render: function (data, type, full) {
+                        const name = full?.full_name ?? "-";
+                        const email = full?.email ?? "-";
+                        const img = full?.foto_profile_url;
 
-                        var $output;
-
-                        if ($image) {
-                            $output =
-                                '<img src="' +
-                                $image +
-                                '" alt="Avatar" class="rounded-circle" style="width:32px;height:32px;object-fit:cover;">';
+                        let avatarHtml = "";
+                        if (img) {
+                            avatarHtml = `<img src="${img}" alt="Avatar" class="rounded-circle" style="width:32px;height:32px;object-fit:cover;">`;
                         } else {
-                            var stateNum = Math.floor(Math.random() * 6) + 1;
-                            var states = [
-                                "success",
-                                "danger",
-                                "warning",
-                                "info",
-                                "dark",
-                                "primary",
-                                "secondary",
-                            ];
-                            var $state = states[stateNum],
-                                $initialsArr = $name.match(/\b\w/g) || [];
-                            var $initials = (
-                                ($initialsArr.shift() || "") +
-                                ($initialsArr.pop() || "")
+                            const initialsArr = name.match(/\b\w/g) || [];
+                            const initials = (
+                                (initialsArr.shift() || "") +
+                                (initialsArr.pop() || "")
                             ).toUpperCase();
-                            $output =
-                                '<span class="avatar-initial rounded-circle bg-label-' +
-                                $state +
-                                '">' +
-                                $initials +
-                                "</span>";
+                            avatarHtml = `<span class="avatar-initial rounded-circle bg-label-primary" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;">${initials}</span>`;
                         }
 
-                        // 🔥 di sini kita pakai id user buat URL
-                        var profileUrl = userView + full["id"];
+                        const profileUrl = `${userViewBase}${full?.id}`;
 
-                        var $row_output =
-                            '<div class="d-flex justify-content-left align-items-center">' +
-                            '<div class="avatar-wrapper">' +
-                            '<div class="avatar avatar-sm me-4">' +
-                            $output +
-                            "</div>" +
-                            "</div>" +
-                            '<div class="d-flex flex-column">' +
-                            '<a href="' +
-                            profileUrl +
-                            '" class="text-heading text-truncate"><span class="fw-medium">' +
-                            $name +
-                            "</span></a>" +
-                            "<small>@" +
-                            $email +
-                            "</small>" +
-                            "</div>" +
-                            "</div>";
-                        return $row_output;
+                        return `
+              <div class="d-flex justify-content-left align-items-center">
+                <div class="avatar-wrapper">
+                  <div class="avatar avatar-sm me-4">
+                    ${avatarHtml}
+                  </div>
+                </div>
+                <div class="d-flex flex-column">
+                  <a href="${profileUrl}" class="text-heading text-truncate">
+                    <span class="fw-medium">${name}</span>
+                  </a>
+                  <small>${email}</small>
+                </div>
+              </div>
+            `;
                     },
                 },
                 {
-                    // User Role
+                    // Role
                     targets: 3,
-                    render: function (data, type, full, meta) {
-                        var $role = full["role"];
-                        var roleBadgeObj = {
+                    render: function (data, type, full) {
+                        const role = full?.role ?? "-";
+                        const roleBadgeObj = {
                             Subscriber:
                                 '<i class="bx bx-crown text-primary me-2"></i>',
                             Author: '<i class="bx bx-edit text-warning me-2"></i>',
@@ -140,110 +115,104 @@ $(function () {
                             Editor: '<i class="bx bx-pie-chart-alt text-info me-2"></i>',
                             Admin: '<i class="bx bx-desktop text-danger me-2"></i>',
                         };
-
-                        var $icon =
-                            roleBadgeObj[$role] ||
+                        const icon =
+                            roleBadgeObj[role] ||
                             '<i class="bx bx-user text-muted me-2"></i>';
-
-                        return (
-                            "<span class='text-truncate d-flex align-items-center text-heading'>" +
-                            $icon +
-                            $role +
-                            "</span>"
-                        );
+                        return `<span class="text-truncate d-flex align-items-center text-heading">${icon}${role}</span>`;
                     },
                 },
                 {
-                    // Foto Profile (kolom plan sebelumnya)
+                    // Foto Profil (preview modal)
                     targets: 4,
-                    render: function (data, type, full, meta) {
-                        var url = full["foto_profile_url"];
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, full) {
+                        const url = full?.foto_profile_url;
                         if (!url) return "-";
-
-                        return (
-                            '<a href="javascript:;" class="js-img-preview" data-title="Foto Profil ' +
-                            full["full_name"] +
-                            '" data-src="' +
-                            url +
-                            '">' +
-                            '<img src="' +
-                            url +
-                            '" alt="Foto Profil" class="rounded" style="width:48px;height:48px;object-fit:cover; cursor:pointer;">' +
-                            "</a>"
-                        );
+                        const title = `Foto Profil ${full?.full_name ?? ""}`;
+                        return `
+              <a href="javascript:;" class="js-img-preview" data-title="${title}" data-src="${url}">
+                <img src="${url}" alt="${title}" class="rounded"
+                     style="width:48px;height:48px;object-fit:cover;cursor:pointer;">
+              </a>
+            `;
                     },
                 },
                 {
-                    // Foto Rumah (kolom billing sebelumnya)
+                    // Foto Rumah (preview modal)
                     targets: 5,
-                    render: function (data, type, full, meta) {
-                        var url = full["foto_rumah_url"];
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, full) {
+                        const url = full?.foto_rumah_url;
                         if (!url) return "-";
-
-                        return (
-                            '<a href="javascript:;" class="js-img-preview" data-title="Foto Rumah ' +
-                            full["full_name"] +
-                            '" data-src="' +
-                            url +
-                            '">' +
-                            '<img src="' +
-                            url +
-                            '" alt="Foto Rumah" class="rounded" style="width:64px;height:48px;object-fit:cover; cursor:pointer;">' +
-                            "</a>"
-                        );
+                        const title = `Foto Rumah ${full?.full_name ?? ""}`;
+                        return `
+              <a href="javascript:;" class="js-img-preview" data-title="${title}" data-src="${url}">
+                <img src="${url}" alt="${title}" class="rounded"
+                     style="width:64px;height:48px;object-fit:cover;cursor:pointer;">
+              </a>
+            `;
                     },
                 },
-
                 {
-                    // User Status
+                    // Status (aman dengan fallback)
                     targets: 6,
-                    render: function (data, type, full, meta) {
-                        var $status = full["status"];
-
-                        return (
-                            '<span class="badge ' +
-                            statusObj[$status].class +
-                            '" text-capitalized>' +
-                            statusObj[$status].title +
-                            "</span>"
-                        );
+                    render: function (data, type, full) {
+                        const st = full?.status;
+                        const mapped = statusObj[st] || {
+                            title: "Unknown",
+                            class: "bg-label-dark",
+                        };
+                        return `<span class="badge ${mapped.class} text-capitalized">${mapped.title}</span>`;
                     },
                 },
                 {
-                    // Actions
-                    targets: -1,
+                    // Actions (FIX: link pakai id)
+                    targets: 7,
                     title: "Actions",
                     searchable: false,
                     orderable: false,
-                    render: function (data, type, full, meta) {
-                        // kalau actions sudah disiapkan di backend: return full["actions"];
-                        return (
-                            '<div class="d-flex align-items-center">' +
-                            '<a href="javascript:;" class="btn btn-icon delete-record"><i class="bx bx-trash bx-md"></i></a>' +
-                            '<a href="' +
-                            userView +
-                            '" class="btn btn-icon"><i class="bx bx-show bx-md"></i></a>' +
-                            '<a href="javascript:;" class="btn btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="bx bx-dots-vertical-rounded bx-md"></i></a>' +
-                            '<div class="dropdown-menu dropdown-menu-end m-0">' +
-                            '<a href="javascript:;" class="dropdown-item">Edit</a>' +
-                            '<a href="javascript:;" class="dropdown-item">Suspend</a>' +
-                            "</div>" +
-                            "</div>"
-                        );
+                    render: function (data, type, full) {
+                        // Kalau backend sudah ngasih full.actions, pakai itu:
+                        if (full?.actions) return full.actions;
+
+                        const viewUrl = `${userViewBase}${full?.id}`;
+
+                        return `
+              <div class="d-flex align-items-center">
+                <a href="javascript:;" class="btn btn-icon delete-record" title="Delete">
+                  <i class="bx bx-trash bx-md"></i>
+                </a>
+                <a href="${viewUrl}" class="btn btn-icon" title="View">
+                  <i class="bx bx-show bx-md"></i>
+                </a>
+                <a href="javascript:;" class="btn btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                  <i class="bx bx-dots-vertical-rounded bx-md"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end m-0">
+                  <a href="${viewUrl}" class="dropdown-item">Detail</a>
+                  <a href="javascript:;" class="dropdown-item">Suspend</a>
+                </div>
+              </div>
+            `;
                     },
                 },
             ],
 
-            order: [[2, "desc"]],
+            // lebih masuk akal order by name ASC
+            order: [[2, "asc"]],
+
             dom:
                 '<"row"' +
                 '<"col-sm-12 col-md-4 col-lg-6" l>' +
-                '<"col-sm-12 col-md-8 col-lg-6"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-md-end justify-content-center align-items-center flex-sm-nowrap flex-wrap flex-sm-row flex-column"<"me-4"f><"user_role w-px-200 me-sm-4 mb-6 mb-sm-0"><"user_plan w-px-200 mb-6 mb-sm-0">>>' +
+                '<"col-sm-12 col-md-8 col-lg-6"<"dt-action-buttons text-xl-end text-lg-start text-md-end text-start d-flex align-items-center justify-content-md-end justify-content-center align-items-center flex-sm-nowrap flex-wrap flex-sm-row flex-column"<"me-4"f><"user_role w-px-200 me-sm-4 mb-6 mb-sm-0">>>' +
                 ">t" +
                 '<"row"' +
                 '<"col-sm-12 col-md-6"i>' +
                 '<"col-sm-12 col-md-6"p>' +
                 ">",
+
             language: {
                 sLengthMenu: "_MENU_",
                 search: "",
@@ -253,32 +222,23 @@ $(function () {
                     previous: '<i class="bx bx-chevron-left bx-18px"></i>',
                 },
             },
-            // For responsive popup
+
             responsive: {
                 details: {
                     display: $.fn.dataTable.Responsive.display.modal({
                         header: function (row) {
-                            var data = row.data();
-                            return "Details of " + data["full_name"];
+                            const data = row.data();
+                            return "Details of " + (data?.full_name ?? "");
                         },
                     }),
                     type: "column",
                     renderer: function (api, rowIdx, columns) {
-                        var data = $.map(columns, function (col, i) {
-                            return col.title !== "" // ? Do not show row in modal popup if title is blank (for check box)
-                                ? '<tr data-dt-row="' +
-                                      col.rowIndex +
-                                      '" data-dt-column="' +
-                                      col.columnIndex +
-                                      '">' +
-                                      "<td>" +
-                                      col.title +
-                                      ":" +
-                                      "</td> " +
-                                      "<td>" +
-                                      col.data +
-                                      "</td>" +
-                                      "</tr>"
+                        const data = $.map(columns, function (col) {
+                            return col.title !== ""
+                                ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}">
+                     <td>${col.title}:</td>
+                     <td>${col.data}</td>
+                   </tr>`
                                 : "";
                         }).join("");
 
@@ -288,18 +248,19 @@ $(function () {
                     },
                 },
             },
+
             initComplete: function () {
-                // Adding role filter once table initialized
+                // Filter Role only
                 this.api()
                     .columns(3)
                     .every(function () {
-                        var column = this;
-                        var select = $(
+                        const column = this;
+                        const select = $(
                             '<select id="UserRole" class="form-select text-capitalize"><option value=""> Select Role </option></select>'
                         )
                             .appendTo(".user_role")
                             .on("change", function () {
-                                var val = $.fn.dataTable.util.escapeRegex(
+                                const val = $.fn.dataTable.util.escapeRegex(
                                     $(this).val()
                                 );
                                 column
@@ -315,174 +276,143 @@ $(function () {
                             .data()
                             .unique()
                             .sort()
-                            .each(function (d, j) {
-                                select.append(
-                                    '<option value="' +
-                                        d +
-                                        '" class="text-capitalize">' +
-                                        d +
-                                        "</option>"
-                                );
-                            });
-                    });
-                this.api()
-                    .columns(4)
-                    .every(function () {
-                        var column = this;
-                        var select = $(
-                            '<select id="Userplan" class="form-select text-capitalize"><option value=""> Select Plan </option></select>'
-                        )
-                            .appendTo(".user_plan")
-                            .on("change", function () {
-                                var val = $.fn.dataTable.util.escapeRegex(
-                                    $(this).val()
-                                );
-                                column
-                                    .search(
-                                        val ? "^" + val + "$" : "",
-                                        true,
-                                        false
-                                    )
-                                    .draw();
-                            });
-
-                        column
-                            .data()
-                            .unique()
-                            .sort()
-                            .each(function (d, j) {
-                                select.append(
-                                    '<option value="' +
-                                        d +
-                                        '" class="text-capitalize">' +
-                                        d +
-                                        "</option>"
-                                );
+                            .each(function (d) {
+                                if (d)
+                                    select.append(
+                                        `<option value="${d}" class="text-capitalize">${d}</option>`
+                                    );
                             });
                     });
             },
         });
+
+        // Delete record (frontend only)
+        $(".datatables-users tbody").on("click", ".delete-record", function () {
+            dt_User.row($(this).parents("tr")).remove().draw();
+        });
+
+        // Tweak controls
+        setTimeout(() => {
+            $(".dataTables_filter .form-control").removeClass(
+                "form-control-sm"
+            );
+            $(".dataTables_length .form-select")
+                .removeClass("form-select-sm")
+                .addClass("mx-0");
+            $(".dataTables_length").addClass("mb-0 mb-md-6");
+        }, 300);
     }
 
-    // Delete Record (frontend-only remove; kalau mau ke backend tinggal ganti jadi AJAX)
-    $(".datatables-users tbody").on("click", ".delete-record", function () {
-        dt_User.row($(this).parents("tr")).remove().draw();
+    // ====== Image Preview Modal (delegated) ======
+    $(document).on("click", ".js-img-preview", function () {
+        const src = $(this).data("src");
+        const title = $(this).data("title") || "Preview Gambar";
+        $("#imagePreviewTitle").text(title);
+        $("#imagePreviewImg").attr("src", src);
+
+        const modalEl = document.getElementById("imagePreviewModal");
+        if (modalEl && window.bootstrap) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
     });
 
-    // Filter form control to default size
-    setTimeout(() => {
-        $(".dataTables_filter .form-control").removeClass("form-control-sm");
-        $(".dataTables_length .form-select").removeClass("form-select-sm");
-        $(".dataTables_length .form-select").addClass("mx-0");
-        $(".dataTables_length").addClass("mb-0 mb-md-6");
-    }, 300);
-});
+    // ====== Role modal title ======
+    const roleTitle = document.querySelector(".role-title");
+    const roleAddBtn = document.querySelector(".add-new-role");
 
-(function () {
-    // On edit role click, update text
-    var roleEditList = document.querySelectorAll(".role-edit-modal"),
-        roleAdd = document.querySelector(".add-new-role"),
-        roleTitle = document.querySelector(".role-title");
-
-    roleAdd.onclick = function () {
-        roleTitle.innerHTML = "Add New Role"; // reset text
-    };
-    if (roleEditList) {
-        roleEditList.forEach(function (roleEditEl) {
-            roleEditEl.onclick = function () {
-                roleTitle.innerHTML = "Edit Role"; // reset text
-            };
-        });
+    if (roleAddBtn && roleTitle) {
+        roleAddBtn.addEventListener(
+            "click",
+            () => (roleTitle.textContent = "Add New Role")
+        );
     }
-})();
 
-document.addEventListener("DOMContentLoaded", function () {
-    // ===========================
-    // ADD ROLE - Select All
-    // ===========================
+    document.querySelectorAll(".role-edit-modal").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            if (roleTitle) roleTitle.textContent = "Edit Role";
+        });
+    });
+
+    // ====== Select all (Add Role) ======
     const selectAllAdd = document.getElementById("selectAllAdd");
     if (selectAllAdd) {
         selectAllAdd.addEventListener("change", function () {
-            const checkboxes = document.querySelectorAll(
-                "#addRoleModal .permission-checkbox"
-            );
-            checkboxes.forEach((cb) => (cb.checked = selectAllAdd.checked));
+            document
+                .querySelectorAll("#addRoleModal .permission-checkbox")
+                .forEach((cb) => {
+                    cb.checked = selectAllAdd.checked;
+                });
         });
     }
 
-    // ===========================
-    // EDIT ROLE - Tombol Edit
-    // ===========================
-    const editButtons = document.querySelectorAll(".role-edit-modal");
-    editButtons.forEach((btn) => {
+    // ====== Edit role load permissions ======
+    document.querySelectorAll(".role-edit-modal").forEach((btn) => {
         btn.addEventListener("click", function () {
             const roleId = this.dataset.roleId;
             const roleName = this.dataset.roleName;
 
             const modal = document.getElementById("editRoleModal");
-            const form = modal.querySelector("#editRoleForm");
+            if (!modal) return;
 
-            // Set action form
+            const form = modal.querySelector("#editRoleForm");
             form.action = `/roles/${roleId}`;
 
-            // Set nama role dan hidden input
             modal.querySelector("#editModalRoleName").value = roleName;
             modal.querySelector("#editRoleId").value = roleId;
 
-            // Reset semua checkbox
+            // reset
             modal
                 .querySelectorAll(".permission-checkbox")
                 .forEach((chk) => (chk.checked = false));
-            modal.querySelector("#selectAllEdit").checked = false;
+            const selectAllEdit = modal.querySelector("#selectAllEdit");
+            if (selectAllEdit) selectAllEdit.checked = false;
 
-            // Ambil permissions via AJAX
-            fetch(`/roles/${roleId}/permissions`)
+            fetch(`/roles/${roleId}/permissions`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+            })
                 .then((res) => res.json())
                 .then((data) => {
-                    data.permissions.forEach((p) => {
+                    const perms = data?.permissions || [];
+                    perms.forEach((p) => {
                         const chk = modal.querySelector(
                             `input.permission-checkbox[value="${p}"]`
                         );
                         if (chk) chk.checked = true;
                     });
 
-                    // Centang "Select All" jika semua permission dicentang
-                    const allChecked = Array.from(
-                        modal.querySelectorAll(".permission-checkbox")
-                    ).every((chk) => chk.checked);
-                    modal.querySelector("#selectAllEdit").checked = allChecked;
-                });
+                    if (selectAllEdit) {
+                        const allChecked = Array.from(
+                            modal.querySelectorAll(".permission-checkbox")
+                        ).every((c) => c.checked);
+                        selectAllEdit.checked = allChecked;
+                    }
+                })
+                .catch((err) => console.error("Gagal ambil permissions:", err));
         });
     });
 
-    // ===========================
-    // EDIT ROLE - Select All
-    // ===========================
+    // ====== Select all (Edit Role) ======
     const selectAllEdit = document.getElementById("selectAllEdit");
     if (selectAllEdit) {
         selectAllEdit.addEventListener("change", function () {
-            const modal = selectAllEdit.closest("#editRoleModal");
+            const modal = document.getElementById("editRoleModal");
+            if (!modal) return;
             modal
                 .querySelectorAll(".permission-checkbox")
                 .forEach((cb) => (cb.checked = selectAllEdit.checked));
         });
     }
-});
 
-document.addEventListener("DOMContentLoaded", function () {
-    // ===========================
-    // Set role di modal saat klik tombol
-    // ===========================
+    // ====== Add user to role modal fill ======
     document.querySelectorAll(".add-user-to-role").forEach((btn) => {
         btn.addEventListener("click", function () {
             const roleId = this.dataset.roleId;
             const roleName = this.dataset.roleName;
 
-            // Set hidden input role_id
             const inputRole = document.getElementById("addUserRoleId");
             if (inputRole) inputRole.value = roleId;
 
-            // Update judul modal
             const modalTitle = document.querySelector(
                 "#addUserToRoleModal .modal-body h4"
             );
@@ -491,67 +421,65 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ===========================
-    // Submit form via AJAX
-    // ===========================
-    const form = document.getElementById("addUserToRoleForm");
-    if (form) {
-        form.addEventListener("submit", function (e) {
+    // ====== Add user to role submit (AJAX, robust) ======
+    const addUserForm = document.getElementById("addUserToRoleForm");
+    if (addUserForm) {
+        addUserForm.addEventListener("submit", function (e) {
             e.preventDefault();
 
-            const formData = new FormData(form);
+            const csrf =
+                document
+                    .querySelector('meta[name="csrf-token"]')
+                    ?.getAttribute("content") ||
+                addUserForm.querySelector('input[name="_token"]')?.value;
 
-            fetch(form.action, {
+            fetch(addUserForm.action, {
                 method: "POST",
                 headers: {
                     "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": document
-                        .querySelector('meta[name="csrf-token"]')
-                        ?.getAttribute("content"),
+                    ...(csrf ? { "X-CSRF-TOKEN": csrf } : {}),
                 },
-                body: formData,
+                body: new FormData(addUserForm),
             })
-                .then((res) => {
-                    if (!res.ok) throw new Error("Network response was not ok");
-                    return res.json();
+                .then(async (res) => {
+                    // coba parse json; kalau bukan json, lempar error biar ketahuan
+                    const contentType = res.headers.get("content-type") || "";
+                    if (!contentType.includes("application/json")) {
+                        const text = await res.text();
+                        throw new Error(
+                            "Response bukan JSON: " + text.slice(0, 150)
+                        );
+                    }
+                    const data = await res.json();
+                    if (!res.ok)
+                        throw new Error(data?.message || "Request gagal");
+                    return data;
                 })
                 .then((data) => {
-                    if (data.success) {
-                        // Tampilkan toastr success
-                        if (typeof toastr !== "undefined") {
+                    if (data?.success) {
+                        if (typeof toastr !== "undefined")
                             toastr.success(data.success);
-                        } else {
-                            alert(data.success);
-                        }
+                        else alert(data.success);
 
-                        // Tutup modal
                         const modalEl =
                             document.getElementById("addUserToRoleModal");
-                        if (modalEl) {
-                            const modal =
-                                bootstrap.Modal.getInstance(modalEl) ||
-                                new bootstrap.Modal(modalEl);
-                            modal.hide();
+                        if (modalEl && window.bootstrap) {
+                            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
                         }
 
-                        // Reset form
-                        form.reset();
+                        addUserForm.reset();
 
-                        // Refresh halaman setelah 1 detik agar perubahan terlihat
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
+                        // refresh datatable (lebih bagus daripada reload full page)
+                        if (dt_User) dt_User.ajax.reload(null, false);
                     }
                 })
                 .catch((err) => {
                     console.error(err);
-                    if (typeof toastr !== "undefined") {
+                    if (typeof toastr !== "undefined")
                         toastr.error(
                             "Terjadi kesalahan saat menambahkan user."
                         );
-                    } else {
-                        alert("Terjadi kesalahan saat menambahkan user.");
-                    }
+                    else alert("Terjadi kesalahan saat menambahkan user.");
                 });
         });
     }

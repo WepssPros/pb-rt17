@@ -5,6 +5,200 @@
 @endsection
 
 @section('content')
+<style>
+  /* =========================
+              ✅ PRO Calendar (Bootstrap-friendly + Compact)
+              Target: FullCalendar inside #pbrtCalendar
+              ========================= */
+
+  #pbrtCalendar {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 16px;
+    padding: 12px;
+    max-width: auto;
+    /* biar nggak kelebaran */
+
+    /* center */
+  }
+
+  /* FullCalendar base: kecilin font + warna border halus */
+  #pbrtCalendar .fc {
+    --fc-border-color: rgba(0, 0, 0, .08);
+    --fc-today-bg-color: rgba(13, 110, 253, .08);
+    /* bootstrap primary tint */
+    font-size: 12px;
+  }
+
+  /* Grid/table calendar biar keliatan clean */
+  #pbrtCalendar .fc .fc-scrollgrid {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* Toolbar: compact + rapi */
+  #pbrtCalendar .fc .fc-toolbar {
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: .75rem;
+  }
+
+  #pbrtCalendar .fc .fc-toolbar-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: .2px;
+  }
+
+  /* Buttons: bootstrap-ish tapi lebih modern */
+  #pbrtCalendar .fc .fc-button {
+    border-radius: 12px !important;
+    padding: .32rem .55rem !important;
+    font-size: .82rem !important;
+    line-height: 1.1;
+    box-shadow: none !important;
+  }
+
+  #pbrtCalendar .fc .fc-button:focus,
+  #pbrtCalendar .fc .fc-button:active {
+    box-shadow: none !important;
+  }
+
+  /* Hari header (Min/Sen/...) */
+  #pbrtCalendar .fc .fc-col-header-cell {
+    background: rgba(0, 0, 0, .02);
+    font-weight: 800;
+    padding: 6px 0;
+  }
+
+  /* Cell tanggal: lebih padat */
+  #pbrtCalendar .fc .fc-daygrid-day-frame {
+    padding: 4px;
+    min-height: 88px;
+    /* kecilin tinggi cell */
+  }
+
+  #pbrtCalendar .fc .fc-daygrid-day-number {
+    font-weight: 800;
+    color: rgba(0, 0, 0, .65);
+    font-size: .78rem;
+    padding: 4px 6px;
+  }
+
+  /* Event pill: kecil, rapi, nggak “ngeblok” */
+  #pbrtCalendar .fc .fc-daygrid-event {
+    border: 0;
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: .74rem;
+    background: rgba(13, 110, 253, .12);
+    /* bootstrap primary tint */
+    color: #0b5ed7;
+  }
+
+  #pbrtCalendar .fc .fc-daygrid-event:hover {
+    background: rgba(13, 110, 253, .18);
+  }
+
+  #pbrtCalendar .fc .fc-daygrid-event .fc-event-time {
+    font-weight: 900;
+  }
+
+  /* Potong teks event biar nggak berantakan */
+  #pbrtCalendar .fc .fc-daygrid-event .fc-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* +more link */
+  #pbrtCalendar .fc .fc-daygrid-more-link {
+    font-weight: 800;
+    color: #0d6efd;
+  }
+
+  /* Badge LIVE: lebih halus */
+  #todayLiveBadge {
+    background: rgba(220, 53, 69, .08);
+    border: 1px solid rgba(220, 53, 69, .18);
+    color: #b02a37;
+    border-radius: 12px;
+  }
+
+  .live-dot {
+    position: relative;
+    padding: .30rem .55rem;
+    border-radius: 999px;
+    letter-spacing: .3px;
+  }
+
+  .live-dot::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #fff;
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 1
+    }
+
+    50% {
+      opacity: .3
+    }
+
+    100% {
+      opacity: 1
+    }
+  }
+
+  /* List event item: clean */
+  .day-event-item {
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: .15s ease;
+  }
+
+  .day-event-item:hover {
+    background: rgba(13, 110, 253, .05);
+    border-color: rgba(13, 110, 253, .22);
+    transform: translateY(-1px);
+  }
+
+  .day-event-time {
+    font-weight: 900;
+    font-size: 12px;
+    color: rgba(0, 0, 0, .75);
+  }
+
+  .day-event-meta {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  /* Mobile: toolbar tetap rapi */
+  @media (max-width: 576px) {
+    #pbrtCalendar {
+      padding: 10px;
+    }
+
+    #pbrtCalendar .fc .fc-toolbar-title {
+      font-size: 1rem;
+    }
+
+    #pbrtCalendar .fc .fc-daygrid-day-frame {
+      min-height: 78px;
+    }
+  }
+
+</style>
 @php
 // ==============================
 // WARNA GROWTH "LAPORAN" (KANAN)
@@ -38,499 +232,327 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="row">
-        <div class="col-md-12 mb-5 ">
-            <style>
-                /* =========================
-                   ✅ PROFESIONAL CALENDAR STYLE
-                ========================== */
+  <div class="row">
+    <div class="col-md-12 mb-5 ">
+      <div class="card-header border-0 pb-0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div id="todayLiveBadge" class="alert alert-danger d-none mb-0 py-2 px-3">
+            <span class="badge bg-danger me-2 live-dot">LIVE</span>
+            <span id="todayLiveText" class="fw-semibold"></span>
+          </div>
 
-                /* Biar card calendar keliatan “niat” */
-                #pbrtCalendar {
-                    padding: 8px;
-                    border-radius: 16px;
-                }
-
-                /* LIVE badge lebih elegan */
-                #todayLiveBadge {
-                    background: rgba(220, 53, 69, .10);
-                    border: 1px solid rgba(220, 53, 69, .20);
-                    color: #b02a37;
-                    border-radius: 12px;
-                }
-
-                .live-dot {
-                    position: relative;
-                    padding: .35rem .6rem;
-                    border-radius: 999px;
-                    letter-spacing: .3px;
-                }
-
-                .live-dot::before {
-                    content: "";
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 999px;
-                    background: #fff;
-                    display: inline-block;
-                    margin-right: 6px;
-                    animation: pulse 1s infinite;
-                }
-
-                @keyframes pulse {
-                    0% {
-                        opacity: 1
-                    }
-
-                    50% {
-                        opacity: .3
-                    }
-
-                    100% {
-                        opacity: 1
-                    }
-                }
-
-                /* FullCalendar overall */
-                #pbrtCalendar .fc {
-                    --fc-border-color: rgba(0, 0, 0, .08);
-                    --fc-today-bg-color: rgba(99, 102, 241, .08);
-                    font-size: 14px;
-                }
-
-                /* Toolbar rapih + responsive */
-                #pbrtCalendar .fc .fc-toolbar {
-                    flex-wrap: wrap;
-                    gap: .6rem;
-                    margin-bottom: .8rem;
-                }
-
-                #pbrtCalendar .fc .fc-toolbar-title {
-                    font-size: 1.25rem;
-                    font-weight: 800;
-                    letter-spacing: .2px;
-                }
-
-                /* Button lebih modern */
-                #pbrtCalendar .fc .fc-button {
-                    border-radius: 12px !important;
-                    padding: .40rem .70rem !important;
-                    font-size: .86rem !important;
-                    box-shadow: none !important;
-                }
-
-                #pbrtCalendar .fc .fc-button:focus {
-                    box-shadow: none !important;
-                }
-
-                /* Header hari (Min, Sen, ...) */
-                #pbrtCalendar .fc .fc-col-header-cell {
-                    background: rgba(0, 0, 0, .02);
-                    font-weight: 800;
-                }
-
-                /* Angka tanggal */
-                #pbrtCalendar .fc .fc-daygrid-day-number {
-                    font-weight: 800;
-                    color: rgba(0, 0, 0, .65);
-                }
-
-                /* Event di month view jadi pill rapi */
-                #pbrtCalendar .fc .fc-daygrid-event {
-                    border-radius: 999px;
-                    padding: 2px 8px;
-                    border: 0;
-                    background: rgba(99, 102, 241, .12);
-                    color: #3730a3;
-                }
-
-                #pbrtCalendar .fc .fc-daygrid-event:hover {
-                    background: rgba(99, 102, 241, .18);
-                }
-
-                #pbrtCalendar .fc .fc-daygrid-event .fc-event-time {
-                    font-weight: 900;
-                }
-
-                /* Link +more */
-                #pbrtCalendar .fc .fc-daygrid-more-link {
-                    font-weight: 800;
-                    color: #6366f1;
-                }
-
-                /* Mobile */
-                @media (max-width: 576px) {
-                    #pbrtCalendar .fc .fc-toolbar-title {
-                        font-size: 1.1rem;
-                    }
-
-                    #pbrtCalendar .fc .fc-toolbar-chunk:nth-child(2) {
-                        width: 100%;
-                        text-align: left;
-                    }
-
-                    #pbrtCalendar .fc .fc-toolbar-chunk:nth-child(1),
-                    #pbrtCalendar .fc .fc-toolbar-chunk:nth-child(3) {
-                        width: 100%;
-                        display: flex;
-                        justify-content: space-between;
-                        gap: .5rem;
-                    }
-                }
-
-                /* List event per tanggal */
-                .day-event-item {
-                    border: 1px solid rgba(0, 0, 0, .08);
-                    border-radius: 14px;
-                    padding: 12px 12px;
-                    background: #fff;
-                    cursor: pointer;
-                    transition: .15s ease;
-                }
-
-                .day-event-item:hover {
-                    background: rgba(99, 102, 241, .06);
-                    border-color: rgba(99, 102, 241, .25);
-                    transform: translateY(-1px);
-                }
-
-                .day-event-time {
-                    font-weight: 900;
-                    font-size: 13px;
-                    color: rgba(0, 0, 0, .75);
-                }
-
-                .day-event-meta {
-                    font-size: 12px;
-                    color: #6b7280;
-                }
-
-            </style>
-
-            <div class="card-header border-0 pb-0">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <div id="todayLiveBadge" class="alert alert-danger d-none mb-0 py-2 px-3">
-                        <span class="badge bg-danger me-2 live-dot">LIVE</span>
-                        <span id="todayLiveText" class="fw-semibold"></span>
-                    </div>
-
-                    <button type="button" id="btnAddSchedule" class="btn btn-primary btn-sm ms-auto">
-                        <i class="bx bx-plus me-1"></i> Tambah Jadwal
-                    </button>
-                </div>
-            </div>
-
-            <div class="card-body pt-3">
-                <div id="pbrtCalendar"></div>
-            </div>
+          <button type="button" id="btnAddSchedule" class="btn btn-primary btn-sm ms-auto">
+            <i class="bx bx-plus me-1"></i> Tambah Jadwal
+          </button>
         </div>
-
-        {{-- ======= KODINGAN KAMU TETAP ======= --}}
-        <div class="col-md-12 col-xxl-4 mb-6">
-            <div class="card h-100 text-center shadow-sm">
-                <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                    <img src="../../be_view/assets/img/logopbrt-circle.png" class="mb-3 img-fluid"
-                        style="max-width: 91px;" alt="Logo PBRT" />
-
-                    <h5 class="card-title mb-1">Selamat Datang!</h5>
-                    <p class="card-subtitle mb-2 text-muted">Monitoring Kas PBRT 17</p>
-
-                    <h6 class="text-primary mb-2">Bapak. {{ Auth::user()->name }}</h6>
-
-                    <a href="{{ route('penjualan.index') }}" class="btn btn-sm btn-primary">Lakukan Penjualan</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xxl-8 mb-6">
-            <div class="card h-100 shadow-sm position-relative">
-                <div class="card-body p-6">
-                    <div class="d-flex align-items-start justify-content-between mb-4">
-                        <h5 class="mb-0">Target Proyek</h5>
-                        <small>Bulan Ini</small>
-                    </div>
-
-                    <div id="targetProyekCarousel" class="carousel slide" data-bs-ride="carousel">
-                        <div class="carousel-inner" id="carouselProyekInner"></div>
-                    </div>
-
-                    <div class="d-flex justify-content-between mt-3">
-                        <button class="btn btn-primary btn-sm " type="button" data-bs-target="#targetProyekCarousel"
-                            data-bs-slide="prev">
-                            <i class='bx bx-chevron-left'></i>
-                        </button>
-                        <button class="btn btn-primary btn-sm " type="button" data-bs-target="#targetProyekCarousel"
-                            data-bs-slide="next">
-                            <i class='bx bx-chevron-right'></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- RINGKASAN --}}
-        <div class="col-md-6 col-xl-4 mb-6">
-            <div class="card h-100 overflow-hidden">
-                <div class="card-header d-flex align-items-center justify-content-between">
-                    <h4 class="">Ringkasan Keuangan</h4>
-                    <img src="../../be_view/assets/img/logopbrt.png" alt="Logo" style="height:58px;">
-                </div>
-
-                <div class=" d-flex flex-column align-items-center">
-                    <small class="text-muted d-block">Kas Sekarang</small>
-                    <h5 class="mb-0 fw-bold text-primary" style="font-size: 20px;">
-                        Rp {{ number_format($currentCash, 0, ',', '.') }}
-                    </h5>
-                </div>
-
-                <div class="card-body p-3">
-                    <ul class="nav nav-pills nav-fill small" role="tablist">
-                        <li class="nav-item">
-                            <button class="nav-link active py-1 px-2 d-flex align-items-center justify-content-center"
-                                data-bs-toggle="tab" data-bs-target="#tab-income">
-                                <i class="bx bx-wallet me-1"></i>
-                                <span style="font-size: 12px;">Pendapatan</span>
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link py-1 px-2 d-flex align-items-center justify-content-center"
-                                data-bs-toggle="tab" data-bs-target="#tab-expenses">
-                                <i class="bx bx-credit-card me-1"></i>
-                                <span style="font-size: 12px;">Pengeluaran</span>
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link py-1 px-2 d-flex align-items-center justify-content-center"
-                                data-bs-toggle="tab" data-bs-target="#tab-profit">
-                                <i class="bx bx-trending-up me-1"></i>
-                                <span style="font-size: 12px;">Keuntungan</span>
-                            </button>
-                        </li>
-                    </ul>
-
-                    <div class="tab-content p-0 text-center">
-                        <div class="tab-pane fade show active" id="tab-income">
-                            <div id="chartIncome" style="height: 230px;"></div>
-                            <h5 class="mt-2 fw-bold text-success" style="font-size: 18px;">
-                                Rp {{ number_format($totalSales,0,',','.') }}
-                            </h5>
-                            <small class="text-success fw-medium" id="incomeGrowth"></small>
-                        </div>
-
-                        <div class="tab-pane fade" id="tab-expenses">
-                            <div id="chartExpenses" style="height: 230px;"></div>
-                            <h5 class="mt-2 fw-bold text-danger" style="font-size: 18px;">
-                                Rp {{ number_format($totalPurchase,0,',','.') }}
-                            </h5>
-                            <small class="text-danger fw-medium" id="expensesGrowth"></small>
-                        </div>
-
-                        <div class="tab-pane fade" id="tab-profit">
-                            <div id="chartProfit" style="height: 230px;"></div>
-
-                            {{-- Kalau profit minus: tampil merah biar sesuai keadaan --}}
-                            <h5 class="mt-2 fw-bold {{ ($profit ?? 0) >= 0 ? 'text-warning' : 'text-danger' }}"
-                                style="font-size: 18px;">
-                                Rp {{ number_format($profit,0,',','.') }}
-                            </h5>
-
-                            <small class="fw-medium" id="profitGrowth"></small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- TOTAL PENDAPATAN + LAPORAN --}}
-        <div class="col-md-12 col-xxl-8 mb-6">
-            <div class="card h-100">
-                <div class="row row-bordered g-0">
-                    <div class="col-md-8">
-                        <div class="card-header d-flex justify-content-between">
-                            <div>
-                                <h5 class="card-title mb-1">Total Pendapatan</h5>
-                                <p class="card-subtitle">Ringkasan laporan tahunan</p>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="totalIncomePBrt"></div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card-header d-flex justify-content-between">
-                            <div>
-                                <h5 class="card-title mb-1" style="font-size: 16px; font-weight: 600;">Laporan</h5>
-                                <p class="card-subtitle mb-0" style="font-size: 14px; color: #6e6b7b;">
-                                    Rata-rata Bulanan Rp{{ number_format($avgMonthlyIncome, 0, ',', '.') }}
-                                </p>
-                                <small class="text-muted" style="font-size:12px;">
-                                    {{ $monthsWithIncome > 0 ? 'Dihitung dari '.$monthsWithIncome.' bulan pemasukan' : 'Belum ada pemasukan' }}
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="card-body pt-lg-2">
-                            <div class="report-list">
-                                {{-- Pendapatan --}}
-                                <div class="report-list-item rounded-2 mb-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="report-list-icon shadow-xs me-4">
-                                            <img src="../../be_view/assets/svg/icons/paypal-icon.svg" width="22"
-                                                height="22" alt="Pendapatan" />
-                                        </div>
-                                        <div
-                                            class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
-                                            <div class="d-flex flex-column">
-                                                <span style="font-size: 14px; color: #6e6b7b;">Pendapatan</span>
-                                                <h5 class="mb-0" style="font-size: 16px; font-weight: 600;">
-                                                    Rp{{ number_format($totalSales ?? 0, 0, ',', '.') }}
-                                                </h5>
-                                            </div>
-                                            <small class="{{ $incomeGrowthClass }}" style="font-size: 13px;">
-                                                {{ number_format($incomeGrowthVal, 2) }}%
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Pengeluaran --}}
-                                <div class="report-list-item rounded-2 mb-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="report-list-icon shadow-xs me-4">
-                                            <img src="../../be_view/assets/svg/icons/credit-card-icon.svg" width="22"
-                                                height="22" alt="Pengeluaran" />
-                                        </div>
-                                        <div
-                                            class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
-                                            <div class="d-flex flex-column">
-                                                <span style="font-size: 14px; color: #6e6b7b;">Pengeluaran</span>
-                                                <h5 class="mb-0" style="font-size: 16px; font-weight: 600;">
-                                                    Rp{{ number_format($totalPurchase ?? 0, 0, ',', '.') }}
-                                                </h5>
-                                            </div>
-                                            <small class="{{ $expenseGrowthClass }}" style="font-size: 13px;">
-                                                {{ number_format($expenseGrowthVal, 2) }}%
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Keuntungan / Rugi --}}
-                                <div class="report-list-item rounded-2">
-                                    <div class="d-flex align-items-center">
-                                        <div class="report-list-icon shadow-xs me-4">
-                                            <img src="../../be_view/assets/svg/icons/wallet-icon.svg" width="22"
-                                                height="22" alt="Keuntungan" />
-                                        </div>
-                                        <div
-                                            class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
-                                            <div class="d-flex flex-column">
-                                                <span style="font-size: 14px; color: #6e6b7b;">
-                                                    {{ ($profit ?? 0) >= 0 ? 'Keuntungan' : 'Rugi' }}
-                                                </span>
-                                                <h5 class="mb-0" style="font-size: 16px; font-weight: 600;">
-                                                    Rp{{ number_format($profit ?? 0, 0, ',', '.') }}
-                                                </h5>
-                                            </div>
-                                            <small class="{{ $profitGrowthClass }}" style="font-size: 13px;">
-                                                {{ number_format($profitGrowthVal, 2) }}%
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> {{-- end laporan --}}
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    {{-- ======= KODINGAN KAMU TETAP ======= --}}
+    <div class="col-md-12 col-xxl-4 mb-6">
+      <div class="card h-100 text-center shadow-sm">
+        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+          <img src="../../be_view/assets/img/logopbrt-circle.png" class="mb-3 img-fluid" style="max-width: 91px;"
+            alt="Logo PBRT" />
+
+          <h5 class="card-title mb-1">Selamat Datang!</h5>
+          <p class="card-subtitle mb-2 text-muted">Monitoring Kas PBRT 17</p>
+
+          <h6 class="text-primary mb-2">Bapak. {{ Auth::user()->name }}</h6>
+
+          <a href="{{ route('penjualan.index') }}" class="btn btn-sm btn-primary">Lakukan Penjualan</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-8 mb-6">
+      <div class="card h-100 shadow-sm position-relative">
+        <div class="card-body pt-3 pb-4">
+          <div id="pbrtCalendar"></div>
+        </div>
+        <div class="card-body p-6">
+          <div class="d-flex align-items-start justify-content-between mb-4">
+            <h5 class="mb-0">Target Proyek</h5>
+            <small>Bulan Ini</small>
+          </div>
+
+          <div id="targetProyekCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner" id="carouselProyekInner"></div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-3">
+            <button class="btn btn-primary btn-sm " type="button" data-bs-target="#targetProyekCarousel"
+              data-bs-slide="prev">
+              <i class='bx bx-chevron-left'></i>
+            </button>
+            <button class="btn btn-primary btn-sm " type="button" data-bs-target="#targetProyekCarousel"
+              data-bs-slide="next">
+              <i class='bx bx-chevron-right'></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {{-- RINGKASAN --}}
+    <div class="col-md-6 col-xl-4 mb-6">
+      <div class="card h-100 overflow-hidden">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h4 class="">Ringkasan Keuangan</h4>
+          <img src="../../be_view/assets/img/logopbrt.png" alt="Logo" style="height:58px;">
+        </div>
+
+        <div class=" d-flex flex-column align-items-center">
+          <small class="text-muted d-block">Kas Sekarang</small>
+          <h5 class="mb-0 fw-bold text-primary" style="font-size: 20px;">
+            Rp {{ number_format($currentCash, 0, ',', '.') }}
+          </h5>
+        </div>
+
+        <div class="card-body p-3">
+          <ul class="nav nav-pills nav-fill small" role="tablist">
+            <li class="nav-item">
+              <button class="nav-link active py-1 px-2 d-flex align-items-center justify-content-center"
+                data-bs-toggle="tab" data-bs-target="#tab-income">
+                <i class="bx bx-wallet me-1"></i>
+                <span style="font-size: 12px;">Pendapatan</span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link py-1 px-2 d-flex align-items-center justify-content-center" data-bs-toggle="tab"
+                data-bs-target="#tab-expenses">
+                <i class="bx bx-credit-card me-1"></i>
+                <span style="font-size: 12px;">Pengeluaran</span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link py-1 px-2 d-flex align-items-center justify-content-center" data-bs-toggle="tab"
+                data-bs-target="#tab-profit">
+                <i class="bx bx-trending-up me-1"></i>
+                <span style="font-size: 12px;">Keuntungan</span>
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content p-0 text-center">
+            <div class="tab-pane fade show active" id="tab-income">
+              <div id="chartIncome" style="height: 230px;"></div>
+              <h5 class="mt-2 fw-bold text-success" style="font-size: 18px;">
+                Rp {{ number_format($totalSales,0,',','.') }}
+              </h5>
+              <small class="text-success fw-medium" id="incomeGrowth"></small>
+            </div>
+
+            <div class="tab-pane fade" id="tab-expenses">
+              <div id="chartExpenses" style="height: 230px;"></div>
+              <h5 class="mt-2 fw-bold text-danger" style="font-size: 18px;">
+                Rp {{ number_format($totalPurchase,0,',','.') }}
+              </h5>
+              <small class="text-danger fw-medium" id="expensesGrowth"></small>
+            </div>
+
+            <div class="tab-pane fade" id="tab-profit">
+              <div id="chartProfit" style="height: 230px;"></div>
+
+              {{-- Kalau profit minus: tampil merah biar sesuai keadaan --}}
+              <h5 class="mt-2 fw-bold {{ ($profit ?? 0) >= 0 ? 'text-warning' : 'text-danger' }}"
+                style="font-size: 18px;">
+                Rp {{ number_format($profit,0,',','.') }}
+              </h5>
+
+              <small class="fw-medium" id="profitGrowth"></small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- TOTAL PENDAPATAN + LAPORAN --}}
+    <div class="col-md-12 col-xxl-8 mb-6">
+      <div class="card h-100">
+        <div class="row row-bordered g-0">
+          <div class="col-md-8">
+            <div class="card-header d-flex justify-content-between">
+              <div>
+                <h5 class="card-title mb-1">Total Pendapatan</h5>
+                <p class="card-subtitle">Ringkasan laporan tahunan</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="totalIncomePBrt"></div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="card-header d-flex justify-content-between">
+              <div>
+                <h5 class="card-title mb-1" style="font-size: 16px; font-weight: 600;">Laporan</h5>
+                <p class="card-subtitle mb-0" style="font-size: 14px; color: #6e6b7b;">
+                  Rata-rata Bulanan Rp{{ number_format($avgMonthlyIncome, 0, ',', '.') }}
+                </p>
+                <small class="text-muted" style="font-size:12px;">
+                  {{ $monthsWithIncome > 0 ? 'Dihitung dari '.$monthsWithIncome.' bulan pemasukan' : 'Belum ada pemasukan' }}
+                </small>
+              </div>
+            </div>
+
+            <div class="card-body pt-lg-2">
+              <div class="report-list">
+                {{-- Pendapatan --}}
+                <div class="report-list-item rounded-2 mb-4">
+                  <div class="d-flex align-items-center">
+                    <div class="report-list-icon shadow-xs me-4">
+                      <img src="../../be_view/assets/svg/icons/paypal-icon.svg" width="22" height="22"
+                        alt="Pendapatan" />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+                      <div class="d-flex flex-column">
+                        <span style="font-size: 14px; color: #6e6b7b;">Pendapatan</span>
+                        <h5 class="mb-0" style="font-size: 16px; font-weight: 600;">
+                          Rp{{ number_format($totalSales ?? 0, 0, ',', '.') }}
+                        </h5>
+                      </div>
+                      <small class="{{ $incomeGrowthClass }}" style="font-size: 13px;">
+                        {{ number_format($incomeGrowthVal, 2) }}%
+                      </small>
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Pengeluaran --}}
+                <div class="report-list-item rounded-2 mb-4">
+                  <div class="d-flex align-items-center">
+                    <div class="report-list-icon shadow-xs me-4">
+                      <img src="../../be_view/assets/svg/icons/credit-card-icon.svg" width="22" height="22"
+                        alt="Pengeluaran" />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+                      <div class="d-flex flex-column">
+                        <span style="font-size: 14px; color: #6e6b7b;">Pengeluaran</span>
+                        <h5 class="mb-0" style="font-size: 16px; font-weight: 600;">
+                          Rp{{ number_format($totalPurchase ?? 0, 0, ',', '.') }}
+                        </h5>
+                      </div>
+                      <small class="{{ $expenseGrowthClass }}" style="font-size: 13px;">
+                        {{ number_format($expenseGrowthVal, 2) }}%
+                      </small>
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Keuntungan / Rugi --}}
+                <div class="report-list-item rounded-2">
+                  <div class="d-flex align-items-center">
+                    <div class="report-list-icon shadow-xs me-4">
+                      <img src="../../be_view/assets/svg/icons/wallet-icon.svg" width="22" height="22"
+                        alt="Keuntungan" />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center w-100 flex-wrap gap-2">
+                      <div class="d-flex flex-column">
+                        <span style="font-size: 14px; color: #6e6b7b;">
+                          {{ ($profit ?? 0) >= 0 ? 'Keuntungan' : 'Rugi' }}
+                        </span>
+                        <h5 class="mb-0" style="font-size: 16px; font-weight: 600;">
+                          Rp{{ number_format($profit ?? 0, 0, ',', '.') }}
+                        </h5>
+                      </div>
+                      <small class="{{ $profitGrowthClass }}" style="font-size: 13px;">
+                        {{ number_format($profitGrowthVal, 2) }}%
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> {{-- end laporan --}}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 {{-- MODAL ADD/EDIT --}}
 <div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body">
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 
-                <div class="text-center mb-3">
-                    <h4 class="mb-1" id="scheduleModalTitle">Tambah Jadwal</h4>
-                    <p class="mb-0">Semua waktu mengikuti <b>WIB (Asia/Jakarta)</b>.</p>
-                </div>
-
-                <form id="scheduleForm" class="row g-3">
-                    @csrf
-                    <input type="hidden" id="scId" value="">
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Judul</label>
-                        <input type="text" class="form-control" id="scTitle" required
-                            placeholder="Contoh: Main Bulutangkis">
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Lokasi (opsional)</label>
-                        <input type="text" class="form-control" id="scLocation" placeholder="Contoh: GOR Kasamba">
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label">Jadwal (WIB)</label>
-                        <input type="text" class="form-control" id="scRange" placeholder="Pilih tanggal & jam (WIB)"
-                            readonly>
-                        <small class="text-muted">Contoh: 15-12-2025 20:00 sampai 16-12-2025 06:00</small>
-                    </div>
-
-                    {{-- Hidden yang dikirim ke backend --}}
-                    <input type="hidden" id="scDate">
-                    <input type="hidden" id="scStart">
-                    <input type="hidden" id="scEnd">
-
-                    <div class="col-12">
-                        <label class="form-label">Catatan (opsional)</label>
-                        <textarea class="form-control" id="scNote" rows="2"></textarea>
-                    </div>
-
-                    <div class="col-12 d-flex justify-content-center gap-2 mt-3 flex-wrap">
-                        <button type="submit" class="btn btn-primary" id="btnSaveSchedule">
-                            <i class="bx bx-save me-1"></i> Simpan
-                        </button>
-
-                        <button type="button" class="btn btn-danger d-none" id="btnDeleteSchedule">
-                            <i class="bx bx-trash me-1"></i> Hapus
-                        </button>
-
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    </div>
-                </form>
-            </div>
+        <div class="text-center mb-3">
+          <h4 class="mb-1" id="scheduleModalTitle">Tambah Jadwal</h4>
+          <p class="mb-0">Semua waktu mengikuti <b>WIB (Asia/Jakarta)</b>.</p>
         </div>
+
+        <form id="scheduleForm" class="row g-3">
+          @csrf
+          <input type="hidden" id="scId" value="">
+
+          <div class="col-12 col-md-6">
+            <label class="form-label">Judul</label>
+            <input type="text" class="form-control" id="scTitle" required placeholder="Contoh: Main Bulutangkis">
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label">Lokasi (opsional)</label>
+            <input type="text" class="form-control" id="scLocation" placeholder="Contoh: GOR Kasamba">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Jadwal (WIB)</label>
+            <input type="text" class="form-control" id="scRange" placeholder="Pilih tanggal & jam (WIB)" readonly>
+            <small class="text-muted">Contoh: 15-12-2025 20:00 sampai 16-12-2025 06:00</small>
+          </div>
+
+          {{-- Hidden yang dikirim ke backend --}}
+          <input type="hidden" id="scDate">
+          <input type="hidden" id="scStart">
+          <input type="hidden" id="scEnd">
+
+          <div class="col-12">
+            <label class="form-label">Catatan (opsional)</label>
+            <textarea class="form-control" id="scNote" rows="2"></textarea>
+          </div>
+
+          <div class="col-12 d-flex justify-content-center gap-2 mt-3 flex-wrap">
+            <button type="submit" class="btn btn-primary" id="btnSaveSchedule">
+              <i class="bx bx-save me-1"></i> Simpan
+            </button>
+
+            <button type="button" class="btn btn-danger d-none" id="btnDeleteSchedule">
+              <i class="bx bx-trash me-1"></i> Hapus
+            </button>
+
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
 {{-- MODAL LIST EVENT PER TANGGAL --}}
 <div class="modal fade" id="dayEventsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="dayEventsTitle">Jadwal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dayEventsTitle">Jadwal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
 
-            <div class="modal-body">
-                <div id="dayEventsEmpty" class="text-muted small d-none">Tidak ada jadwal di tanggal ini.</div>
-                <div id="dayEventsList" class="d-grid gap-2"></div>
-            </div>
+      <div class="modal-body">
+        <div id="dayEventsEmpty" class="text-muted small d-none">Tidak ada jadwal di tanggal ini.</div>
+        <div id="dayEventsList" class="d-grid gap-2"></div>
+      </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
-                <button type="button" class="btn btn-primary" id="btnAddScheduleFromDay">
-                    <i class="bx bx-plus me-1"></i> Tambah Jadwal
-                </button>
-            </div>
-        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+        <button type="button" class="btn btn-primary" id="btnAddScheduleFromDay">
+          <i class="bx bx-plus me-1"></i> Tambah Jadwal
+        </button>
+      </div>
     </div>
+  </div>
 </div>
 @endsection
 
@@ -541,7 +563,7 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', function () {
   const TZ = 'Asia/Jakarta';
 
   const calEl = document.getElementById('pbrtCalendar');
@@ -895,7 +917,7 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
 
 {{-- AREA CHART (PUNYA KAMU) - TIDAK DIUBAH --}}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
   const totalIncomeEl = document.querySelector('#totalIncomePBrt');
   const actualIncomeData = @json($salesPerMonth);
 
@@ -983,7 +1005,7 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
 
 {{-- RADIAL + TEXT FIX (PUNYA KAMU) - TIDAK DIUBAH --}}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function() {
   function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
 
   function renderRadialChart(selector, value, max, color) {
@@ -1074,7 +1096,7 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
 
 {{-- CAROUSEL --}}
 <script>
-    const proyekList = @json($projectTargets);
+  const proyekList = @json($projectTargets);
 const carouselInner = document.getElementById('carouselProyekInner');
 const perSlide = 2;
 

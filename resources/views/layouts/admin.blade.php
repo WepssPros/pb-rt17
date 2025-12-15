@@ -60,6 +60,7 @@
         ];
         @endphp
 
+        
         <!-- CSS -->
         @foreach ($cssFiles as $css)
         <link rel="stylesheet" href="{{ $css }}">

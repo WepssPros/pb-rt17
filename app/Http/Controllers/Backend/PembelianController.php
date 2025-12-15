@@ -24,7 +24,11 @@ class PembelianController extends Controller
 
     public function data()
     {
-        $purchases = Purchase::with('items');
+
+        $kasUtamaId = 1; // ganti dengan ID kas utama sesuai database
+        $purchases = Purchase::whereHas('cashTransactions', function ($q) use ($kasUtamaId) {
+            $q->where('cash_account_id', $kasUtamaId);
+        })->with('items');
 
         return datatables()->of($purchases)
             ->addColumn('checkbox', fn($p) => '<input type="checkbox" class="dt-checkboxes form-check-input" value="' . $p->id . '">')

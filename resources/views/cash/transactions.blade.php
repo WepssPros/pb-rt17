@@ -75,8 +75,22 @@
 
                     <div class="col-12">
                         <label class="form-label">Referensi (Opsional)</label>
-                        <input type="text" class="form-control" name="reference_type" placeholder="Contoh: INV, PUR">
-                        <input type="hidden" name="reference_id">
+
+                        <div class="input-group">
+                            <select class="form-select" id="refCode">
+                                <option value="">-- Kode --</option>
+                                <option value="PUR">PUR</option>
+                                <option value="GTG">GTG</option>
+                                <option value="IUR">IUR</option>
+                                <option value="BUY">BUY</option>
+                                <option value="SELL">SELL</option>
+                            </select>
+
+                            <input type="text" class="form-control" id="refValue" placeholder="Contoh: 12122025">
+                        </div>
+
+                        <!-- ini yang dikirim ke backend -->
+                        <input type="hidden" name="reference_type" id="reference_type">
                     </div>
 
                     <div class="col-12 text-center mt-3">
@@ -205,5 +219,19 @@ $(function () {
         );
     }
 });
+</script>
+
+<script>
+    function updateReferenceType() {
+        const code = document.getElementById('refCode').value;
+        const val  = document.getElementById('refValue').value.trim();
+
+        // hasilnya kosong kalau belum lengkap
+        document.getElementById('reference_type').value =
+            (code && val) ? `${code}-${val}` : '';
+    }
+
+    document.getElementById('refCode').addEventListener('change', updateReferenceType);
+    document.getElementById('refValue').addEventListener('input', updateReferenceType);
 </script>
 @endpush

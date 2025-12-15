@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Models\CashAccount;
-use App\Models\Purchase;
-use App\Models\Sale;
 use App\Models\CashTransaction;
 use App\Models\ProjectTarget;
-use Illuminate\Http\Request;
+use App\Models\Purchase;
+use App\Models\Sale;
 
 class DashboardController extends Controller
 {
@@ -16,41 +15,115 @@ class DashboardController extends Controller
     {
         $kasUtamaId = 1;
 
-        // ambil data kas utama
-        $cashAccount = CashAccount::find($kasUtamaId); // sama dengan where('id', ...)->first()
+        // =========================
+        // KAS SAAT INI
+        // =========================
+        $cashAccount = CashAccount::find($kasUtamaId);
+        $currentCash = $cashAccount?->balance ?? 0;
 
-        // kalau kolom saldo kamu namanya 'balance'
-        $currentCash = $cashAccount ? $cashAccount->balance : 0;
+        // =========================
+        // BASE QUERY
+        // =========================
+        $baseTx = CashTransaction::query()
+            ->where('cash_account_id', $kasUtamaId);
 
+        // =========================
+        // RULE REF (REALTIME SESUAI KODE KAMU)
+        // PEMASUKAN: IUR, SELL
+        // PENGELUARAN: PUR, GTG, BUY
+        // + dukung format lama Sale::class / Purchase::class
+        // =========================
+        $incomeRef = function ($q) {
+            $q->where('reference_type', Sale::class)
+                ->orWhere('reference_type', 'LIKE', 'IUR%')
+                ->orWhere('reference_type', 'LIKE', 'SELL%');
+        };
 
-        $transactions = CashTransaction::where('cash_account_id', $kasUtamaId)->get();
+        $expenseRef = function ($q) {
+            $q->where('reference_type', Purchase::class)
+                ->orWhere('reference_type', 'LIKE', 'PUR%')
+                ->orWhere('reference_type', 'LIKE', 'GTG%')
+                ->orWhere('reference_type', 'LIKE', 'BUY%');
+        };
 
-        $totalSales = $transactions->where('type', 'in')
-            ->where('reference_type', Sale::class)
+        // =========================
+        // TOTAL PEMASUKAN & PENGELUARAN
+        // =========================
+        $totalSales = (clone $baseTx)
+            ->where('type', 'in')
+            ->where($incomeRef)
             ->sum('amount');
 
-        $totalPurchase = $transactions->where('type', 'out')
-            ->where('reference_type', Purchase::class)
+        $totalPurchase = (clone $baseTx)
+            ->where('type', 'out')
+            ->where($expenseRef)
             ->sum('amount');
 
         $profit = $totalSales - $totalPurchase;
 
-        $totalTransactions = $transactions->where('type', 'in')
-            ->where('reference_type', Sale::class)
-            ->count();
+        // =========================
+        // TOTAL TRANSAKSI (SEMUA)
+        // =========================
+        $totalTransactions = (clone $baseTx)->count();
 
-        // Total sales per bulan tahun ini
+        // =========================
+        // PEMASUKAN PER BULAN (CHART TAHUN INI)
+        // =========================
         $year = now()->year;
-        $salesPerMonth = CashTransaction::where('cash_account_id', $kasUtamaId)
+
+        $salesPerMonth = (clone $baseTx)
             ->where('type', 'in')
-            ->where('reference_type', Sale::class)
             ->whereYear('created_at', $year)
+            ->where($incomeRef)
             ->selectRaw('MONTH(created_at) as month, SUM(amount) as total')
             ->groupBy('month')
             ->pluck('total', 'month')
             ->toArray();
 
-        // Ambil target proyek bulan ini
+        // =========================
+        // GROWTH BULAN INI VS BULAN LALU (UNTUK "LAPORAN")
+        // =========================
+        $startThisMonth = now()->startOfMonth();
+        $endThisMonth   = now()->endOfMonth();
+
+        $startLastMonth = now()->subMonth()->startOfMonth();
+        $endLastMonth   = now()->subMonth()->endOfMonth();
+
+        $incomeThisMonth = (clone $baseTx)
+            ->where('type', 'in')
+            ->whereBetween('created_at', [$startThisMonth, $endThisMonth])
+            ->where($incomeRef)
+            ->sum('amount');
+
+        $incomeLastMonth = (clone $baseTx)
+            ->where('type', 'in')
+            ->whereBetween('created_at', [$startLastMonth, $endLastMonth])
+            ->where($incomeRef)
+            ->sum('amount');
+
+        $expenseThisMonth = (clone $baseTx)
+            ->where('type', 'out')
+            ->whereBetween('created_at', [$startThisMonth, $endThisMonth])
+            ->where($expenseRef)
+            ->sum('amount');
+
+        $expenseLastMonth = (clone $baseTx)
+            ->where('type', 'out')
+            ->whereBetween('created_at', [$startLastMonth, $endLastMonth])
+            ->where($expenseRef)
+            ->sum('amount');
+
+        $profitThisMonth = $incomeThisMonth - $expenseThisMonth;
+        $profitLastMonth = $incomeLastMonth - $expenseLastMonth;
+
+        // persen growth
+        $growthIncome  = $incomeLastMonth > 0 ? (($incomeThisMonth - $incomeLastMonth) / $incomeLastMonth) * 100 : 0;
+        $growthExpense = $expenseLastMonth > 0 ? (($expenseThisMonth - $expenseLastMonth) / $expenseLastMonth) * 100 : 0;
+        $growthProfit  = $profitLastMonth != 0 ? (($profitThisMonth - $profitLastMonth) / abs($profitLastMonth)) * 100 : 0;
+
+        // =========================
+        // TARGET PROYEK
+        // =========================
         $projectTargets = ProjectTarget::with('cashAccount')
             ->orderBy('target_date', 'asc')
             ->get()
@@ -69,7 +142,6 @@ class DashboardController extends Controller
                     'status_text' => $progress >= 100
                         ? "<i class='bx bx-trophy text-success'></i> Tercapai"
                         : "<i class='bx bx-time text-warning'></i> Belum Tercapai",
-
                 ];
             });
 
@@ -80,8 +152,10 @@ class DashboardController extends Controller
             'totalTransactions',
             'salesPerMonth',
             'projectTargets',
-            'currentCash'
-
+            'currentCash',
+            'growthIncome',
+            'growthExpense',
+            'growthProfit'
         ));
     }
 }

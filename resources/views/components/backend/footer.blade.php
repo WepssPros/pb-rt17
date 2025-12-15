@@ -7,17 +7,26 @@
                     document.write(new Date().getFullYear());
                 </script>
                 , made with ❤️ by
-                <a href="https://themeselection.com" target="_blank" class="footer-link">Persatuan Bulutangkis RT 17 KASAMBA </a>
+                <a href="https://kas-pbrt17.myledger.id/" target="_blank" class="footer-link">
+                    Persatuan Bulutangkis RT 17 KASAMBA
+                </a>
             </div>
+
             <div class="d-none d-lg-inline-block">
-                <a href="https://themeselection.com/license/" class="footer-link me-4" target="_blank">License</a>
-                <a href="https://themeselection.com/" target="_blank" class="footer-link me-4">More Themes</a>
+                <a href="https://github.com/WepssPros" class="footer-link me-4" target="_blank">
+                    <i class="bx bxl-github me-1"></i>
+                    GitHub Reyhan
+                </a>
 
-                <a href="https://demos.themeselection.com/sneat-bootstrap-html-admin-template/documentation/"
-                    target="_blank" class="footer-link me-4">Documentation</a>
+                <a href="https://wepsspros.github.io/git-reyhan-portfolio/" target="_blank" class="footer-link me-4">
+                    <i class="bx bx-briefcase-alt-2 me-1"></i>
+                    Portfolio Reyhan
+                </a>
 
-                <a href="https://themeselection.com/support/" target="_blank"
-                    class="footer-link d-none d-sm-inline-block">Support</a>
+                <span class="text-muted">
+                    <i class="bx bx-code-alt me-1"></i>
+                    Dibuat Oleh Reyhan Dwi Amberta
+                </span>
             </div>
         </div>
     </div>

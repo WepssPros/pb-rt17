@@ -794,22 +794,7 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
     },
 
     // klik & drag select masih buat create
-    select: function(info){
-      resetForm();
-      setModeCreate();
-
-      const startYMD = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year:'numeric', month:'2-digit', day:'2-digit' }).format(info.start);
-      $('scDate').value  = startYMD;
-      $('scStart').value = '18:00';
-      $('scEnd').value   = '23:00';
-
-      const [yy,mm,dd] = startYMD.split('-').map(Number);
-      const fakeStart = new Date(yy, mm-1, dd, 18, 0);
-      const fakeEnd   = new Date(yy, mm-1, dd, 23, 0);
-      if ($('scRange')?._flatpickr) $('scRange')._flatpickr.setDate([fakeStart, fakeEnd], true);
-
-      scheduleModal.show();
-    },
+   
 
     eventsSet: function(events){
       updateTodayBadge(events);

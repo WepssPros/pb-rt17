@@ -1,4 +1,5 @@
 @extends('layouts.admin')
+
 @section('title')
 <title>Admin Dashboard - Cashflow RT 17</title>
 @endsection
@@ -32,8 +33,199 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
 : 0;
 @endphp
 
+{{-- FULLCALENDAR + FLATPICKR CSS --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="row">
+        <div class="col-md-12 mb-5 ">
+            <style>
+                /* =========================
+                   ✅ PROFESIONAL CALENDAR STYLE
+                ========================== */
+
+                /* Biar card calendar keliatan “niat” */
+                #pbrtCalendar {
+                    padding: 8px;
+                    border-radius: 16px;
+                }
+
+                /* LIVE badge lebih elegan */
+                #todayLiveBadge {
+                    background: rgba(220, 53, 69, .10);
+                    border: 1px solid rgba(220, 53, 69, .20);
+                    color: #b02a37;
+                    border-radius: 12px;
+                }
+
+                .live-dot {
+                    position: relative;
+                    padding: .35rem .6rem;
+                    border-radius: 999px;
+                    letter-spacing: .3px;
+                }
+
+                .live-dot::before {
+                    content: "";
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 999px;
+                    background: #fff;
+                    display: inline-block;
+                    margin-right: 6px;
+                    animation: pulse 1s infinite;
+                }
+
+                @keyframes pulse {
+                    0% {
+                        opacity: 1
+                    }
+
+                    50% {
+                        opacity: .3
+                    }
+
+                    100% {
+                        opacity: 1
+                    }
+                }
+
+                /* FullCalendar overall */
+                #pbrtCalendar .fc {
+                    --fc-border-color: rgba(0, 0, 0, .08);
+                    --fc-today-bg-color: rgba(99, 102, 241, .08);
+                    font-size: 14px;
+                }
+
+                /* Toolbar rapih + responsive */
+                #pbrtCalendar .fc .fc-toolbar {
+                    flex-wrap: wrap;
+                    gap: .6rem;
+                    margin-bottom: .8rem;
+                }
+
+                #pbrtCalendar .fc .fc-toolbar-title {
+                    font-size: 1.25rem;
+                    font-weight: 800;
+                    letter-spacing: .2px;
+                }
+
+                /* Button lebih modern */
+                #pbrtCalendar .fc .fc-button {
+                    border-radius: 12px !important;
+                    padding: .40rem .70rem !important;
+                    font-size: .86rem !important;
+                    box-shadow: none !important;
+                }
+
+                #pbrtCalendar .fc .fc-button:focus {
+                    box-shadow: none !important;
+                }
+
+                /* Header hari (Min, Sen, ...) */
+                #pbrtCalendar .fc .fc-col-header-cell {
+                    background: rgba(0, 0, 0, .02);
+                    font-weight: 800;
+                }
+
+                /* Angka tanggal */
+                #pbrtCalendar .fc .fc-daygrid-day-number {
+                    font-weight: 800;
+                    color: rgba(0, 0, 0, .65);
+                }
+
+                /* Event di month view jadi pill rapi */
+                #pbrtCalendar .fc .fc-daygrid-event {
+                    border-radius: 999px;
+                    padding: 2px 8px;
+                    border: 0;
+                    background: rgba(99, 102, 241, .12);
+                    color: #3730a3;
+                }
+
+                #pbrtCalendar .fc .fc-daygrid-event:hover {
+                    background: rgba(99, 102, 241, .18);
+                }
+
+                #pbrtCalendar .fc .fc-daygrid-event .fc-event-time {
+                    font-weight: 900;
+                }
+
+                /* Link +more */
+                #pbrtCalendar .fc .fc-daygrid-more-link {
+                    font-weight: 800;
+                    color: #6366f1;
+                }
+
+                /* Mobile */
+                @media (max-width: 576px) {
+                    #pbrtCalendar .fc .fc-toolbar-title {
+                        font-size: 1.1rem;
+                    }
+
+                    #pbrtCalendar .fc .fc-toolbar-chunk:nth-child(2) {
+                        width: 100%;
+                        text-align: left;
+                    }
+
+                    #pbrtCalendar .fc .fc-toolbar-chunk:nth-child(1),
+                    #pbrtCalendar .fc .fc-toolbar-chunk:nth-child(3) {
+                        width: 100%;
+                        display: flex;
+                        justify-content: space-between;
+                        gap: .5rem;
+                    }
+                }
+
+                /* List event per tanggal */
+                .day-event-item {
+                    border: 1px solid rgba(0, 0, 0, .08);
+                    border-radius: 14px;
+                    padding: 12px 12px;
+                    background: #fff;
+                    cursor: pointer;
+                    transition: .15s ease;
+                }
+
+                .day-event-item:hover {
+                    background: rgba(99, 102, 241, .06);
+                    border-color: rgba(99, 102, 241, .25);
+                    transform: translateY(-1px);
+                }
+
+                .day-event-time {
+                    font-weight: 900;
+                    font-size: 13px;
+                    color: rgba(0, 0, 0, .75);
+                }
+
+                .day-event-meta {
+                    font-size: 12px;
+                    color: #6b7280;
+                }
+
+            </style>
+
+            <div class="card-header border-0 pb-0">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div id="todayLiveBadge" class="alert alert-danger d-none mb-0 py-2 px-3">
+                        <span class="badge bg-danger me-2 live-dot">LIVE</span>
+                        <span id="todayLiveText" class="fw-semibold"></span>
+                    </div>
+
+                    <button type="button" id="btnAddSchedule" class="btn btn-primary btn-sm ms-auto">
+                        <i class="bx bx-plus me-1"></i> Tambah Jadwal
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body pt-3">
+                <div id="pbrtCalendar"></div>
+            </div>
+        </div>
+
+        {{-- ======= KODINGAN KAMU TETAP ======= --}}
         <div class="col-md-12 col-xxl-4 mb-6">
             <div class="card h-100 text-center shadow-sm">
                 <div class="card-body d-flex flex-column align-items-center justify-content-center">
@@ -170,7 +362,6 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
                             <div>
                                 <h5 class="card-title mb-1" style="font-size: 16px; font-weight: 600;">Laporan</h5>
                                 <p class="card-subtitle mb-0" style="font-size: 14px; color: #6e6b7b;">
-                                    {{-- Rata-rata bulanan sesuai keadaan (bulan yang ada pemasukan) --}}
                                     Rata-rata Bulanan Rp{{ number_format($avgMonthlyIncome, 0, ',', '.') }}
                                 </p>
                                 <small class="text-muted" style="font-size:12px;">
@@ -181,7 +372,6 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
 
                         <div class="card-body pt-lg-2">
                             <div class="report-list">
-
                                 {{-- Pendapatan --}}
                                 <div class="report-list-item rounded-2 mb-4">
                                     <div class="d-flex align-items-center">
@@ -249,7 +439,6 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                     </div> {{-- end laporan --}}
@@ -258,101 +447,558 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
         </div>
     </div>
 </div>
+
+{{-- MODAL ADD/EDIT --}}
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+                <div class="text-center mb-3">
+                    <h4 class="mb-1" id="scheduleModalTitle">Tambah Jadwal</h4>
+                    <p class="mb-0">Semua waktu mengikuti <b>WIB (Asia/Jakarta)</b>.</p>
+                </div>
+
+                <form id="scheduleForm" class="row g-3">
+                    @csrf
+                    <input type="hidden" id="scId" value="">
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Judul</label>
+                        <input type="text" class="form-control" id="scTitle" required
+                            placeholder="Contoh: Main Bulutangkis">
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Lokasi (opsional)</label>
+                        <input type="text" class="form-control" id="scLocation" placeholder="Contoh: GOR Kasamba">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Jadwal (WIB)</label>
+                        <input type="text" class="form-control" id="scRange" placeholder="Pilih tanggal & jam (WIB)"
+                            readonly>
+                        <small class="text-muted">Contoh: 15-12-2025 20:00 sampai 16-12-2025 06:00</small>
+                    </div>
+
+                    {{-- Hidden yang dikirim ke backend --}}
+                    <input type="hidden" id="scDate">
+                    <input type="hidden" id="scStart">
+                    <input type="hidden" id="scEnd">
+
+                    <div class="col-12">
+                        <label class="form-label">Catatan (opsional)</label>
+                        <textarea class="form-control" id="scNote" rows="2"></textarea>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-center gap-2 mt-3 flex-wrap">
+                        <button type="submit" class="btn btn-primary" id="btnSaveSchedule">
+                            <i class="bx bx-save me-1"></i> Simpan
+                        </button>
+
+                        <button type="button" class="btn btn-danger d-none" id="btnDeleteSchedule">
+                            <i class="bx bx-trash me-1"></i> Hapus
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL LIST EVENT PER TANGGAL --}}
+<div class="modal fade" id="dayEventsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dayEventsTitle">Jadwal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="dayEventsEmpty" class="text-muted small d-none">Tidak ada jadwal di tanggal ini.</div>
+                <div id="dayEventsList" class="d-grid gap-2"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" id="btnAddScheduleFromDay">
+                    <i class="bx bx-plus me-1"></i> Tambah Jadwal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-{{-- AREA CHART (PUNYA KAMU) - TIDAK DIUBAH --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-    const totalIncomeEl = document.querySelector('#totalIncomePBrt');
-    const actualIncomeData = @json($salesPerMonth);
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 
-    const incomeData = [];
-    for (let month = 1; month <= 12; month++) {
-        incomeData.push(actualIncomeData[month] ?? 0);
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+  const TZ = 'Asia/Jakarta';
+
+  const calEl = document.getElementById('pbrtCalendar');
+  if (!calEl) return;
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+  const scheduleModalEl = document.getElementById('scheduleModal');
+  const scheduleModal = bootstrap.Modal.getOrCreateInstance(scheduleModalEl);
+
+  const dayEventsModalEl = document.getElementById('dayEventsModal');
+  const dayEventsModal = bootstrap.Modal.getOrCreateInstance(dayEventsModalEl);
+
+  const $ = (id) => document.getElementById(id);
+
+  const formEl = $('scheduleForm');
+  const btnDelete = $('btnDeleteSchedule');
+  const btnAdd = $('btnAddSchedule');
+  const btnAddFromDay = $('btnAddScheduleFromDay');
+
+  // ---------- Utils ----------
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[s]));
+  }
+
+  function todayWibYMD(){
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: TZ, year:'numeric', month:'2-digit', day:'2-digit'
+    }).format(new Date());
+  }
+
+  function setModeCreate(){
+    $('scheduleModalTitle').textContent = 'Tambah Jadwal';
+    $('scId').value = '';
+    btnDelete?.classList.add('d-none');
+  }
+
+  function setModeEdit(){
+    $('scheduleModalTitle').textContent = 'Edit Jadwal';
+    btnDelete?.classList.remove('d-none');
+  }
+
+  function resetForm(){
+    formEl?.reset();
+    $('scId').value = '';
+    $('scDate').value = '';
+    $('scStart').value = '';
+    $('scEnd').value = '';
+    if ($('scRange')?._flatpickr) $('scRange')._flatpickr.clear();
+  }
+
+  async function doFetch(url, method, payload) {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrf,
+        "Accept": "application/json"
+      },
+      body: payload ? JSON.stringify(payload) : null
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({message:'Request gagal'}));
+      throw new Error(err.message || 'Request gagal');
+    }
+    return res.json().catch(()=> ({}));
+  }
+
+  // ---------- Flatpickr range ----------
+  flatpickr('#scRange', {
+    mode: 'range',
+    enableTime: true,
+    time_24hr: true,
+    locale: 'id',
+    dateFormat: 'd-m-Y H:i',
+    minuteIncrement: 5,
+    disableMobile: true,
+
+    onChange: function(selectedDates){
+      if (selectedDates.length === 2) {
+        const start = selectedDates[0];
+        const end   = selectedDates[1];
+
+        const startYMD = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year:'numeric', month:'2-digit', day:'2-digit' }).format(start);
+        const startHM  = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour:'2-digit', minute:'2-digit', hour12:false }).format(start);
+        const endHM    = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour:'2-digit', minute:'2-digit', hour12:false }).format(end);
+
+        $('scDate').value  = startYMD;
+        $('scStart').value = startHM;
+        $('scEnd').value   = endHM;
+      }
+    }
+  });
+
+  // ---------- LIVE badge (DB RAW) ----------
+  function updateTodayBadge(events) {
+    const badge = document.getElementById('todayLiveBadge');
+    const text  = document.getElementById('todayLiveText');
+    if (!badge || !text) return;
+
+    const today = todayWibYMD();
+
+    const todays = events
+      .filter(ev => ev.extendedProps?.db_date === today)
+      .sort((a,b)=> (a.extendedProps?.db_start_time || '99:99').localeCompare(b.extendedProps?.db_start_time || '99:99'));
+
+    if (!todays.length) {
+      badge.classList.add('d-none');
+      text.textContent = '';
+      return;
     }
 
-    const maxY = Math.max(...Object.values(actualIncomeData), 0) * 1.2 || 10000;
+    const ev = todays[0];
+    const title = ev.title || 'Ada jadwal';
+    const start = ev.extendedProps?.db_start_time || '';
+    const end   = ev.extendedProps?.db_end_time || '';
 
-    const totalIncomeConfig = {
-        chart: {
-            height: 290,
-            type: 'area',
-            toolbar: false,
-            dropShadow: {
-                enabled: true,
-                top: 14,
-                left: 2,
-                blur: 3,
-                color: '#28a745',
-                opacity: 0.15
-            },
-            fontFamily: 'Inter, sans-serif'
-        },
-        series: [{ data: incomeData }],
-        dataLabels: { enabled: false },
-        stroke: { width: 3, curve: 'smooth' },
-        colors: ['#28a745'],
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shade: 'light',
-                shadeIntensity: 0.8,
-                opacityFrom: 0.7,
-                opacityTo: 0.25,
-                stops: [0, 95, 100]
-            }
-        },
-        tooltip: {
-            style: { fontFamily: 'Inter, sans-serif', fontSize: '14px' },
-            y: {
-                formatter: function(val) {
-                    return 'Rp ' + new Intl.NumberFormat('id-ID').format(val);
-                }
-            }
-        },
-        grid: {
-            show: true,
-            strokeDashArray: 10,
-            borderColor: '#e0e0e0',
-            padding: { top: -15, bottom: -10, left: 0, right: 0 }
-        },
-        xaxis: {
-            categories: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
-            labels: {
-                style: {
-                    colors: '#6e6b7b',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '13px'
-                }
-            },
-            axisBorder: { show: false },
-            axisTicks: { show: false }
-        },
-        yaxis: {
-            min: 0,
-            max: maxY,
-            tickAmount: 5,
-            labels: {
-                offsetX: -15,
-                formatter: function(val) {
-                    return 'Rp ' + new Intl.NumberFormat('id-ID').format(val);
-                },
-                style: { fontSize: '13px', fontFamily: 'Inter, sans-serif', colors: '#6e6b7b' }
-            }
-        }
+    badge.classList.remove('d-none');
+    text.innerHTML = `Hari ini ada jadwal <b>${escapeHtml(title)}</b> dari jam <b>${start}</b>${end ? ` - <b>${end}</b>` : ''}`;
+  }
+
+  // ---------- ✅ MODAL LIST EVENT PER TANGGAL ----------
+  let clickedDayYMD = null;
+
+  function openEditFromEvent(ev){
+    resetForm();
+    setModeEdit();
+
+    $('scId').value = ev.id;
+    $('scTitle').value = ev.title || '';
+    $('scLocation').value = ev.extendedProps?.location || '';
+    $('scNote').value = ev.extendedProps?.note || '';
+
+    const dbDate  = ev.extendedProps?.db_date || '';
+    const dbStart = ev.extendedProps?.db_start_time || '';
+    const dbEnd   = ev.extendedProps?.db_end_time || '';
+
+    $('scDate').value  = dbDate;
+    $('scStart').value = dbStart;
+    $('scEnd').value   = dbEnd;
+
+    if (dbDate && dbStart && dbEnd && $('scRange')?._flatpickr) {
+      const [yy,mm,dd] = dbDate.split('-').map(Number);
+      const [sh,sm] = dbStart.split(':').map(Number);
+      const [eh,em] = dbEnd.split(':').map(Number);
+
+      const fakeStart = new Date(yy, mm-1, dd, sh, sm);
+
+      let fakeEnd = new Date(yy, mm-1, dd, eh, em);
+      if (dbEnd <= dbStart) {
+        fakeEnd = new Date(yy, mm-1, dd + 1, eh, em);
+      }
+
+      $('scRange')._flatpickr.setDate([fakeStart, fakeEnd], true);
+    }
+
+    scheduleModal.show();
+  }
+
+  function renderDayEventsModal(ymd, events){
+    clickedDayYMD = ymd;
+
+    const titleEl = $('dayEventsTitle');
+    const emptyEl = $('dayEventsEmpty');
+    const listEl  = $('dayEventsList');
+
+    const [yy,mm,dd] = ymd.split('-').map(Number);
+    const pretty = new Intl.DateTimeFormat('id-ID', { day:'2-digit', month:'long', year:'numeric' })
+      .format(new Date(yy, mm-1, dd));
+
+    titleEl.textContent = `Jadwal - ${pretty}`;
+    listEl.innerHTML = '';
+
+    if (!events.length) {
+      emptyEl.classList.remove('d-none');
+    } else {
+      emptyEl.classList.add('d-none');
+
+      events.sort((a,b)=> (a.extendedProps?.db_start_time || '99:99')
+        .localeCompare(b.extendedProps?.db_start_time || '99:99'));
+
+      events.forEach((ev) => {
+        const dbStart = ev.extendedProps?.db_start_time || '';
+        const dbEnd   = ev.extendedProps?.db_end_time || '';
+        const loc     = ev.extendedProps?.location || '';
+        const note    = ev.extendedProps?.note || '';
+
+        const div = document.createElement('div');
+        div.className = 'day-event-item';
+        div.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="day-event-time">${escapeHtml(dbStart)}${dbEnd ? ' - ' + escapeHtml(dbEnd) : ''}</div>
+            <span class="badge bg-primary-subtle text-primary fw-semibold">Detail</span>
+          </div>
+          <div class="fw-bold">${escapeHtml(ev.title || 'Tanpa Judul')}</div>
+          ${loc ? `<div class="day-event-meta mt-1"><i class="bx bx-map me-1"></i>${escapeHtml(loc)}</div>` : ''}
+          ${note ? `<div class="day-event-meta"><i class="bx bx-note me-1"></i>${escapeHtml(note)}</div>` : ''}
+        `;
+
+        div.addEventListener('click', function(){
+          dayEventsModal.hide();
+          openEditFromEvent(ev);
+        });
+
+        listEl.appendChild(div);
+      });
+    }
+
+    dayEventsModal.show();
+  }
+
+  // ---------- FullCalendar ----------
+  const calendar = new FullCalendar.Calendar(calEl, {
+    timeZone: TZ,
+    locale: 'id',
+
+    buttonText: { today: 'Hari ini' },
+    initialView: 'dayGridMonth',
+
+    dayMaxEvents: true,
+    displayEventTime: true,
+    eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+
+    headerToolbar: {
+      left: 'today',
+      center: 'title',
+      right: 'dayGridMonth'
+    },
+
+    selectable: true,
+    selectMirror: true,
+
+    events: "{{ route('schedule.events') }}",
+
+    // ✅ klik tanggal => buka modal list event
+    dateClick: function(info){
+      const ymd = info.dateStr; // YYYY-MM-DD sesuai timezone calendar
+      const all = calendar.getEvents();
+      const dayEvents = all.filter(e => e.extendedProps?.db_date === ymd);
+      renderDayEventsModal(ymd, dayEvents);
+    },
+
+    // klik event => edit
+    eventClick: function(info){
+      info.jsEvent.preventDefault();
+      openEditFromEvent(info.event);
+    },
+
+    // klik & drag select masih buat create
+    select: function(info){
+      resetForm();
+      setModeCreate();
+
+      const startYMD = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year:'numeric', month:'2-digit', day:'2-digit' }).format(info.start);
+      $('scDate').value  = startYMD;
+      $('scStart').value = '18:00';
+      $('scEnd').value   = '23:00';
+
+      const [yy,mm,dd] = startYMD.split('-').map(Number);
+      const fakeStart = new Date(yy, mm-1, dd, 18, 0);
+      const fakeEnd   = new Date(yy, mm-1, dd, 23, 0);
+      if ($('scRange')?._flatpickr) $('scRange')._flatpickr.setDate([fakeStart, fakeEnd], true);
+
+      scheduleModal.show();
+    },
+
+    eventsSet: function(events){
+      updateTodayBadge(events);
+    }
+  });
+
+  calendar.render();
+
+  // tombol tambah dari header
+  btnAdd?.addEventListener('click', function(){
+    resetForm();
+    setModeCreate();
+
+    const today = todayWibYMD();
+    $('scDate').value  = today;
+    $('scStart').value = '18:00';
+    $('scEnd').value   = '23:00';
+
+    const [yy,mm,dd] = today.split('-').map(Number);
+    const fakeStart = new Date(yy, mm-1, dd, 18, 0);
+    const fakeEnd   = new Date(yy, mm-1, dd, 23, 0);
+    if ($('scRange')?._flatpickr) $('scRange')._flatpickr.setDate([fakeStart, fakeEnd], true);
+
+    scheduleModal.show();
+  });
+
+  // tombol tambah dari modal tanggal
+  btnAddFromDay?.addEventListener('click', function(){
+    if (!clickedDayYMD) return;
+
+    resetForm();
+    setModeCreate();
+
+    $('scDate').value  = clickedDayYMD;
+    $('scStart').value = '18:00';
+    $('scEnd').value   = '23:00';
+
+    const [yy,mm,dd] = clickedDayYMD.split('-').map(Number);
+    const fakeStart = new Date(yy, mm-1, dd, 18, 0);
+    const fakeEnd   = new Date(yy, mm-1, dd, 23, 0);
+    if ($('scRange')?._flatpickr) $('scRange')._flatpickr.setDate([fakeStart, fakeEnd], true);
+
+    dayEventsModal.hide();
+    scheduleModal.show();
+  });
+
+  // submit create/update
+  formEl?.addEventListener('submit', async function(e){
+    e.preventDefault();
+
+    const id = $('scId').value;
+
+    const payload = {
+      title: ($('scTitle').value || '').trim(),
+      location: ($('scLocation').value || '').trim(),
+      date: $('scDate').value,
+      start_time: $('scStart').value,
+      end_time: $('scEnd').value,
+      note: ($('scNote').value || '').trim(),
     };
 
-    if (totalIncomeEl) {
-        new ApexCharts(totalIncomeEl, totalIncomeConfig).render();
+    if (!payload.title) return alert('Judul wajib diisi');
+    if (!payload.date) return alert('Tanggal wajib diisi');
+    if (!payload.start_time) return alert('Jam mulai wajib diisi');
+    if (!payload.end_time) return alert('Jam selesai wajib diisi');
+    if (payload.start_time === payload.end_time) return alert('Jam selesai tidak boleh sama dengan jam mulai');
+
+    try {
+      if (id) {
+        await doFetch(`{{ url('/schedule') }}/${id}`, 'PUT', payload);
+      } else {
+        await doFetch(`{{ route('schedule.store') }}`, 'POST', payload);
+      }
+      scheduleModal.hide();
+      calendar.refetchEvents();
+    } catch(err) {
+      alert(err.message);
     }
+  });
+
+  // delete
+  btnDelete?.addEventListener('click', async function(){
+    const id = $('scId').value;
+    if (!id) return;
+    if (!confirm('Yakin hapus jadwal ini?')) return;
+
+    try {
+      await doFetch(`{{ url('/schedule') }}/${id}`, 'DELETE');
+      scheduleModal.hide();
+      calendar.refetchEvents();
+    } catch(err) {
+      alert(err.message);
+    }
+  });
+
 });
 </script>
 
-{{-- RADIAL + TEXT FIX (Biar gak -8833333%) --}}
+{{-- AREA CHART (PUNYA KAMU) - TIDAK DIUBAH --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+  const totalIncomeEl = document.querySelector('#totalIncomePBrt');
+  const actualIncomeData = @json($salesPerMonth);
 
+  const incomeData = [];
+  for (let month = 1; month <= 12; month++) {
+    incomeData.push(actualIncomeData[month] ?? 0);
+  }
+
+  const maxY = Math.max(...Object.values(actualIncomeData), 0) * 1.2 || 10000;
+
+  const totalIncomeConfig = {
+    chart: {
+      height: 290,
+      type: 'area',
+      toolbar: false,
+      dropShadow: {
+        enabled: true,
+        top: 14,
+        left: 2,
+        blur: 3,
+        color: '#28a745',
+        opacity: 0.15
+      },
+      fontFamily: 'Inter, sans-serif'
+    },
+    series: [{ data: incomeData }],
+    dataLabels: { enabled: false },
+    stroke: { width: 3, curve: 'smooth' },
+    colors: ['#28a745'],
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'light',
+        shadeIntensity: 0.8,
+        opacityFrom: 0.7,
+        opacityTo: 0.25,
+        stops: [0, 95, 100]
+      }
+    },
+    tooltip: {
+      style: { fontFamily: 'Inter, sans-serif', fontSize: '14px' },
+      y: {
+        formatter: function(val) {
+          return 'Rp ' + new Intl.NumberFormat('id-ID').format(val);
+        }
+      }
+    },
+    grid: {
+      show: true,
+      strokeDashArray: 10,
+      borderColor: '#e0e0e0',
+      padding: { top: -15, bottom: -10, left: 0, right: 0 }
+    },
+    xaxis: {
+      categories: ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],
+      labels: {
+        style: {
+          colors: '#6e6b7b',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '13px'
+        }
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: {
+      min: 0,
+      max: maxY,
+      tickAmount: 5,
+      labels: {
+        offsetX: -15,
+        formatter: function(val) {
+          return 'Rp ' + new Intl.NumberFormat('id-ID').format(val);
+        },
+        style: { fontSize: '13px', fontFamily: 'Inter, sans-serif', colors: '#6e6b7b' }
+      }
+    }
+  };
+
+  if (totalIncomeEl) {
+    new ApexCharts(totalIncomeEl, totalIncomeConfig).render();
+  }
+});
+</script>
+
+{{-- RADIAL + TEXT FIX (PUNYA KAMU) - TIDAK DIUBAH --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
   function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
 
   function renderRadialChart(selector, value, max, color) {

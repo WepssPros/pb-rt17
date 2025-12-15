@@ -9,6 +9,7 @@ use App\Http\Controllers\Backend\ProductController;
 use App\Http\Controllers\Backend\ProjectTargetController;
 use App\Http\Controllers\Backend\ReportController;
 use App\Http\Controllers\Backend\RoleManagementController;
+use App\Http\Controllers\Backend\ScheduleController;
 use App\Http\Controllers\Backend\TransactionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -32,6 +33,10 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         // untuk datatable AJAX
     });
 
+    Route::get('/schedule/events', [ScheduleController::class, 'events'])->name('schedule.events');
+    Route::post('/schedule', [ScheduleController::class, 'store'])->name('schedule.store');
+    Route::put('/schedule/{schedule}', [ScheduleController::class, 'update'])->name('schedule.update');
+    Route::delete('/schedule/{schedule}', [ScheduleController::class, 'destroy'])->name('schedule.destroy');
     //Transaction Routes
     Route::post('/sales', [TransactionController::class, 'createSale'])->name('sales.store');
     Route::post('/purchases', [TransactionController::class, 'createPurchase'])->name('purchases.store');

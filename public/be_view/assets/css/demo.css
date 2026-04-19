@@ -122,3 +122,45 @@
   text-align: center;
   margin-top: 1rem;
 }
+
+/* Custom Rounding & Avatar Fixes */
+.navbar-detached {
+  border-radius: 1rem !important;
+}
+
+.dropdown-menu {
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+  padding: 0.5rem;
+}
+
+.dropdown-item {
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+}
+
+.avatar-fix {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-img-fix {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-online::after {
+  bottom: 2px !important;
+  right: 2px !important;
+  border: 2px solid #fff !important;
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0 !important;
+}

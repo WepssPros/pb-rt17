@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 @section('title')
     <title>Produk Shuttlecock - PB RT 17 KASAMBA</title>
+@endsection
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
 
@@ -67,6 +68,31 @@
                             <input type="text" id="productUnit" name="unit" class="form-control"
                                 placeholder="Satuan Produk" required>
                         </div>
+                    </div>
+
+                    {{-- Linked Product (Child PCS) - hanya untuk produk tube --}}
+                    <div class="col-12 col-md-6" id="childProductWrapper">
+                        <label class="form-label" for="childProductId">Produk Isi (PCS)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bx bx-link"></i></span>
+                            <select id="childProductId" name="child_product_id" class="form-select">
+                                <option value="">-- Tidak Ada --</option>
+                                @foreach(App\Models\Product::where('unit', 'pcs')->get() as $pcsProduct)
+                                    <option value="{{ $pcsProduct->id }}">{{ $pcsProduct->name }} ({{ $pcsProduct->sku }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <small class="text-muted">Pilih produk pcs yang terkait jika ini produk tube</small>
+                    </div>
+
+                    <div class="col-12 col-md-6" id="pcsPerUnitWrapper">
+                        <label class="form-label" for="pcsPerUnit">Jumlah PCS per Unit</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bx bx-package"></i></span>
+                            <input type="number" id="pcsPerUnit" name="pcs_per_unit" class="form-control"
+                                value="12" min="1" placeholder="12">
+                        </div>
+                        <small class="text-muted">Berapa bola (pcs) dalam 1 tube</small>
                     </div>
 
                     <div class="col-12 col-md-6">

@@ -58,6 +58,39 @@ class TransactionService
 
                 $total += $linePrice;
                 $total_cost += $lineCost;
+
+                // ============================================================
+                // SINKRONISASI STOCK TUBE ↔ PCS
+                // ============================================================
+
+                if ($product->hasChildProduct()) {
+                    // --- JUAL TUBE → kurangi stock PCS child ---
+                    $childProduct = Product::find($product->child_product_id);
+                    $childQty = $it['qty'] * $product->pcs_per_unit;
+
+                    $childStock = Stock::firstOrCreate(['product_id' => $childProduct->id]);
+                    if ($childStock->quantity < $childQty) {
+                        throw new \Exception('Stok pcs tidak cukup untuk sinkronisasi: ' . $childProduct->name . ' (butuh ' . $childQty . ' pcs, tersedia ' . $childStock->quantity . ')');
+                    }
+                    $childStock->quantity -= $childQty;
+                    $childStock->save();
+
+                    StockMovement::create([
+                        'product_id' => $childProduct->id,
+                        'movement_type' => 'sale',
+                        'quantity' => -1 * $childQty,
+                        'unit' => 'pcs',
+                        'unit_quantity' => $childQty,
+                        'reference_type' => Sale::class,
+                        'reference_id' => $sale->id,
+                        'cost_per_unit' => $childProduct->cost_price,
+                        'sell_price_per_unit' => $childProduct->sell_price,
+                        'note' => 'Auto-sync: penjualan ' . $it['qty'] . ' tube ' . $product->name,
+                    ]);
+                } else {
+                    // --- JUAL PCS → recalculate stock TUBE parent ---
+                    $this->recalculateParentTubeStock($product, $sale);
+                }
             }
 
             $sale->total = $total;
@@ -141,6 +174,30 @@ class TransactionService
                 ]);
 
                 $total += $lineTotal;
+
+                // ============================================================
+                // SINKRONISASI STOCK: BELI TUBE → tambah stock PCS child
+                // ============================================================
+                if ($product->hasChildProduct()) {
+                    $childProduct = Product::find($product->child_product_id);
+                    $childQty = $it['qty'] * $product->pcs_per_unit;
+
+                    $childStock = Stock::firstOrCreate(['product_id' => $childProduct->id]);
+                    $childStock->quantity += $childQty;
+                    $childStock->save();
+
+                    StockMovement::create([
+                        'product_id' => $childProduct->id,
+                        'movement_type' => 'purchase',
+                        'quantity' => $childQty,
+                        'unit' => 'pcs',
+                        'unit_quantity' => $childQty,
+                        'reference_type' => Purchase::class,
+                        'reference_id' => $purchase->id,
+                        'cost_per_unit' => $childProduct->cost_price,
+                        'note' => 'Auto-sync: pembelian ' . $it['qty'] . ' tube ' . $product->name,
+                    ]);
+                }
             }
 
             $purchase->total = $total;
@@ -167,5 +224,46 @@ class TransactionService
 
             return $purchase;
         });
+    }
+
+    /**
+     * Recalculate parent tube stock after selling pcs.
+     * Tube stock = floor(pcs_stock / pcs_per_unit)
+     *
+     * Contoh: Jual 12 pcs → pcs turun dari 36 ke 24 → tube dari 3 ke 2 (berkurang 1)
+     */
+    private function recalculateParentTubeStock(Product $pcsProduct, $reference): void
+    {
+        $parentProducts = Product::where('child_product_id', $pcsProduct->id)->get();
+
+        foreach ($parentProducts as $parent) {
+            $pcsStock = Stock::firstOrCreate(['product_id' => $pcsProduct->id]);
+            $currentPcsQty = $pcsStock->quantity;
+
+            $expectedTubeQty = intdiv($currentPcsQty, $parent->pcs_per_unit);
+
+            $tubeStock = Stock::firstOrCreate(['product_id' => $parent->id]);
+            $currentTubeQty = $tubeStock->quantity;
+
+            $diff = $currentTubeQty - $expectedTubeQty;
+
+            if ($diff > 0) {
+                // Tube perlu dikurangi
+                $tubeStock->quantity = $expectedTubeQty;
+                $tubeStock->save();
+
+                StockMovement::create([
+                    'product_id' => $parent->id,
+                    'movement_type' => 'adjustment',
+                    'quantity' => -1 * $diff,
+                    'unit' => $parent->unit,
+                    'unit_quantity' => $diff,
+                    'reference_type' => get_class($reference),
+                    'reference_id' => $reference->id,
+                    'cost_per_unit' => $parent->cost_price,
+                    'note' => 'Auto-sync: penjualan pcs ' . $pcsProduct->name . ' → tube dikurangi ' . $diff,
+                ]);
+            }
+        }
     }
 }

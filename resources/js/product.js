@@ -226,6 +226,8 @@ $(function () {
             $("#productForm")[0].reset();
             $("#productModal .modal-title").text("Tambah Produk Baru");
             $('#productModal input[name="product_id"]').val("");
+            $('#childProductId').val("");
+            $('#pcsPerUnit').val(12);
             $("#productModal").modal("show");
         });
 
@@ -300,6 +302,11 @@ $(function () {
             );
 
             $('#productModal textarea[name="notes"]').val(rowData.notes || "");
+
+            // Linked product fields
+            $('#childProductId').val(rowData.child_product_id || "");
+            $('#pcsPerUnit').val(rowData.pcs_per_unit || 12);
+
             $("#productModal").modal("show");
         });
 

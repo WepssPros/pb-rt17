@@ -28,6 +28,8 @@ class ProductController extends Controller
             ->addColumn('cost_price', fn($p) => number_format($p->cost_price, 0, ',', '.'))
             ->addColumn('sell_price', fn($p) => number_format($p->sell_price, 0, ',', '.'))
             ->addColumn('stock', fn($p) => $p->stock?->quantity ?? 0)
+            ->addColumn('child_product_id', fn($p) => $p->child_product_id)
+            ->addColumn('pcs_per_unit', fn($p) => $p->pcs_per_unit)
             ->rawColumns(['checkbox', 'product_name'])
             ->make(true);
     }

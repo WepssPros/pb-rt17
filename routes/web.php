@@ -31,7 +31,7 @@ Route::get('/', function () {
 
 
 Route::middleware(['auth', 'roleAny'])->group(function () {
-    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+    Route::prefix('dashboard')->name('dashboard.')->middleware('permission:akses dashboard')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');     // halaman datatable + modal
         // untuk datatable AJAX
     });
@@ -47,25 +47,25 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
     //Penjualan View
 
 
-    Route::prefix('penjualan')->name('penjualan.')->group(function () {
+    Route::prefix('penjualan')->name('penjualan.')->middleware('permission:akses penjualan')->group(function () {
         Route::get('/', [PenjualanController::class, 'index'])->name('index');          // halaman datatable + modal
         Route::get('/data', [PenjualanController::class, 'data'])->name('data');        // untuk datatable AJAX
     });
 
-    Route::prefix('pembelian')->name('pembelian.')->group(function () {
+    Route::prefix('pembelian')->name('pembelian.')->middleware('permission:akses pembelian')->group(function () {
         Route::get('/', [PembelianController::class, 'index'])->name('index');          // halaman datatable + modal
         Route::get('/data', [PembelianController::class, 'data'])->name('data');        // untuk datatable AJAX
     });
 
 
-    Route::prefix('cash')->name('cash.')->group(function () {
+    Route::prefix('cash')->name('cash.')->middleware('permission:akses kas transaksi')->group(function () {
         Route::get('/', [CashAndTransactionController::class, 'index'])->name('accounts');
         Route::get('/{account}/transactions', [CashAndTransactionController::class, 'transactions'])->name('transactions');
         Route::post('/accounts', [CashAndTransactionController::class, 'storeAccount'])->name('accounts.store');
         Route::post('/transactions', [CashAndTransactionController::class, 'storeTransaction'])->name('transactions.store');
     });
 
-    Route::prefix('accounting')->group(function () {
+    Route::prefix('accounting')->middleware('permission:akses jurnal umum')->group(function () {
         Route::get('/', [JournalController::class, 'index'])->name('journals.index');
         Route::get('/journals/data', [JournalController::class, 'data'])->name('journals.data');
 
@@ -74,7 +74,7 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         Route::get('/journals/{id}/lines', [JournalController::class, 'linesData'])->name('journals.lines.data');
     });
 
-    Route::prefix('products')->name('products.')->group(function () {
+    Route::prefix('products')->name('products.')->middleware('permission:akses stok shuttlecock')->group(function () {
         Route::get('/', [ProductController::class, 'index'])->name('index');          // halaman datatable + modal
         Route::get('/data', [ProductController::class, 'data'])->name('data');        // untuk datatable AJAX
         Route::post('/', [ProductController::class, 'store'])->name('store');         // simpan product baru
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
 
 
 
-    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('permission:akses laporan stok')->group(function () {
 
         Route::get('/stock', [ReportController::class, 'stock'])->name('stock');
 
@@ -94,7 +94,7 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         Route::get('/stock/data', [ReportController::class, 'stockData'])->name('stock.data');
     });
 
-    Route::prefix('projects')->name('projects.')->group(function () {
+    Route::prefix('projects')->name('projects.')->middleware('permission:akses target proyek')->group(function () {
         Route::get('/', [ProjectTargetController::class, 'index'])->name('index');
         Route::get('/data', [ProjectTargetController::class, 'data'])->name('data');
         Route::post('/', [ProjectTargetController::class, 'store'])->name('store');
@@ -102,7 +102,7 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         Route::delete('/{id}', [ProjectTargetController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('roles')->name('roles.')->group(function () {
+    Route::prefix('roles')->name('roles.')->middleware('permission:akses manajemen user')->group(function () {
         // /roles  → roles.index
         Route::get('/', [RoleManagementController::class, 'index'])->name('index');
 

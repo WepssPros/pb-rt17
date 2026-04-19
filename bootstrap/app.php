@@ -23,6 +23,32 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Tangani akses terlarang (403) secara global
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 403) {
+                // Jika dari AJAX/API, return JSON
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Akses ditolak.'], 403);
+                }
+                // Jika web biasa, redirect back dengan Toast (session error)
+                return redirect()->back()->with('error', $e->getMessage() ?: 'Akses ditolak. Anda tidak memiliki izin untuk halaman ini.');
+            }
+        });
+
+        // Tangani AuthorizationException (Laravel Native)
+        $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Akses ditolak.'], 403);
+            }
+            return redirect()->back()->with('error', 'Akses ditolak. Anda tidak memiliki izin yang diperlukan.');
+        });
+
+        // Tangani UnauthorizedException (Spatie Permission)
+        $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Akses ditolak.'], 403);
+            }
+            return redirect()->back()->with('error', 'Anda tidak memiliki hak akses (role/permission) yang diperlukan.');
+        });
     })
     ->create();

@@ -167,9 +167,7 @@ class RoleManagementController extends Controller
     public function showProfile(User $user)
     {
         // Kebijakan: Hanya pemilik yang bisa lihat detail profilnya sendiri
-        if (auth()->id() !== $user->id) {
-            return redirect()->route('roles.index')->with('error', 'Akses ditolak. Anda hanya diperbolehkan melihat profil Anda sendiri.');
-        }
+        abort_if(auth()->id() !== $user->id, 403, 'Akses ditolak. Anda hanya diperbolehkan melihat profil Anda sendiri.');
 
         // load semua roles user (tanpa filter guard)
         $user->load('roles');
@@ -182,9 +180,7 @@ class RoleManagementController extends Controller
 
     public function updateProfile(Request $request, User $user)
     {
-        if (auth()->id() !== $user->id) {
-            return redirect()->back()->with('error', 'Akses ditolak. Anda tidak diperbolehkan mengedit profil user lain.');
-        }
+        abort_if(auth()->id() !== $user->id, 403, 'Akses ditolak. Anda tidak diperbolehkan mengedit profil user lain.');
 
         $request->validate([
             'name'         => 'required|string|max:255',
@@ -209,9 +205,7 @@ class RoleManagementController extends Controller
 
     public function updatePhotoProfile(Request $request, User $user)
     {
-        if (auth()->id() !== $user->id) {
-            return redirect()->back()->with('error', 'Akses ditolak. Anda tidak diperbolehkan mengganti foto profil user lain.');
-        }
+        abort_if(auth()->id() !== $user->id, 403, 'Akses ditolak. Anda tidak diperbolehkan mengganti foto profil user lain.');
 
         $request->validate([
             'foto_profile' => 'required|image|mimes:jpg,jpeg,png|max:2048',
@@ -240,9 +234,7 @@ class RoleManagementController extends Controller
     }
     public function updatePhotoHouse(Request $request, User $user)
     {
-        if (auth()->id() !== $user->id) {
-            return redirect()->back()->with('error', 'Akses ditolak. Anda tidak diperbolehkan mengganti foto rumah user lain.');
-        }
+        abort_if(auth()->id() !== $user->id, 403, 'Akses ditolak. Anda tidak diperbolehkan mengganti foto rumah user lain.');
 
         $request->validate([
             'foto_rumah' => 'required|image|mimes:jpg,jpeg,png|max:4096',

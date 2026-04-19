@@ -8,9 +8,23 @@ use App\Models\CashTransaction;
 use App\Models\ProjectTarget;
 use App\Models\Purchase;
 use App\Models\Sale;
+use App\Models\JournalLine;
 
 class DashboardController extends Controller
 {
+    private function getCogsForTransactions($transactionsQuery)
+    {
+        $saleIds = (clone $transactionsQuery)
+            ->where('reference_type', Sale::class)
+            ->pluck('reference_id');
+
+        return JournalLine::where('account', 'COGS')
+            ->whereHas('journal', function ($q) use ($saleIds) {
+                $q->where('reference_type', Sale::class)
+                  ->whereIn('reference_id', $saleIds);
+            })->sum('debit');
+    }
+
     public function index()
     {
         $kasUtamaId = 1;
@@ -40,19 +54,20 @@ class DashboardController extends Controller
         };
 
         $expenseRef = function ($q) {
-            $q->where('reference_type', Purchase::class)
-                ->orWhere('reference_type', 'LIKE', 'PUR%')
-                ->orWhere('reference_type', 'LIKE', 'GTG%')
-                ->orWhere('reference_type', 'LIKE', 'BUY%');
+            $q->where('reference_type', 'NOT LIKE', 'PUR%')
+              ->where('reference_type', 'NOT LIKE', 'BUY%')
+              ->where('reference_type', '!=', Purchase::class);
         };
 
         // =========================
         // TOTAL PEMASUKAN & PENGELUARAN
         // =========================
-        $totalSales = (clone $baseTx)
+        $rawTotalSales = (clone $baseTx)
             ->where('type', 'in')
             ->where($incomeRef)
             ->sum('amount');
+        $cogsTotalSales = $this->getCogsForTransactions((clone $baseTx)->where('type', 'in')->where($incomeRef));
+        $totalSales = $rawTotalSales - $cogsTotalSales;
 
         $totalPurchase = (clone $baseTx)
             ->where('type', 'out')
@@ -71,14 +86,23 @@ class DashboardController extends Controller
         // =========================
         $year = now()->year;
 
-        $salesPerMonth = (clone $baseTx)
+        $salesPerMonthRaw = (clone $baseTx)
             ->where('type', 'in')
             ->whereYear('created_at', $year)
             ->where($incomeRef)
-            ->selectRaw('MONTH(created_at) as month, SUM(amount) as total')
-            ->groupBy('month')
-            ->pluck('total', 'month')
-            ->toArray();
+            ->get();
+
+        $salesPerMonth = [];
+        foreach ($salesPerMonthRaw->groupBy(function($item) { return $item->created_at->month; }) as $month => $txs) {
+            $rawSale = $txs->sum('amount');
+            $saleIds = $txs->where('reference_type', Sale::class)->pluck('reference_id')->toArray();
+            $cogsInMonth = JournalLine::where('account', 'COGS')
+                ->whereHas('journal', function($q) use ($saleIds) {
+                    $q->where('reference_type', Sale::class)->whereIn('reference_id', $saleIds);
+                })->sum('debit');
+            
+            $salesPerMonth[$month] = $rawSale - $cogsInMonth;
+        }
 
         // =========================
         // GROWTH BULAN INI VS BULAN LALU (UNTUK "LAPORAN")
@@ -89,17 +113,11 @@ class DashboardController extends Controller
         $startLastMonth = now()->subMonth()->startOfMonth();
         $endLastMonth   = now()->subMonth()->endOfMonth();
 
-        $incomeThisMonth = (clone $baseTx)
-            ->where('type', 'in')
-            ->whereBetween('created_at', [$startThisMonth, $endThisMonth])
-            ->where($incomeRef)
-            ->sum('amount');
+        $rawIncomeThisMonth = (clone $baseTx)->where('type', 'in')->whereBetween('created_at', [$startThisMonth, $endThisMonth])->where($incomeRef);
+        $incomeThisMonth = $rawIncomeThisMonth->sum('amount') - $this->getCogsForTransactions($rawIncomeThisMonth);
 
-        $incomeLastMonth = (clone $baseTx)
-            ->where('type', 'in')
-            ->whereBetween('created_at', [$startLastMonth, $endLastMonth])
-            ->where($incomeRef)
-            ->sum('amount');
+        $rawIncomeLastMonth = (clone $baseTx)->where('type', 'in')->whereBetween('created_at', [$startLastMonth, $endLastMonth])->where($incomeRef);
+        $incomeLastMonth = $rawIncomeLastMonth->sum('amount') - $this->getCogsForTransactions($rawIncomeLastMonth);
 
         $expenseThisMonth = (clone $baseTx)
             ->where('type', 'out')
@@ -147,6 +165,7 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'totalSales',
+            'rawTotalSales',
             'totalPurchase',
             'profit',
             'totalTransactions',

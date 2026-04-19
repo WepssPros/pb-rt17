@@ -1013,12 +1013,12 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
     if (!el) return 0;
 
     const safeMax = (max && max > 0) ? max : 0;
-    const percentRaw = safeMax > 0 ? (Math.abs(value) / safeMax) * 100 : 0;
-    const percent = clamp(Math.round(percentRaw), 0, 100);
+    const percentRaw = safeMax > 0 ? (value / safeMax) * 100 : 0;
+    const percent = percentRaw; // Keep raw for precision
 
     const options = {
       chart: { type: 'radialBar', height: 230 },
-      series: [percent],
+      series: [clamp(percent, 0, 100)],
       plotOptions: {
         radialBar: {
           startAngle: -160,
@@ -1031,7 +1031,7 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
               show: true,
               fontSize: '24px',
               fontWeight: 600,
-              formatter: function(val) { return val + '%'; }
+              formatter: function(val) { return val.toFixed(2) + '%'; }
             }
           }
         }
@@ -1055,40 +1055,38 @@ $avgMonthlyIncome = ($monthsWithIncome > 0)
     return percent;
   }
 
-  const maxIncome   = {{ max($totalSales, 1) * 1.2 }};
-  const maxExpenses = {{ max($totalPurchase, 1) * 1.2 }};
-  const maxProfit   = {{ max(abs($profit), 1) * 1.2 }};
+  const denominator = {{ max($rawTotalSales, 1) }};
 
   const incomeVal  = {{ $totalSales ?? 0 }};
   const expenseVal = {{ $totalPurchase ?? 0 }};
   const profitVal  = {{ $profit ?? 0 }};
 
-  const incomePercent  = renderRadialChart('#chartIncome', incomeVal, maxIncome, '#28a745');
-  const expensePercent = renderRadialChart('#chartExpenses', expenseVal, maxExpenses, '#dc3545');
+  const incomePercent  = renderRadialChart('#chartIncome', incomeVal, denominator, '#28a745');
+  const expensePercent = renderRadialChart('#chartExpenses', expenseVal, denominator, '#dc3545');
 
   const profitColor = (profitVal >= 0) ? '#28a745' : '#dc3545';
-  const profitPercent = renderRadialChart('#chartProfit', profitVal, maxProfit, profitColor);
+  const profitPercent = renderRadialChart('#chartProfit', profitVal, denominator, profitColor);
 
   const incomeTextEl  = document.querySelector('#incomeGrowth');
   const expenseTextEl = document.querySelector('#expensesGrowth');
   const profitTextEl  = document.querySelector('#profitGrowth');
 
   if (incomeTextEl) {
-    incomeTextEl.innerHTML = `<i class="bx bx-trending-up"></i> Pendapatan mencapai ${incomePercent}% dari batas`;
+    incomeTextEl.innerHTML = `<i class="bx bx-trending-up"></i> Margin Pendapatan Bersih: ${incomePercent.toFixed(2)}% dari Omset`;
   }
   if (expenseTextEl) {
-    expenseTextEl.innerHTML = `<i class="bx bx-trending-up"></i> Pengeluaran mencapai ${expensePercent}% dari batas`;
+    expenseTextEl.innerHTML = `<i class="bx bx-trending-up"></i> Rasio Pengeluaran: ${expensePercent.toFixed(2)}% dari Omset`;
   }
 
   if (profitTextEl) {
     if (profitVal >= 0) {
       profitTextEl.classList.remove('text-danger');
       profitTextEl.classList.add('text-success');
-      profitTextEl.innerHTML = `<i class="bx bx-trending-up"></i> Keuntungan mencapai ${profitPercent}% dari batas`;
+      profitTextEl.innerHTML = `<i class="bx bx-trending-up"></i> Net Profit Margin: ${profitPercent.toFixed(2)}% dari Omset`;
     } else {
       profitTextEl.classList.remove('text-success');
       profitTextEl.classList.add('text-danger');
-      profitTextEl.innerHTML = `<i class="bx bx-trending-down"></i> Rugi mencapai ${profitPercent}% dari batas`;
+      profitTextEl.innerHTML = `<i class="bx bx-trending-down"></i> Rugi: ${Math.abs(profitPercent).toFixed(2)}% dari Omset`;
     }
   }
 });

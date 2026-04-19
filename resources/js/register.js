@@ -211,56 +211,55 @@ document.addEventListener("DOMContentLoaded", function () {
             const hidden = document.querySelector(inputId);
             if (!el || !hidden) return;
 
-            new Dropzone(el, {
-                url: "/",
-                autoProcessQueue: false,
+            const myDropzone = new Dropzone(el, {
+                url: `/api/tmp-upload/${type}`,
+                autoProcessQueue: true,
                 maxFiles: 1,
-                maxFilesize: 5,
+                maxFilesize: 20,
                 acceptedFiles: "image/*",
                 addRemoveLinks: true,
+                headers: {
+                    ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
+                    Accept: "application/json",
+                },
 
                 init: function () {
+                    // Cek jika validasi form gagal & foto sudah ter-set via hidden input (Old Value)
+                    if (hidden.value) {
+                        const mockFile = { name: hidden.value, size: 12345, accepted: true };
+                        this.displayExistingFile(mockFile, `/storage/tmp/${type === 'fotorumah' ? 'foto_rumah' : 'foto_profile'}/${hidden.value}`);
+                        this.files.push(mockFile);
+                    }
+
                     this.on("addedfile", (file) => {
-                        // pastikan cuma 1 file
                         if (this.files.length > 1) {
                             this.removeFile(this.files[0]);
                         }
+                    });
 
-                        const formData = new FormData();
-                        formData.append("file", file);
+                    this.on("success", (file, response) => {
+                        let res = response;
+                        if (typeof response === 'string') {
+                            try { res = JSON.parse(response); } catch(e) {}
+                        }
+                        
+                        if (res && res.success) {
+                            hidden.value = res.filename;
+                        } else {
+                            console.error("Dropzone success but invalid JSON:", response);
+                            alert("Upload sukses tapi respons tidak valid.");
+                            this.removeFile(file);
+                        }
+                    });
 
-                        axios
-                            .post(`/api/tmp-upload/${type}`, formData, {
-                                headers: {
-                                    ...(csrfToken
-                                        ? { "X-CSRF-TOKEN": csrfToken }
-                                        : {}),
-                                    "Content-Type": "multipart/form-data",
-                                    Accept: "application/json",
-                                },
-                            })
-                            .then((res) => {
-                                const filename = res?.data?.filename;
-                                if (filename) {
-                                    hidden.value = filename;
-                                } else {
-                                    alert(
-                                        "Response upload tidak sesuai dari server."
-                                    );
-                                    this.removeFile(file);
-                                }
-                            })
-                            .catch((err) => {
-                                console.error(
-                                    "Upload gagal:",
-                                    err?.response || err
-                                );
-                                alert("Upload gagal, coba lagi!");
-                                this.removeFile(file);
-                            });
+                    this.on("error", (file, response) => {
+                        console.error("Upload gagal:", response);
+                        alert("Upload gagal, coba lagi!");
+                        this.removeFile(file);
                     });
 
                     this.on("removedfile", () => {
+                        // Jangan bersihkan jika ini submission loading / hanya ganti view
                         hidden.value = "";
                     });
                 },
@@ -281,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!fotoRumah || !fotoProfile) {
                 e.preventDefault();
                 alert(
-                    "Silakan upload foto rumah dan foto profile sebelum submit!"
+                    "Silakan pastikan proses upload foto rumah dan foto profile selesai sebelum disubmit!"
                 );
             }
         });

@@ -12,4 +12,9 @@ class JournalLine extends Model
 {
     use HasFactory;
     protected $fillable = ['journal_id', 'account', 'debit', 'credit', 'note'];
+
+    public function journal()
+    {
+        return $this->belongsTo(Journal::class, 'journal_id');
+    }
 }

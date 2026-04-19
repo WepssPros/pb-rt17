@@ -11,6 +11,7 @@
         <title>Registrasi User Kas Monitoring RT 17 Kasamba</title>
 
         <meta name="description" content="" />
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="../../be_view/assets/img/favicon/favicon.ico" />

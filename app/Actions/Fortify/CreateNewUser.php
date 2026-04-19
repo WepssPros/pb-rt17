@@ -24,14 +24,22 @@ class CreateNewUser implements CreatesNewUsers
             'perumahan' => ['nullable', 'string', 'max:255'],
             'blok_rumah' => ['nullable', 'string', 'max:10'],
             'no_rumah' => ['nullable', 'string', 'max:10'],
-            'foto_rumah' => ['nullable', 'string'],
-            'foto_profile' => ['nullable', 'string'],
+            'foto_rumah' => ['nullable', 'image', 'max:20480'], // 20MB
+            'foto_profile' => ['nullable', 'image', 'max:20480'], // 20MB
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
-        // Pindahkan file tmp ke folder final
-        $foto_rumah = $this->moveTempFile($input['foto_rumah'] ?? null, 'foto_rumah');
-        $foto_profile = $this->moveTempFile($input['foto_profile'] ?? null, 'foto_profile');
+        $foto_rumah_path = null;
+        if (isset($input['foto_rumah']) && $input['foto_rumah'] instanceof \Illuminate\Http\UploadedFile) {
+            $foto_rumah_path = $input['foto_rumah']->hashName();
+            $input['foto_rumah']->storeAs('foto_rumah', $foto_rumah_path, 'public');
+        }
+
+        $foto_profile_path = null;
+        if (isset($input['foto_profile']) && $input['foto_profile'] instanceof \Illuminate\Http\UploadedFile) {
+            $foto_profile_path = $input['foto_profile']->hashName();
+            $input['foto_profile']->storeAs('foto_profile', $foto_profile_path, 'public');
+        }
 
         $user = User::create([
             'name' => $input['name'],
@@ -42,34 +50,12 @@ class CreateNewUser implements CreatesNewUsers
             'perumahan' => $input['perumahan'] ?? null,
             'blok_rumah' => $input['blok_rumah'] ?? null,
             'no_rumah' => $input['no_rumah'] ?? null,
-            'foto_rumah' => $foto_rumah,
-            'foto_profile' => $foto_profile,
+            'foto_rumah' => $foto_rumah_path,
+            'foto_profile' => $foto_profile_path,
         ]);
 
         $user->assignRole('userpbrt');
 
         return $user;
-    }
-
-    private function moveTempFile(?string $filename, string $type): ?string
-    {
-        if (!$filename) return null;
-
-        $disk = 'public';
-        $tmpPath = "tmp/{$type}/{$filename}";
-        $finalFolder = $type; // foto_profile atau foto_rumah
-        $finalPath = "{$finalFolder}/{$filename}";
-
-        if (!Storage::disk($disk)->exists($tmpPath)) {
-            return null; // file tidak ada
-        }
-
-        if (!Storage::disk($disk)->exists($finalFolder)) {
-            Storage::disk($disk)->makeDirectory($finalFolder);
-        }
-
-        Storage::disk($disk)->move($tmpPath, $finalPath);
-
-        return $filename;
     }
 }

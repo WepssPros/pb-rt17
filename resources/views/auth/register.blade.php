@@ -81,10 +81,7 @@
                             enctype="multipart/form-data">
                             @csrf
 
-                            {{-- jika kamu simpan hasil upload dropzone dalam input hidden --}}
-                            <input type="hidden" name="foto_rumah" id="foto_rumah" value="{{ old('foto_rumah') }}">
-                            <input type="hidden" name="foto_profile" id="foto_profile"
-                                value="{{ old('foto_profile') }}">
+                            {{-- Foto upload dipindah ke input file standar di Step 3 --}}
 
                             {{-- Step 1: Account --}}
                             <div id="accountDetailsValidation" class="content">
@@ -244,10 +241,12 @@
                                     <div class="col-sm-6">
                                         <div class="card mb-6">
                                             <h5 class="card-header">Upload Foto Rumah</h5>
-                                            <div class="card-body">
-                                                <div id="dropzone-fotorumah" class="dropzone"></div>
-                                                @error('foto_rumah') <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
+                                            <div class="card-body text-center">
+                                                <div class="mb-4 d-flex justify-content-center">
+                                                    <img id="preview-rumah" src="{{ asset('be_view/assets/img/avatars/1.png') }}" alt="Preview Rumah" class="rounded" style="width: 150px; height: 150px; object-fit: cover; border: 2px dashed #d9dee3;">
+                                                </div>
+                                                <input type="file" name="foto_rumah" id="input-rumah" class="form-control" accept="image/*">
+                                                @error('foto_rumah') <div class="text-danger mt-2 small text-start">{{ $message }}</div> @enderror
                                             </div>
                                         </div>
                                     </div>
@@ -255,10 +254,12 @@
                                     <div class="col-sm-6">
                                         <div class="card mb-6">
                                             <h5 class="card-header">Upload Foto Profile</h5>
-                                            <div class="card-body">
-                                                <div id="dropzone-fotoprofile" class="dropzone"></div>
-                                                @error('foto_profile') <div class="text-danger mt-2">{{ $message }}
-                                                </div> @enderror
+                                            <div class="card-body text-center">
+                                                <div class="mb-4 d-flex justify-content-center">
+                                                    <img id="preview-profile" src="{{ asset('be_view/assets/img/avatars/1.png') }}" alt="Preview Profile" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 2px dashed #d9dee3;">
+                                                </div>
+                                                <input type="file" name="foto_profile" id="input-profile" class="form-control" accept="image/*">
+                                                @error('foto_profile') <div class="text-danger mt-2 small text-start">{{ $message }}</div> @enderror
                                             </div>
                                         </div>
                                     </div>

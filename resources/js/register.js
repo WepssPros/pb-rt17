@@ -177,112 +177,28 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    stepsPrev.forEach((btn) => {
-        btn.addEventListener("click", () => stepper.previous());
-    });
+    // --- Photo Previews (REPLACING DROPZONE) ---
+    function setupPreview(inputId, previewId) {
+        const input = document.querySelector(inputId);
+        const preview = document.querySelector(previewId);
+        if (!input || !preview) return;
 
-    // ---------------------
-    // Dropzone + Axios upload
-    // ---------------------
-    if (typeof Dropzone !== "undefined") {
-        Dropzone.autoDiscover = false;
-
-        const csrfToken =
-            document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute("content") ||
-            stepsForm.querySelector('input[name="_token"]')?.value;
-
-        const dropzones = [
-            {
-                selector: "#dropzone-fotorumah",
-                inputId: "#foto_rumah",
-                type: "fotorumah",
-            },
-            {
-                selector: "#dropzone-fotoprofile",
-                inputId: "#foto_profile",
-                type: "fotoprofile",
-            },
-        ];
-
-        dropzones.forEach(({ selector, inputId, type }) => {
-            const el = document.querySelector(selector);
-            const hidden = document.querySelector(inputId);
-            if (!el || !hidden) return;
-
-            const myDropzone = new Dropzone(el, {
-                url: `/api/tmp-upload/${type}`,
-                autoProcessQueue: true,
-                maxFiles: 1,
-                maxFilesize: 20,
-                acceptedFiles: "image/*",
-                addRemoveLinks: true,
-                headers: {
-                    ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
-                    Accept: "application/json",
-                },
-
-                init: function () {
-                    // Cek jika validasi form gagal & foto sudah ter-set via hidden input (Old Value)
-                    if (hidden.value) {
-                        const mockFile = { name: hidden.value, size: 12345, accepted: true };
-                        this.displayExistingFile(mockFile, `/storage/tmp/${type === 'fotorumah' ? 'foto_rumah' : 'foto_profile'}/${hidden.value}`);
-                        this.files.push(mockFile);
-                    }
-
-                    this.on("addedfile", (file) => {
-                        if (this.files.length > 1) {
-                            this.removeFile(this.files[0]);
-                        }
-                    });
-
-                    this.on("success", (file, response) => {
-                        let res = response;
-                        if (typeof response === 'string') {
-                            try { res = JSON.parse(response); } catch(e) {}
-                        }
-                        
-                        if (res && res.success) {
-                            hidden.value = res.filename;
-                        } else {
-                            console.error("Dropzone success but invalid JSON:", response);
-                            alert("Upload sukses tapi respons tidak valid.");
-                            this.removeFile(file);
-                        }
-                    });
-
-                    this.on("error", (file, response) => {
-                        console.error("Upload gagal:", response);
-                        alert("Upload gagal, coba lagi!");
-                        this.removeFile(file);
-                    });
-
-                    this.on("removedfile", () => {
-                        // Jangan bersihkan jika ini submission loading / hanya ganti view
-                        hidden.value = "";
-                    });
-                },
-            });
-        });
-    } else {
-        console.warn("Dropzone belum ter-load. Upload tidak aktif.");
-    }
-
-    // ---------------------
-    // Submit: cek foto sudah diupload
-    // ---------------------
-    if (submitBtn) {
-        submitBtn.addEventListener("click", function (e) {
-            const fotoRumah = document.querySelector("#foto_rumah")?.value;
-            const fotoProfile = document.querySelector("#foto_profile")?.value;
-
-            if (!fotoRumah || !fotoProfile) {
-                e.preventDefault();
-                alert(
-                    "Silakan pastikan proses upload foto rumah dan foto profile selesai sebelum disubmit!"
-                );
+        input.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         });
     }
+
+    setupPreview("#input-rumah", "#preview-rumah");
+    setupPreview("#input-profile", "#preview-profile");
+
+    stepsPrev.forEach((btn) => {
+        btn.addEventListener("click", () => stepper.previous());
+    });
 });

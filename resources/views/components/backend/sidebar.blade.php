@@ -79,12 +79,14 @@
         </li>
         @endcan
 
+        @can('akses target proyek')
         <li class="menu-item {{ request()->routeIs('projects.*') ? 'active' : '' }}">
             <a href="{{ route('projects.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-target-lock"></i>
                 <div class="text-truncate">Target Proyek Umum</div>
             </a>
         </li>
+        @endcan
         <!-- Laporan -->
         @can('akses laporan stok')
         <li class="menu-header small text-uppercase"><span class="menu-header-text">Laporan</span></li>

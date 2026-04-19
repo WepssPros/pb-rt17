@@ -371,6 +371,10 @@
 @endsection
 
 @push('scripts')
+<script>
+    // Global variable untuk authorization di JS (roles.js)
+    window.currentUserId = @json(auth()->id());
+</script>
 @vite('resources/js/roles.js')
 
 {{-- Notifikasi toastr --}}

@@ -132,6 +132,19 @@
 
         <script src="../../be_view/assets/js/pages-auth-multisteps.js"></script>
         <script src="../../be_view/assets/js/forms-file-upload.js"></script>
+
+        {{-- Global Session Notifications --}}
+        <script>
+            window.addEventListener('load', () => {
+                @if(session('success'))
+                toastr.success("{{ session('success') }}", "Berhasil!");
+                @endif
+
+                @if(session('error'))
+                toastr.error("{{ session('error') }}", "Akses Ditolak!");
+                @endif
+            });
+        </script>
     </body>
 
 </html>

@@ -70,10 +70,12 @@
                             </div>
 
                             {{-- Tombol opsional, misal untuk edit --}}
+                            @if(auth()->id() === $user->id)
                             <a href="javascript:void(0)" class="btn btn-primary mb-1" data-bs-toggle="modal"
                                 data-bs-target="#modalEditDataUser">
                                 <i class="bx bx-user-check bx-sm me-2"></i>Edit Profil
                             </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -185,6 +187,7 @@
         </div>
         <div class="col-xl-8 col-lg-7 col-md-7">
             <!-- Profile Actions -->
+            @if(auth()->id() === $user->id)
             <div class="card card-action mb-6">
                 <div class="card-header align-items-center justify-content-between">
                     <h5 class="card-action-title mb-0">
@@ -230,6 +233,7 @@
                     </div>
                 </div>
             </div>
+            @endif
             <!--/ Profile Actions -->
 
 

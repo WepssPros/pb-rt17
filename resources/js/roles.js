@@ -178,20 +178,33 @@ $(function () {
                         if (full?.actions) return full.actions;
 
                         const viewUrl = `${userViewBase}${full?.id}`;
+                        const isOwner =
+                            parseInt(full?.id) ===
+                            parseInt(window.currentUserId);
+
+                        // Hanya tampilkan tombol View/Detail jika ini adalah profil milik sendiri
+                        const viewButton = isOwner
+                            ? `
+                <a href="${viewUrl}" class="btn btn-icon" title="View">
+                  <i class="bx bx-show bx-md"></i>
+                </a>`
+                            : "";
+
+                        const detailDropdownItem = isOwner
+                            ? `<a href="${viewUrl}" class="dropdown-item">Detail</a>`
+                            : "";
 
                         return `
               <div class="d-flex align-items-center">
                 <a href="javascript:;" class="btn btn-icon delete-record" title="Delete">
                   <i class="bx bx-trash bx-md"></i>
                 </a>
-                <a href="${viewUrl}" class="btn btn-icon" title="View">
-                  <i class="bx bx-show bx-md"></i>
-                </a>
+                ${viewButton}
                 <a href="javascript:;" class="btn btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                   <i class="bx bx-dots-vertical-rounded bx-md"></i>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end m-0">
-                  <a href="${viewUrl}" class="dropdown-item">Detail</a>
+                  ${detailDropdownItem}
                   <a href="javascript:;" class="dropdown-item">Suspend</a>
                 </div>
               </div>

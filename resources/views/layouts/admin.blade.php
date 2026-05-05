@@ -1,150 +1,330 @@
 <!doctype html>
-<html lang="en" class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr"
-    data-theme="theme-default" data-assets-path="../../be_view/assets/" data-template="vertical-menu-template"
-    data-style="light">
+<html lang="id" class="theme">
 
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-        @yield('title')
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet">
+    <script>
+        (() => {
+            try {
+                const theme = localStorage.getItem('pbrt-theme') || 'light';
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+                document.documentElement.dataset.theme = theme;
+                window.__PBRT_THEME__ = theme;
+            } catch (error) {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.dataset.theme = 'light';
+                window.__PBRT_THEME__ = 'light';
+            }
+        })();
+    </script>
+    @yield('title')
+    @viteReactRefresh
+    @vite(['resources/css/app.css', 'resources/js/admin/main.jsx'])
+</head>
 
-        <link rel="icon" type="image/x-icon" href="../../be_view/assets/img/favicon/favicon.ico" />
+@php
+    $profileUser = $user ?? null;
+    $authUser = auth()->user();
+    $routeName = request()->route()?->getName() ?? '';
+    $currentPageKey = match (true) {
+        str_starts_with($routeName, 'dashboard.') => 'dashboard',
+        str_starts_with($routeName, 'products.') => 'products',
+        str_starts_with($routeName, 'penjualan.') => 'penjualan',
+        str_starts_with($routeName, 'pembelian.') => 'pembelian',
+        $routeName === 'cash.accounts' => 'cash',
+        $routeName === 'cash.transactions' => 'cash-transactions',
+        str_starts_with($routeName, 'projects.') => 'projects',
+        str_starts_with($routeName, 'reports.') => 'reports',
+        $routeName === 'roles.index' => 'roles',
+        $routeName === 'roles.users.show' => 'roles-user',
+        $routeName === 'journals.index' => 'journals',
+        $routeName === 'journals.show' => 'journals-show',
+        default => 'fallback',
+    };
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        @php
-        $cssFiles = [
-        // Fonts
-        '../../be_view/assets/vendor/fonts/boxicons.css',
-        '../../be_view/assets/vendor/fonts/fontawesome.css',
-        '../../be_view/assets/vendor/fonts/flag-icons.css',
+    $menu = [
+        [
+            'label' => 'Overview',
+            'icon' => 'dashboard',
+            'items' => array_values(array_filter([
+                $authUser?->can('akses dashboard') ? [
+                    'label' => 'Dashboard',
+                    'href' => route('dashboard.index'),
+                    'active' => request()->routeIs('dashboard.*'),
+                ] : null,
+            ])),
+        ],
+        [
+            'label' => 'Master Data',
+            'icon' => 'master',
+            'items' => array_values(array_filter([
+                $authUser?->can('akses stok shuttlecock') ? [
+                    'label' => 'Stok Shuttlecock',
+                    'href' => route('products.index'),
+                    'active' => request()->routeIs('products.*'),
+                ] : null,
+            ])),
+        ],
+        [
+            'label' => 'Transaksi',
+            'icon' => 'transaction',
+            'items' => array_values(array_filter([
+                $authUser?->can('akses penjualan') ? [
+                    'label' => 'Penjualan',
+                    'href' => route('penjualan.index'),
+                    'active' => request()->routeIs('penjualan.*'),
+                ] : null,
+                $authUser?->can('akses pembelian') ? [
+                    'label' => 'Pembelian',
+                    'href' => route('pembelian.index'),
+                    'active' => request()->routeIs('pembelian.*'),
+                ] : null,
+            ])),
+        ],
+        [
+            'label' => 'Keuangan',
+            'icon' => 'finance',
+            'items' => array_values(array_filter([
+                $authUser?->can('akses kas transaksi') ? [
+                    'label' => 'Kas & Transaksi',
+                    'href' => route('cash.accounts'),
+                    'active' => request()->routeIs('cash.*'),
+                ] : null,
+                $authUser?->can('akses jurnal umum') ? [
+                    'label' => 'Jurnal Umum',
+                    'href' => route('journals.index'),
+                    'active' => request()->routeIs('journals.*'),
+                ] : null,
+                $authUser?->can('akses target proyek') ? [
+                    'label' => 'Target Proyek',
+                    'href' => route('projects.index'),
+                    'active' => request()->routeIs('projects.*'),
+                ] : null,
+            ])),
+        ],
+        [
+            'label' => 'Laporan',
+            'icon' => 'report',
+            'items' => array_values(array_filter([
+                $authUser?->can('akses laporan stok') ? [
+                    'label' => 'Rekap Stok',
+                    'href' => route('reports.stock'),
+                    'active' => request()->routeIs('reports.*'),
+                ] : null,
+            ])),
+        ],
+        [
+            'label' => 'Pengaturan',
+            'icon' => 'settings',
+            'items' => array_values(array_filter([
+                $authUser?->can('akses manajemen user') ? [
+                    'label' => 'Manajemen User',
+                    'href' => route('roles.index'),
+                    'active' => request()->routeIs('roles.*'),
+                ] : null,
+            ])),
+        ],
+    ];
+    $menu = array_values(array_filter($menu, fn ($group) => count($group['items']) > 0));
 
-        // Core CSS
-        '../../be_view/assets/vendor/css/rtl/core.css',
-        '../../be_view/assets/vendor/css/rtl/theme-default.css',
-        '../../be_view/assets/css/demo.css',
+    $pageData = match ($currentPageKey) {
+        'dashboard' => [
+            'totalSales' => $totalSales ?? 0,
+            'rawTotalSales' => $rawTotalSales ?? 0,
+            'totalPurchase' => $totalPurchase ?? 0,
+            'profit' => $profit ?? 0,
+            'totalTransactions' => $totalTransactions ?? 0,
+            'salesPerMonth' => $salesPerMonth ?? [],
+            'projectTargets' => $projectTargets ?? [],
+            'currentCash' => $currentCash ?? 0,
+            'growthIncome' => $growthIncome ?? 0,
+            'growthExpense' => $growthExpense ?? 0,
+            'growthProfit' => $growthProfit ?? 0,
+            'routes' => [
+                'events' => route('schedule.events'),
+                'store' => route('schedule.store'),
+                'base' => url('/schedule'),
+            ],
+        ],
+        'products' => [
+            'routes' => [
+                'data' => route('products.data'),
+            ],
+            'childProducts' => \App\Models\Product::where('unit', 'pcs')->get(['id', 'name', 'sku']),
+        ],
+        'penjualan' => [
+            'products' => collect($products ?? [])->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sell_price' => $product->sell_price,
+                'cost_price' => $product->cost_price,
+                'unit' => $product->unit,
+            ])->values(),
+            'cashAccounts' => collect($cashAccounts ?? [])->map(fn ($account) => [
+                'id' => $account->id,
+                'name' => $account->name,
+            ])->values(),
+            'routes' => [
+                'data' => route('penjualan.data'),
+                'store' => route('sales.store'),
+            ],
+        ],
+        'pembelian' => [
+            'products' => collect($products ?? [])->map(fn ($product) => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sell_price' => $product->sell_price,
+                'cost_price' => $product->cost_price,
+                'unit' => $product->unit,
+            ])->values(),
+            'cashAccounts' => collect($cashAccounts ?? [])->map(fn ($account) => [
+                'id' => $account->id,
+                'name' => $account->name,
+            ])->values(),
+            'routes' => [
+                'data' => route('pembelian.data'),
+                'store' => route('purchases.store'),
+            ],
+        ],
+        'cash' => [
+            'routes' => [
+                'data' => route('cash.accounts'),
+                'store' => route('cash.accounts.store'),
+            ],
+        ],
+        'cash-transactions' => [
+            'account' => [
+                'id' => $account->id ?? null,
+                'name' => $account->name ?? '-',
+            ],
+            'routes' => [
+                'data' => isset($account) ? route('cash.transactions', $account->id) : route('cash.accounts'),
+                'store' => route('cash.transactions.store'),
+            ],
+        ],
+        'projects' => [
+            'cashAccounts' => \App\Models\CashAccount::get(['id', 'name', 'balance']),
+            'routes' => [
+                'data' => route('projects.data'),
+            ],
+        ],
+        'reports' => [
+            'from' => now()->startOfMonth()->format('Y-m-d'),
+            'to' => now()->endOfMonth()->format('Y-m-d'),
+            'routes' => [
+                'data' => route('reports.stock.data'),
+            ],
+        ],
+        'roles' => [
+            'roles' => collect($roles ?? [])->loadMissing('users')->map(fn ($role) => [
+                'id' => $role->id,
+                'name' => ucfirst($role->name),
+                'users_count' => $role->users_count ?? $role->users?->count() ?? 0,
+                'users' => collect($role->users ?? [])->map(fn ($roleUser) => [
+                    'id' => $roleUser->id,
+                    'name' => $roleUser->name,
+                    'foto_profile_url' => $roleUser->foto_profile_url,
+                ])->values(),
+            ])->values(),
+            'permissions' => collect($permissions ?? [])->map(fn ($permission) => [
+                'name' => $permission->name,
+                'label' => str_replace('.', ' · ', $permission->name),
+            ])->values(),
+            'users' => collect($users ?? [])->map(fn ($roleUser) => [
+                'id' => $roleUser->id,
+                'name' => $roleUser->name,
+                'email' => $roleUser->email,
+            ])->values(),
+            'routes' => [
+                'datatable' => route('roles.datatable'),
+                'addUser' => route('roles.addUser'),
+            ],
+        ],
+        'roles-user' => [
+            'user' => [
+                'id' => $profileUser->id ?? null,
+                'name' => $profileUser->name ?? '-',
+                'email' => $profileUser->email ?? '-',
+                'username' => $profileUser->username ?? '',
+                'phone_number' => $profileUser->phone_number ?? '',
+                'perumahan' => $profileUser->perumahan ?? '',
+                'blok_rumah' => $profileUser->blok_rumah ?? '',
+                'no_rumah' => $profileUser->no_rumah ?? '',
+                'foto_profile_url' => $profileUser->foto_profile_url ?? null,
+                'foto_rumah_url' => $profileUser->foto_rumah_url ?? null,
+                'joined_at' => $profileUser?->created_at?->format('d M Y'),
+                'status_label' => match ($profileUser->status ?? 2) {
+                    1 => 'Pending',
+                    2 => 'Active',
+                    3 => 'Inactive',
+                    default => 'Active',
+                },
+                'roles' => collect($roles ?? $profileUser?->roles ?? [])->map(fn ($role) => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ])->values(),
+            ],
+            'routes' => [
+                'updateProfile' => $profileUser ? route('users.updateProfile', $profileUser->id) : '#',
+                'updatePhotoProfile' => $profileUser ? route('users.updatePhotoProfile', $profileUser->id) : '#',
+                'updatePhotoHouse' => $profileUser ? route('users.updatePhotoHouse', $profileUser->id) : '#',
+            ],
+        ],
+        'journals' => [
+            'routes' => [
+                'data' => route('journals.data'),
+            ],
+        ],
+        'journals-show' => [
+            'journal' => [
+                'id' => $journal->id ?? null,
+                'memo' => $journal->memo ?? null,
+                'date_label' => isset($journal) ? date('d-m-Y', strtotime($journal->date)) : '-',
+                'reference_label' => isset($journal) && $journal->reference_type
+                    ? $journal->reference_type . ' #' . $journal->reference_id
+                    : '-',
+            ],
+            'routes' => [
+                'lines' => isset($journal) ? route('journals.lines.data', $journal->id) : '#',
+            ],
+        ],
+        default => [],
+    };
 
-        // Vendor CSS
-        '../../be_view/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css',
-        '../../be_view/assets/vendor/libs/typeahead-js/typeahead.css',
-        '../../be_view/assets/vendor/libs/apex-charts/apex-charts.css',
-        '../../be_view/assets/vendor/libs/flatpickr/flatpickr.css',
-        '../../be_view/assets/vendor/libs/toastr/toastr.css',
-        '../../be_view/assets/vendor/libs/sweetalert2/sweetalert2.css',
+    $bootstrap = [
+        'csrfToken' => csrf_token(),
+        'logoutUrl' => route('logout'),
+        'currentRoute' => $routeName,
+        'pageKey' => $currentPageKey,
+        'authUser' => [
+            'id' => $authUser?->id,
+            'name' => $authUser?->name,
+            'email' => $authUser?->email,
+            'avatar' => $authUser?->foto_profile_url ?: asset('be_view/assets/img/avatars/default.png'),
+            'profileUrl' => $authUser ? route('roles.users.show', $authUser->id) : '#',
+        ],
+        'permissions' => $authUser?->getAllPermissions()->pluck('name')->values() ?? [],
+        'flash' => [
+            'success' => session('success'),
+            'error' => session('error'),
+        ],
+        'initialTheme' => 'light',
+        'menu' => $menu,
+        'pageData' => $pageData,
+    ];
+@endphp
 
-
-        // Page CSS
-        '../../be_view/assets/vendor/css/pages/card-analytics.css',
-
-        // Datatables CSS
-        '../../be_view/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css',
-        '../../be_view/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css',
-        '../../be_view/assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css',
-        '../../be_view/assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css',
-
-        // Form Validation
-        '../../be_view/assets/vendor/libs/@form-validation/form-validation.css',
-
-        // Row Group
-        '../../be_view/assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css',
-        ];
-
-        $headJs = [
-        // Helpers & Config
-        '../../be_view/assets/vendor/js/helpers.js',
-        '../../be_view/assets/vendor/js/template-customizer.js',
-        '../../be_view/assets/js/config.js',
-        ];
-        @endphp
-
-
-        <!-- CSS -->
-        @foreach ($cssFiles as $css)
-        <link rel="stylesheet" href="{{ $css }}">
-        @endforeach
-
-        <!-- JS in HEAD (only helpers & config) -->
-        @foreach ($headJs as $js)
-        <script src="{{ $js }}"></script>
-        @endforeach
-    </head>
-
-    <body>
-        <div class="layout-wrapper layout-content-navbar">
-            <div class="layout-container">
-                @include('components.backend.sidebar')
-                <div class="layout-page">
-                    @include('components.backend.navbar')
-                    <div class="content-wrapper">
-                        @yield('content')
-                        @include('components.backend.footer')
-                        <div class="content-backdrop fade"></div>
-                    </div>
-                </div>
-            </div>
-            @include('components.backend.overlay')
-            @include('components.backend.dragtarget')
-            <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
-        </div>
-
-        @php
-        $bodyJs = [
-        // Core
-        '../../be_view/assets/vendor/libs/jquery/jquery.js',
-        '../../be_view/assets/vendor/libs/popper/popper.js',
-        '../../be_view/assets/vendor/js/bootstrap.js',
-        '../../be_view/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js',
-        '../../be_view/assets/vendor/libs/hammer/hammer.js',
-        '../../be_view/assets/vendor/libs/i18n/i18n.js',
-        '../../be_view/assets/vendor/libs/typeahead-js/typeahead.js',
-        '../../be_view/assets/vendor/js/menu.js',
-
-        // Vendors
-        '../../be_view/assets/vendor/libs/apex-charts/apexcharts.js',
-        '../../be_view/assets/vendor/libs/flatpickr/flatpickr.js',
-        '../../be_view/assets/vendor/libs/toastr/toastr.js',
-        '../../be_view/assets/vendor/libs/sweetalert2/sweetalert2.js',
-
-        // Datatable
-        '../../be_view/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js',
-
-        // Form Validation
-        '../../be_view/assets/vendor/libs/@form-validation/popular.js',
-        '../../be_view/assets/vendor/libs/@form-validation/bootstrap5.js',
-        '../../be_view/assets/vendor/libs/@form-validation/auto-focus.js',
-
-        // Main & Page
-        '../../be_view/assets/js/main.js',
-        '../../be_view/assets/js/app-ecommerce-dashboard.js',
-        ];
-        @endphp
-
-        <!-- Load JS at bottom -->
-        @foreach ($bodyJs as $js)
-        <script src="{{ $js }}"></script>
-        @endforeach
-
-
-        @stack('scripts')
-
-        <script src="../../be_view/assets/js/pages-auth-multisteps.js"></script>
-        <script src="../../be_view/assets/js/forms-file-upload.js"></script>
-
-        {{-- Global Session Notifications --}}
-        <script>
-            window.addEventListener('load', () => {
-                @if(session('success'))
-                toastr.success("{{ session('success') }}", "Berhasil!");
-                @endif
-
-                @if(session('error'))
-                toastr.error("{{ session('error') }}", "Akses Ditolak!");
-                @endif
-            });
-        </script>
-    </body>
+<body class="admin-shell min-h-screen bg-background text-foreground antialiased">
+    <div id="admin-root"></div>
+    <script>
+        window.__ADMIN_BOOTSTRAP__ = {!! \Illuminate\Support\Js::from($bootstrap) !!};
+    </script>
+</body>
 
 </html>

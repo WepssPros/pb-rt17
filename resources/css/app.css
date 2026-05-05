@@ -1,7 +1,251 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 [x-cloak] {
     display: none;
+}
+
+@layer base {
+  .theme {
+        --font-heading: var(--font-sans);
+        --font-sans: 'Poppins', 'Satoshi', sans-serif;
+    }
+  :root {
+        --background: oklch(0.985 0.004 286);
+        --foreground: oklch(0.27 0.03 276);
+        --card: oklch(0.998 0.002 286);
+        --card-foreground: oklch(0.27 0.03 276);
+        --popover: oklch(0.998 0.002 286);
+        --popover-foreground: oklch(0.27 0.03 276);
+        --primary: oklch(0.56 0.2 281);
+        --primary-foreground: oklch(0.985 0 0);
+        --secondary: oklch(0.968 0.007 282);
+        --secondary-foreground: oklch(0.31 0.03 276);
+        --muted: oklch(0.962 0.006 282);
+        --muted-foreground: oklch(0.53 0.02 278);
+        --accent: oklch(0.944 0.018 284);
+        --accent-foreground: oklch(0.29 0.04 280);
+        --destructive: oklch(0.577 0.245 27.325);
+        --border: oklch(0.902 0.01 281);
+        --input: oklch(0.946 0.008 282);
+        --ring: oklch(0.63 0.14 281);
+        --chart-1: oklch(0.56 0.2 281);
+        --chart-2: oklch(0.63 0.16 255);
+        --chart-3: oklch(0.71 0.11 236);
+        --chart-4: oklch(0.61 0.14 309);
+        --chart-5: oklch(0.72 0.1 201);
+        --radius: 1rem;
+        --sidebar: oklch(0.994 0.003 286);
+        --sidebar-foreground: oklch(0.27 0.03 276);
+        --sidebar-primary: oklch(0.56 0.2 281);
+        --sidebar-primary-foreground: oklch(0.985 0 0);
+        --sidebar-accent: oklch(0.953 0.014 284);
+        --sidebar-accent-foreground: oklch(0.29 0.04 280);
+        --sidebar-border: oklch(0.91 0.01 281);
+        --sidebar-ring: oklch(0.63 0.14 281);
+        --surface: oklch(0.996 0.002 286);
+        --surface-elevated: oklch(0.989 0.005 284);
+        --surface-muted: oklch(0.965 0.006 282);
+        --surface-strong: oklch(0.941 0.01 282);
+        --success: oklch(0.67 0.14 153);
+        --warning: oklch(0.78 0.15 83);
+        --app-glow: 99 102 241;
+        --app-overlay: 15 23 42;
+    }
+  .dark {
+        --background: oklch(0.18 0.022 277);
+        --foreground: oklch(0.985 0 0);
+        --card: oklch(0.23 0.022 278);
+        --card-foreground: oklch(0.985 0 0);
+        --popover: oklch(0.205 0.024 278);
+        --popover-foreground: oklch(0.985 0 0);
+        --primary: oklch(0.72 0.16 281);
+        --primary-foreground: oklch(0.24 0.03 276);
+        --secondary: oklch(0.28 0.02 276);
+        --secondary-foreground: oklch(0.985 0 0);
+        --muted: oklch(0.29 0.02 276);
+        --muted-foreground: oklch(0.78 0.02 279);
+        --accent: oklch(0.32 0.04 284);
+        --accent-foreground: oklch(0.985 0 0);
+        --destructive: oklch(0.704 0.191 22.216);
+        --border: oklch(1 0 0 / 10%);
+        --input: oklch(1 0 0 / 12%);
+        --ring: oklch(0.72 0.16 281);
+        --chart-1: oklch(0.72 0.16 281);
+        --chart-2: oklch(0.68 0.16 252);
+        --chart-3: oklch(0.7 0.12 232);
+        --chart-4: oklch(0.65 0.13 308);
+        --chart-5: oklch(0.72 0.11 197);
+        --sidebar: oklch(0.205 0.022 278);
+        --sidebar-foreground: oklch(0.985 0 0);
+        --sidebar-primary: oklch(0.72 0.16 281);
+        --sidebar-primary-foreground: oklch(0.24 0.03 276);
+        --sidebar-accent: oklch(0.29 0.03 282);
+        --sidebar-accent-foreground: oklch(0.985 0 0);
+        --sidebar-border: oklch(1 0 0 / 10%);
+        --sidebar-ring: oklch(0.72 0.16 281);
+        --surface: oklch(0.215 0.022 278);
+        --surface-elevated: oklch(0.242 0.023 279);
+        --surface-muted: oklch(0.272 0.02 279);
+        --surface-strong: oklch(0.32 0.024 282);
+        --success: oklch(0.73 0.14 153);
+        --warning: oklch(0.83 0.14 84);
+        --app-glow: 129 140 248;
+        --app-overlay: 2 6 23;
+    }
+  * {
+    border-color: color-mix(in oklab, var(--border) 100%, transparent);
+    }
+  html {
+    font-family: var(--font-sans);
+    color-scheme: light;
+    }
+  html.dark {
+    color-scheme: dark;
+    }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    }
+  body.admin-shell {
+    background-image:
+      radial-gradient(circle at top left, rgba(var(--app-glow), 0.12), transparent 28%),
+      radial-gradient(circle at top right, rgba(var(--app-glow), 0.08), transparent 22%),
+      linear-gradient(180deg, color-mix(in oklab, var(--background) 100%, white 0%) 0%, color-mix(in oklab, var(--background) 96%, var(--accent) 4%) 100%);
+    background-attachment: fixed;
+    }
+}
+
+@layer components {
+  .app-shell {
+    min-height: 100vh;
+    color: var(--foreground);
+  }
+
+  .app-panel {
+    background-color: color-mix(in oklab, var(--surface) 94%, transparent);
+    color: var(--foreground);
+    border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+    box-shadow: 0 18px 50px -38px rgba(var(--app-overlay), 0.28);
+  }
+
+  .app-panel-elevated {
+    background-color: color-mix(in oklab, var(--surface-elevated) 96%, transparent);
+    box-shadow: 0 22px 60px -42px rgba(var(--app-overlay), 0.34);
+  }
+
+  .dark .app-panel-elevated {
+    box-shadow:
+      0 26px 70px -48px rgba(var(--app-overlay), 0.8),
+      0 0 0 1px rgba(var(--app-glow), 0.08);
+  }
+
+  .app-subpanel {
+    background-color: color-mix(in oklab, var(--surface-muted) 96%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 90%, transparent);
+  }
+
+  .app-toolbar {
+    background-color: color-mix(in oklab, var(--surface) 92%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+  }
+
+  .app-page-header {
+    background-color: color-mix(in oklab, var(--surface) 96%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+    box-shadow: 0 20px 60px -46px rgba(var(--app-overlay), 0.26);
+  }
+
+  .dark .app-page-header {
+    box-shadow:
+      0 24px 72px -52px rgba(var(--app-overlay), 0.85),
+      0 0 0 1px rgba(var(--app-glow), 0.08);
+  }
+
+  .app-input {
+    background-color: color-mix(in oklab, var(--surface) 100%, transparent);
+  }
+
+  .dark .app-input {
+    background-color: color-mix(in oklab, var(--surface-muted) 100%, transparent);
+  }
+
+  .app-empty {
+    background-color: color-mix(in oklab, var(--surface-muted) 94%, transparent);
+    border: 1px dashed color-mix(in oklab, var(--border) 92%, transparent);
+  }
+
+  .app-overlay-panel {
+    background-color: color-mix(in oklab, var(--popover) 96%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+  }
+
+  .app-accent-badge {
+    background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 88%, white 12%), color-mix(in oklab, var(--primary) 62%, var(--accent) 38%));
+    color: var(--primary-foreground);
+  }
+
+  .app-soft-accent {
+    background-color: color-mix(in oklab, var(--accent) 75%, transparent);
+    color: color-mix(in oklab, var(--accent-foreground) 88%, var(--foreground) 12%);
+    border: 1px solid color-mix(in oklab, var(--primary) 18%, var(--border) 82%);
+  }
+
+  .app-table-wrap {
+    background-color: color-mix(in oklab, var(--surface) 96%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+    box-shadow: 0 20px 60px -48px rgba(var(--app-overlay), 0.28);
+  }
+
+  .dark .app-table-wrap {
+    box-shadow:
+      0 24px 72px -52px rgba(var(--app-overlay), 0.85),
+      0 0 0 1px rgba(var(--app-glow), 0.05);
+  }
+
+  .admin-shell .fc {
+    --fc-border-color: color-mix(in oklab, var(--border) 100%, transparent);
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: color-mix(in oklab, var(--surface-muted) 96%, transparent);
+    --fc-list-event-hover-bg-color: color-mix(in oklab, var(--accent) 65%, transparent);
+    --fc-today-bg-color: color-mix(in oklab, var(--accent) 32%, transparent);
+    --fc-button-bg-color: color-mix(in oklab, var(--surface) 98%, transparent);
+    --fc-button-border-color: color-mix(in oklab, var(--border) 100%, transparent);
+    --fc-button-text-color: var(--foreground);
+    --fc-button-hover-bg-color: color-mix(in oklab, var(--accent) 50%, transparent);
+    --fc-button-hover-border-color: color-mix(in oklab, var(--primary) 18%, var(--border) 82%);
+    --fc-button-active-bg-color: color-mix(in oklab, var(--primary) 15%, transparent);
+    --fc-button-active-border-color: color-mix(in oklab, var(--primary) 28%, var(--border) 72%);
+    --fc-event-bg-color: color-mix(in oklab, var(--primary) 88%, white 12%);
+    --fc-event-border-color: color-mix(in oklab, var(--primary) 90%, black 10%);
+    --fc-event-text-color: var(--primary-foreground);
+  }
+
+  .admin-shell .fc .fc-toolbar-title {
+    color: var(--foreground);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .admin-shell .fc .fc-button {
+    box-shadow: none;
+    border-radius: 0.9rem;
+  }
+
+  .admin-shell .fc .fc-col-header-cell-cushion,
+  .admin-shell .fc .fc-daygrid-day-number {
+    color: var(--foreground);
+  }
+
+  .admin-shell .fc .fc-event {
+    border-radius: 0.75rem;
+    padding-inline: 0.2rem;
+  }
+
+  .toaster [data-sonner-toast] {
+    box-shadow: 0 20px 55px -42px rgba(var(--app-overlay), 0.42);
+  }
 }

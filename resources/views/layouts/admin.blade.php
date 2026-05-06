@@ -222,10 +222,11 @@
             ],
         ],
         'roles' => [
-            'roles' => collect($roles ?? [])->loadMissing('users')->map(fn ($role) => [
+            'roles' => collect($roles ?? [])->map(fn ($role) => [
                 'id' => $role->id,
                 'name' => ucfirst($role->name),
                 'users_count' => $role->users_count ?? $role->users?->count() ?? 0,
+                'permissions_count' => $role->permissions_count ?? $role->permissions?->count() ?? 0,
                 'users' => collect($role->users ?? [])->map(fn ($roleUser) => [
                     'id' => $roleUser->id,
                     'name' => $roleUser->name,

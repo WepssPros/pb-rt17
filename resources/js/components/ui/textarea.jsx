@@ -10,7 +10,7 @@ function Textarea({
     <textarea
       data-slot="textarea"
       className={cn(
-        "flex min-h-16 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:text-sm dark:bg-slate-950/70 dark:text-white dark:disabled:bg-slate-900 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        "flex min-h-[132px] w-full rounded-[22px] border border-input bg-[color-mix(in_oklab,var(--surface)_98%,transparent)] px-3.5 py-3 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition-colors outline-none placeholder:text-muted-foreground/90 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/32 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 dark:bg-[color-mix(in_oklab,var(--surface-muted)_92%,transparent)] dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] dark:disabled:bg-slate-900 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
         className
       )}
       {...props} />

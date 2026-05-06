@@ -15,7 +15,9 @@ class RoleManagementController extends Controller
 {
     public function index()
     {
-        $roles = Role::withCount('users')->get(); // ambil semua role + jumlah user
+        $roles = Role::with(['users:id,name,foto_profile'])
+            ->withCount(['users', 'permissions'])
+            ->get(); // ambil semua role + user preview + ringkasan permission
         $permissions = Permission::all(); // ambil semua permission
         $users = User::whereDoesntHave('roles', function ($q) {
             $q->where('guard_name', 'userpbrt');
@@ -27,6 +29,8 @@ class RoleManagementController extends Controller
     public function datatable(Request $request)
     {
         $query = User::with('roles'); // pakai Spatie Roles
+
+        $isDataTablesRequest = $request->filled('draw');
 
         // total sebelum filter
         $recordsTotal = $query->count();
@@ -60,17 +64,20 @@ class RoleManagementController extends Controller
         $orderColumn = $columns[$orderColumnIndex] ?? 'name';
         $query->orderBy($orderColumn, $orderDir);
 
-        // paging
-        $start  = (int) $request->input('start', 0);
-        $length = (int) $request->input('length', 10);
-        if ($length > 0) {
-            $query->skip($start)->take($length);
+        // paging hanya untuk legacy DataTables request
+        if ($isDataTablesRequest) {
+            $start  = (int) $request->input('start', 0);
+            $length = (int) $request->input('length', 10);
+            if ($length > 0) {
+                $query->skip($start)->take($length);
+            }
         }
 
         $users = $query->get();
 
         $data = $users->map(function ($user) {
             $roleName = $user->roles->first()->name ?? 'User';
+            $status = $user->status ?? 2;
 
             return [
                 'id'              => $user->id,
@@ -80,10 +87,22 @@ class RoleManagementController extends Controller
                 'foto_profile_url' => $user->foto_profile_url,
                 'foto_rumah_url'  => $user->foto_rumah_url,
                 'role'            => $roleName,
-                'status'          => $user->status ?? 2, // contoh
+                'status'          => $status,
+                'status_label'    => match ($status) {
+                    1 => 'Pending',
+                    2 => 'Active',
+                    3 => 'Inactive',
+                    default => 'Active',
+                },
                 'actions'         => '', // bisa isi HTML tombol di sini nanti
             ];
         });
+
+        if (!$isDataTablesRequest) {
+            return response()->json([
+                'data' => $data,
+            ]);
+        }
 
         return response()->json([
             'draw'            => intval($request->input('draw')),
@@ -157,7 +176,7 @@ class RoleManagementController extends Controller
     public function getPermissions(Role $role)
     {
         // Ambil semua permission yang dimiliki role
-        $permissions = $role->permissions()->pluck('name'); // ['users.create', 'users.edit', ...]
+        $permissions = $role->permissions()->pluck('name')->values()->toArray(); // ['users.create', 'users.edit', ...]
 
         return response()->json([
             'permissions' => $permissions

@@ -197,13 +197,222 @@
   .app-table-wrap {
     background-color: color-mix(in oklab, var(--surface) 96%, transparent);
     border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
-    box-shadow: 0 20px 60px -48px rgba(var(--app-overlay), 0.28);
+    box-shadow: 0 18px 48px -42px rgba(var(--app-overlay), 0.24);
   }
 
   .dark .app-table-wrap {
     box-shadow:
       0 24px 72px -52px rgba(var(--app-overlay), 0.85),
       0 0 0 1px rgba(var(--app-glow), 0.05);
+  }
+
+  .app-table-toolbar {
+    background-color: color-mix(in oklab, var(--surface) 94%, transparent);
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+  }
+
+  .app-table-scroll {
+    max-height: 58vh;
+    overflow: auto;
+    scrollbar-gutter: stable both-edges;
+    overscroll-behavior: contain;
+  }
+
+  @media (min-width: 768px) {
+    .app-table-scroll {
+      max-height: 62vh;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .app-table-scroll {
+      max-height: 66vh;
+    }
+  }
+
+  .app-table-header {
+    background-color: transparent;
+  }
+
+  .app-table-head {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    height: 2.75rem;
+    background-color: color-mix(in oklab, var(--surface-muted) 98%, transparent);
+    color: color-mix(in oklab, var(--muted-foreground) 92%, var(--foreground) 8%);
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    box-shadow: inset 0 -1px 0 color-mix(in oklab, var(--border) 100%, transparent);
+  }
+
+  .dark .app-table-head {
+    background-color: color-mix(in oklab, var(--surface-elevated) 98%, transparent);
+    color: color-mix(in oklab, var(--muted-foreground) 88%, var(--foreground) 12%);
+  }
+
+  .app-table-row {
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+    transition: background-color 140ms ease, border-color 140ms ease;
+  }
+
+  .app-table-row[data-clickable="true"] {
+    cursor: pointer;
+  }
+
+  .app-table-row:hover {
+    background-color: color-mix(in oklab, var(--surface-muted) 92%, transparent);
+  }
+
+  .app-table-row[data-clickable="true"]:hover {
+    background-color: color-mix(in oklab, var(--accent) 30%, var(--surface-muted) 70%);
+  }
+
+  .dark .app-table-row:hover {
+    background-color: color-mix(in oklab, var(--surface-muted) 80%, transparent);
+  }
+
+  .app-table-row[data-active="true"] {
+    background-color: color-mix(in oklab, var(--accent) 38%, var(--surface-muted) 62%);
+  }
+
+  .app-table-cell {
+    padding: 0.7rem 0.85rem;
+    color: color-mix(in oklab, var(--foreground) 88%, transparent);
+    vertical-align: middle;
+  }
+
+  .app-table-icon-button {
+    border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+    background-color: color-mix(in oklab, var(--surface) 98%, transparent);
+    color: color-mix(in oklab, var(--muted-foreground) 92%, var(--foreground) 8%);
+    box-shadow: 0 10px 24px -18px rgba(var(--app-overlay), 0.22);
+  }
+
+  .app-table-icon-button:hover,
+  .app-table-icon-button[data-state="open"] {
+    border-color: color-mix(in oklab, var(--primary) 24%, var(--border) 76%);
+    color: color-mix(in oklab, var(--primary) 74%, var(--foreground) 26%);
+    background-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  }
+
+  .dark .app-table-icon-button {
+    background-color: color-mix(in oklab, var(--surface-muted) 94%, transparent);
+    box-shadow: 0 16px 34px -26px rgba(var(--app-overlay), 0.52);
+  }
+
+  .app-table-status {
+    color: color-mix(in oklab, var(--muted-foreground) 96%, transparent);
+  }
+
+  .app-cell-truncate {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-cell-meta,
+  .app-cell-money {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .app-cell-meta__icon,
+  .app-cell-money__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background-color: color-mix(in oklab, var(--accent) 58%, transparent);
+    color: color-mix(in oklab, var(--primary) 76%, var(--foreground) 24%);
+  }
+
+  .app-cell-meta__text,
+  .app-cell-money__value {
+    color: color-mix(in oklab, var(--foreground) 88%, transparent);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .app-cell-muted-meta {
+    color: color-mix(in oklab, var(--muted-foreground) 92%, transparent);
+  }
+
+  .app-cell-flow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in oklab, var(--border) 100%, transparent);
+    padding: 0.35rem 0.7rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .app-cell-flow-in,
+  .app-cell-debit {
+    background-color: color-mix(in oklab, var(--destructive) 11%, var(--surface) 89%);
+    color: color-mix(in oklab, var(--destructive) 72%, var(--foreground) 28%);
+    border-color: color-mix(in oklab, var(--destructive) 18%, var(--border) 82%);
+  }
+
+  .app-cell-flow-out,
+  .app-cell-credit {
+    background-color: color-mix(in oklab, var(--success) 14%, var(--surface) 86%);
+    color: color-mix(in oklab, var(--success) 76%, var(--foreground) 24%);
+    border-color: color-mix(in oklab, var(--success) 20%, var(--border) 80%);
+  }
+
+  .app-cell-balance {
+    color: color-mix(in oklab, var(--primary) 74%, var(--foreground) 26%);
+  }
+
+  .app-cell-debit .app-cell-money__icon,
+  .app-cell-credit .app-cell-money__icon,
+  .app-cell-balance .app-cell-money__icon {
+    background-color: transparent;
+  }
+
+  .app-cell-debit .app-cell-meta__icon,
+  .app-cell-debit .app-cell-money__icon {
+    color: color-mix(in oklab, var(--destructive) 76%, var(--foreground) 24%);
+  }
+
+  .app-cell-credit .app-cell-meta__icon,
+  .app-cell-credit .app-cell-money__icon {
+    color: color-mix(in oklab, var(--success) 78%, var(--foreground) 22%);
+  }
+
+  .app-cell-balance .app-cell-meta__icon,
+  .app-cell-balance .app-cell-money__icon {
+    color: color-mix(in oklab, var(--primary) 76%, var(--foreground) 24%);
+  }
+
+  .dark .app-cell-flow-badge {
+    border-color: color-mix(in oklab, var(--border) 100%, transparent);
+  }
+
+  .dark .app-cell-flow-in,
+  .dark .app-cell-debit {
+    background-color: color-mix(in oklab, var(--destructive) 18%, var(--surface) 82%);
+    color: color-mix(in oklab, var(--destructive) 74%, white 26%);
+  }
+
+  .dark .app-cell-flow-out,
+  .dark .app-cell-credit {
+    background-color: color-mix(in oklab, var(--success) 20%, var(--surface) 80%);
+    color: color-mix(in oklab, var(--success) 78%, white 22%);
   }
 
   .admin-shell .fc {

@@ -1,16 +1,39 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+    ArrowDownLeftIcon,
+    ArrowUpRightIcon,
     AlertTriangleIcon,
+    BadgeInfoIcon,
+    BoxesIcon,
+    Building2Icon,
+    CalendarDaysIcon,
     CalendarClockIcon,
     CheckCircle2Icon,
+    CheckIcon,
+    CircleDotIcon,
     CircleDollarSignIcon,
+    Clock3Icon,
     EyeIcon,
+    FileCode2Icon,
+    FileTextIcon,
+    HashIcon,
+    HouseIcon,
     ImageIcon,
+    ImageUpIcon,
+    LandmarkIcon,
+    MapPinIcon,
     PencilIcon,
+    PhoneIcon,
     PlusIcon,
+    Package2Icon,
     ReceiptTextIcon,
+    ShieldCheckIcon,
     TargetIcon,
     Trash2Icon,
+    TypeIcon,
+    UploadIcon,
+    UserRoundIcon,
+    WalletIcon,
     UserPlus2Icon,
     WalletCardsIcon,
 } from "lucide-react";
@@ -73,6 +96,12 @@ import { toast } from "sonner";
 
 import { AdminDataTable } from "@/admin/data-table";
 import {
+    getTransactionTone,
+    MoneyValueCell,
+    TableMetaCell,
+    TransactionTypeBadge,
+} from "@/admin/table-cells";
+import {
     buildNestedParams,
     fetchJson,
     formatCurrency,
@@ -89,6 +118,219 @@ import {
 const PAGE_CARD_CLASS = "app-panel app-panel-elevated rounded-[28px]";
 const SUBPANEL_CLASS = "app-subpanel rounded-[24px] p-4";
 const EMPTY_PANEL_CLASS = "app-empty rounded-[24px]";
+const DIALOG_FORM_GAP = "gap-5";
+const EMPTY_SELECT_VALUE = "__empty__";
+
+function cx(...values) {
+    return values.filter(Boolean).join(" ");
+}
+
+function spanClass(span = "full") {
+    return {
+        full: "col-span-12",
+        half: "col-span-12 md:col-span-6",
+        third: "col-span-12 md:col-span-4",
+        twoThirds: "col-span-12 md:col-span-8",
+        quarter: "col-span-12 md:col-span-3",
+    }[span] || "col-span-12";
+}
+
+function FormGrid({ className, children }) {
+    return <div className={cx("grid grid-cols-12", DIALOG_FORM_GAP, className)}>{children}</div>;
+}
+
+function resolveFieldPlaceholder(id = "", type = "text", kind = "input") {
+    const key = String(id || "").toLowerCase();
+
+    if (kind === "select") {
+        if (key.includes("product-child")) return "Pilih produk isi";
+        if (key.includes("ref-code")) return "Pilih kode referensi";
+        if (key.includes("cash-account")) return "Pilih akun kas";
+        if (key.includes("role")) return "Pilih role";
+        if (key.includes("user")) return "Pilih user";
+        return "Pilih data";
+    }
+
+    if (kind === "textarea") {
+        if (key.includes("note") || key.includes("notes")) return "Tulis catatan tambahan";
+        if (key.includes("description")) return "Tulis deskripsi";
+        return "Tulis informasi tambahan";
+    }
+
+    if (kind === "money") {
+        if (key.includes("cost")) return "Masukkan harga modal";
+        if (key.includes("sell")) return "Masukkan harga jual";
+        if (key.includes("balance")) return "Masukkan saldo awal";
+        if (key.includes("amount")) return "Masukkan nominal";
+        if (key.includes("target")) return "Masukkan target dana";
+        return "Masukkan nominal";
+    }
+
+    if (type === "date") return "Pilih tanggal";
+    if (type === "time") return "Pilih waktu";
+    if (type === "number") return "Masukkan angka";
+
+    if (key.includes("name")) return "Masukkan nama";
+    if (key.includes("sku")) return "Masukkan SKU";
+    if (key.includes("unit")) return "Contoh: pcs atau tube";
+    if (key.includes("location")) return "Masukkan lokasi";
+    if (key.includes("title")) return "Masukkan judul";
+    if (key.includes("number") || key.includes("invoice") || key.includes("reference")) return "Masukkan nomor referensi";
+    if (key.includes("customer")) return "Masukkan nama pelanggan";
+    if (key.includes("supplier")) return "Masukkan nama supplier";
+    if (key.includes("code")) return "Masukkan kode";
+    if (key.includes("value")) return "Masukkan nilai";
+    if (key.includes("phone")) return "Masukkan nomor telepon";
+    if (key.includes("email")) return "Masukkan email";
+
+    return "Masukkan data";
+}
+
+function FieldHeading({ icon: Icon, label, htmlFor }) {
+    return (
+        <FieldLabel htmlFor={htmlFor} className="mb-1.5 gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            <span className="flex size-6 items-center justify-center rounded-lg bg-[color-mix(in_oklab,var(--accent)_66%,transparent)] text-primary dark:bg-[color-mix(in_oklab,var(--accent)_32%,transparent)]">
+                <Icon className="size-3" />
+            </span>
+            <span>{label}</span>
+        </FieldLabel>
+    );
+}
+
+function TextControl({ id, icon: Icon, className, type = "text", placeholder, ...props }) {
+    return (
+        <div className="relative">
+            {Icon ? (
+                <span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-muted-foreground">
+                    <Icon className="size-4" />
+                </span>
+            ) : null}
+            <Input
+                id={id}
+                type={type}
+                placeholder={placeholder || resolveFieldPlaceholder(id, type)}
+                className={cx("app-input rounded-lg", Icon ? "pl-11" : "", className)}
+                {...props}
+            />
+        </div>
+    );
+}
+
+function TextareaControl({ id, icon: Icon, className, placeholder, ...props }) {
+    return (
+        <div className="relative">
+            {Icon ? (
+                <span className="pointer-events-none absolute left-3.5 top-4 z-10 text-muted-foreground">
+                    <Icon className="size-4" />
+                </span>
+            ) : null}
+            <Textarea
+                id={id}
+                placeholder={placeholder || resolveFieldPlaceholder(id, "text", "textarea")}
+                className={cx("rounded-lg", Icon ? "pl-11" : "", className)}
+                {...props}
+            />
+        </div>
+    );
+}
+
+function SelectControl({ id, icon: Icon, value, onValueChange, placeholder, children, triggerClassName }) {
+    return (
+        <Select value={value} onValueChange={onValueChange}>
+            <div className="relative">
+                {Icon ? (
+                    <span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-muted-foreground">
+                        <Icon className="size-4" />
+                    </span>
+                ) : null}
+                <SelectTrigger id={id} className={cx("app-input rounded-lg", Icon ? "pl-11" : "", triggerClassName)}>
+                    <SelectValue placeholder={placeholder || resolveFieldPlaceholder(id, "text", "select")} />
+                </SelectTrigger>
+            </div>
+            <SelectContent>{children}</SelectContent>
+        </Select>
+    );
+}
+
+function MoneyControl({ id, icon: Icon = WalletIcon, className, placeholder, ...props }) {
+    return (
+        <InputGroup className={cx("rounded-lg", className)}>
+            <InputGroupAddon className="pl-3">
+                <Icon className="size-4" />
+                <InputGroupText>Rp</InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+                id={id}
+                placeholder={placeholder || resolveFieldPlaceholder(id, "text", "money")}
+                className="pl-1.5"
+                {...props}
+            />
+        </InputGroup>
+    );
+}
+
+function ReadonlyField({ icon: Icon, value, className }) {
+    return (
+        <div className={cx("app-subpanel flex h-11 items-center gap-2.5 rounded-2xl px-3.5 text-sm font-medium text-foreground/88", className)}>
+            {Icon ? <Icon className="size-4 text-muted-foreground" /> : null}
+            <span className="truncate">{value}</span>
+        </div>
+    );
+}
+
+function UploadField({ label, helper, file, onChange, accept = "image/*" }) {
+    const inputId = React.useId();
+
+    return (
+        <div className="app-subpanel rounded-[20px] p-5">
+            <div className="flex flex-col gap-3">
+                <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
+                    {helper ? <p className="mt-1 text-sm text-muted-foreground">{helper}</p> : null}
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <label htmlFor={inputId}>
+                        <input
+                            id={inputId}
+                            type="file"
+                            accept={accept}
+                            className="sr-only"
+                            onChange={(event) => onChange(event.target.files?.[0] || null)}
+                        />
+                        <span className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-[color-mix(in_oklab,var(--surface)_96%,transparent)] px-4 py-3 text-sm font-medium text-foreground transition hover:bg-muted">
+                            <UploadIcon className="size-4" />
+                            Pilih File
+                        </span>
+                    </label>
+                    <div className="min-w-0 text-sm text-muted-foreground">
+                        {file?.name || "Belum ada file dipilih"}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function PermissionCheck({ label, checked, onChange }) {
+    return (
+        <label className="app-panel group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-foreground transition hover:border-primary/25 hover:bg-accent/35">
+            <span className="relative">
+                <input type="checkbox" className="peer sr-only" checked={checked} onChange={onChange} />
+                <span
+                    className={cx(
+                        "flex size-5 items-center justify-center rounded-md border transition peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/25",
+                        checked
+                            ? "border-primary bg-primary text-primary-foreground shadow-[0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]"
+                            : "border-border bg-[color-mix(in_oklab,var(--surface)_98%,transparent)] text-transparent"
+                    )}
+                >
+                    <CheckIcon className="size-3.5" />
+                </span>
+            </span>
+            <span>{label}</span>
+        </label>
+    );
+}
 
 function PageHero({ title, description, actions }) {
     return (
@@ -528,46 +770,54 @@ function DashboardPage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel htmlFor="schedule-title">Judul</FieldLabel>
-                        <Input
-                            id="schedule-title"
-                            value={form.title}
-                            onChange={(event) =>
-                                setForm((current) => ({ ...current, title: event.target.value }))
-                            }
-                        />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="schedule-location">Lokasi</FieldLabel>
-                        <Input
-                            id="schedule-location"
-                            value={form.location}
-                            onChange={(event) =>
-                                setForm((current) => ({ ...current, location: event.target.value }))
-                            }
-                        />
-                    </Field>
-                    <div className="grid gap-4 lg:grid-cols-3">
+                <FormGrid>
+                    <div className={spanClass("full")}>
                         <Field>
-                            <FieldLabel htmlFor="schedule-date">Tanggal</FieldLabel>
-                            <Input
+                            <FieldHeading htmlFor="schedule-title" icon={TypeIcon} label="Judul" />
+                            <TextControl
+                                id="schedule-title"
+                                icon={TypeIcon}
+                                value={form.title}
+                                onChange={(event) =>
+                                    setForm((current) => ({ ...current, title: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("full")}>
+                        <Field>
+                            <FieldHeading htmlFor="schedule-location" icon={MapPinIcon} label="Lokasi" />
+                            <TextControl
+                                id="schedule-location"
+                                icon={MapPinIcon}
+                                value={form.location}
+                                onChange={(event) =>
+                                    setForm((current) => ({ ...current, location: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("third")}>
+                        <Field>
+                            <FieldHeading htmlFor="schedule-date" icon={CalendarDaysIcon} label="Tanggal" />
+                            <TextControl
                                 id="schedule-date"
+                                icon={CalendarDaysIcon}
                                 type="date"
-                                className="w-full"
                                 value={form.date}
                                 onChange={(event) =>
                                     setForm((current) => ({ ...current, date: event.target.value }))
                                 }
                             />
                         </Field>
+                    </div>
+                    <div className={spanClass("third")}>
                         <Field>
-                            <FieldLabel htmlFor="schedule-start">Mulai</FieldLabel>
-                            <Input
+                            <FieldHeading htmlFor="schedule-start" icon={Clock3Icon} label="Mulai" />
+                            <TextControl
                                 id="schedule-start"
+                                icon={Clock3Icon}
                                 type="time"
-                                className="w-full"
                                 value={form.start_time}
                                 onChange={(event) =>
                                     setForm((current) => ({
@@ -577,12 +827,14 @@ function DashboardPage({ bootstrap }) {
                                 }
                             />
                         </Field>
+                    </div>
+                    <div className={spanClass("third")}>
                         <Field>
-                            <FieldLabel htmlFor="schedule-end">Selesai</FieldLabel>
-                            <Input
+                            <FieldHeading htmlFor="schedule-end" icon={Clock3Icon} label="Selesai" />
+                            <TextControl
                                 id="schedule-end"
+                                icon={Clock3Icon}
                                 type="time"
-                                className="w-full"
                                 value={form.end_time}
                                 onChange={(event) =>
                                     setForm((current) => ({ ...current, end_time: event.target.value }))
@@ -590,17 +842,20 @@ function DashboardPage({ bootstrap }) {
                             />
                         </Field>
                     </div>
-                    <Field>
-                        <FieldLabel htmlFor="schedule-note">Catatan</FieldLabel>
-                        <Textarea
-                            id="schedule-note"
-                            value={form.note}
-                            onChange={(event) =>
-                                setForm((current) => ({ ...current, note: event.target.value }))
-                            }
-                        />
-                    </Field>
-                </FieldGroup>
+                    <div className={spanClass("full")}>
+                        <Field>
+                            <FieldHeading htmlFor="schedule-note" icon={FileTextIcon} label="Catatan" />
+                            <TextareaControl
+                                id="schedule-note"
+                                icon={FileTextIcon}
+                                value={form.note}
+                                onChange={(event) =>
+                                    setForm((current) => ({ ...current, note: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                </FormGrid>
             </DialogShell>
         </>
     );
@@ -623,7 +878,10 @@ function ProductPage({ bootstrap }) {
                 ["sku", draft.sku],
                 ["unit", draft.unit],
                 ["unit_content", draft.pcs_per_unit],
-                ["child_product_id", draft.child_product_id],
+                [
+                    "child_product_id",
+                    draft.child_product_id === EMPTY_SELECT_VALUE ? "" : draft.child_product_id,
+                ],
                 ["pcs_per_unit", draft.pcs_per_unit],
                 ["cost_price", parseCurrencyInput(draft.cost_price)],
                 ["sell_price", parseCurrencyInput(draft.sell_price)],
@@ -673,52 +931,116 @@ function ProductPage({ bootstrap }) {
             />
 
             <AdminDataTable
-                title="Daftar produk"
-                description="Sumber data tetap memakai endpoint `/products/data` yang sudah ada."
+                title="Produk"
+                description="Katalog produk, SKU, harga, dan stok aktif."
                 rows={rows}
                 isLoading={loading}
                 searchFields={["name", "product_name", "sku", "unit"]}
+                rowActionMode="action-dialog"
+                getRowTitle={(row) => row.product_name || row.name}
+                getRowSubtitle={(row) => `${row.sku || "-"} · ${row.unit || "-"}`}
+                getRowSummary={(row) => [
+                    { label: "Nama Produk", value: row.product_name || row.name, icon: Package2Icon },
+                    { label: "SKU", value: row.sku || "-", icon: HashIcon },
+                    { label: "Satuan", value: row.unit || "-", icon: BoxesIcon },
+                    { label: "Harga Jual", value: formatCurrency(row.sell_price_value), icon: CircleDollarSignIcon },
+                    { label: "Harga Pokok", value: formatCurrency(row.cost_price_value), icon: WalletIcon },
+                    { label: "Stok", value: String(row.stock ?? 0), icon: BoxesIcon },
+                ]}
+                getRowActions={(row) => [
+                    {
+                        key: "delete",
+                        label: "Hapus",
+                        icon: Trash2Icon,
+                        tone: "destructive",
+                        onSelect: () => setConfirmDelete(row),
+                    },
+                    {
+                        key: "edit",
+                        label: "Edit Produk",
+                        icon: PencilIcon,
+                        tone: "primary",
+                        onSelect: () => {
+                            setDraft(productDraftFromRow(row));
+                            setOpen(true);
+                        },
+                    },
+                ]}
                 columns={[
-                    { key: "name", title: "Nama Produk", sortKey: "name", render: (row) => row.product_name || row.name },
-                    { key: "sku", title: "SKU", sortKey: "sku" },
-                    { key: "unit", title: "Satuan", sortKey: "unit" },
-                    { key: "cost", title: "Harga Pokok", sortKey: "cost_price_value", render: (row) => formatCurrency(row.cost_price_value) },
-                    { key: "sell", title: "Harga Jual", sortKey: "sell_price_value", render: (row) => formatCurrency(row.sell_price_value) },
+                    {
+                        key: "name",
+                        title: "Nama Produk",
+                        icon: Package2Icon,
+                        sortKey: "name",
+                        required: true,
+                        filterable: true,
+                        filterAccessor: (row) => row.product_name || row.name,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={Package2Icon}
+                                value={row.product_name || row.name}
+                                truncate
+                                maxLength={28}
+                                textClassName="font-medium text-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "sku",
+                        title: "SKU",
+                        icon: HashIcon,
+                        sortKey: "sku",
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={HashIcon}
+                                value={row.sku}
+                                textClassName="font-medium tracking-[0.02em] text-muted-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "unit",
+                        title: "Satuan",
+                        icon: BoxesIcon,
+                        sortKey: "unit",
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={BoxesIcon}
+                                value={row.unit}
+                                textClassName="font-medium lowercase text-muted-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "cost",
+                        title: "Harga Pokok",
+                        icon: WalletIcon,
+                        sortKey: "cost_price_value",
+                        render: (row) => (
+                            <MoneyValueCell value={formatCurrency(row.cost_price_value)} tone="balance" />
+                        ),
+                    },
+                    {
+                        key: "sell",
+                        title: "Harga Jual",
+                        icon: CircleDollarSignIcon,
+                        sortKey: "sell_price_value",
+                        render: (row) => (
+                            <MoneyValueCell value={formatCurrency(row.sell_price_value)} tone="balance" />
+                        ),
+                    },
                     {
                         key: "stock",
                         title: "Stok",
+                        icon: BoxesIcon,
                         sortKey: "stock",
+                        filterable: true,
                         render: (row) => (
                             <Badge variant={Number(row.stock) > 0 ? "secondary" : "destructive"}>
                                 {row.stock}
                             </Badge>
-                        ),
-                    },
-                    {
-                        key: "actions",
-                        title: "Aksi",
-                        render: (row) => (
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        setDraft(productDraftFromRow(row));
-                                        setOpen(true);
-                                    }}
-                                >
-                                    <PencilIcon data-icon="inline-start" />
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => setConfirmDelete(row)}
-                                >
-                                    <Trash2Icon data-icon="inline-start" />
-                                    Hapus
-                                </Button>
-                            </div>
                         ),
                     },
                 ]}
@@ -737,22 +1059,26 @@ function ProductPage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <div className="grid gap-4 md:grid-cols-2">
+                <FormGrid>
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel htmlFor="product-name">Nama Produk</FieldLabel>
-                            <Input
+                            <FieldHeading htmlFor="product-name" icon={Package2Icon} label="Nama Produk" />
+                            <TextControl
                                 id="product-name"
+                                icon={Package2Icon}
                                 value={draft.name}
                                 onChange={(event) =>
                                     setDraft((current) => ({ ...current, name: event.target.value }))
                                 }
                             />
                         </Field>
+                    </div>
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel htmlFor="product-sku">SKU</FieldLabel>
-                            <Input
+                            <FieldHeading htmlFor="product-sku" icon={HashIcon} label="SKU" />
+                            <TextControl
                                 id="product-sku"
+                                icon={HashIcon}
                                 value={draft.sku}
                                 onChange={(event) =>
                                     setDraft((current) => ({ ...current, sku: event.target.value }))
@@ -760,49 +1086,51 @@ function ProductPage({ bootstrap }) {
                             />
                         </Field>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel htmlFor="product-unit">Satuan</FieldLabel>
-                            <Input
+                            <FieldHeading htmlFor="product-unit" icon={BoxesIcon} label="Satuan" />
+                            <TextControl
                                 id="product-unit"
+                                icon={BoxesIcon}
                                 value={draft.unit}
                                 onChange={(event) =>
                                     setDraft((current) => ({ ...current, unit: event.target.value }))
                                 }
                             />
                         </Field>
+                    </div>
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel htmlFor="product-child">Produk Isi (PCS)</FieldLabel>
-                            <Select
-                                value={String(draft.child_product_id || "")}
+                            <FieldHeading htmlFor="product-child" icon={Package2Icon} label="Produk Isi (PCS)" />
+                            <SelectControl
+                                id="product-child"
+                                icon={Package2Icon}
+                                value={String(draft.child_product_id || EMPTY_SELECT_VALUE)}
                                 onValueChange={(value) =>
                                     setDraft((current) => ({
                                         ...current,
                                         child_product_id: value,
                                     }))
                                 }
+                                placeholder="Tidak ada"
                             >
-                                <SelectTrigger id="product-child" className="w-full">
-                                    <SelectValue placeholder="Tidak ada" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectItem value="">Tidak ada</SelectItem>
-                                        {bootstrap.pageData.childProducts.map((product) => (
-                                            <SelectItem key={product.id} value={String(product.id)}>
-                                                {product.name} ({product.sku})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                                <SelectGroup>
+                                    <SelectItem value={EMPTY_SELECT_VALUE}>Tidak ada</SelectItem>
+                                    {bootstrap.pageData.childProducts.map((product) => (
+                                        <SelectItem key={product.id} value={String(product.id)}>
+                                            {product.name} ({product.sku})
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectControl>
                         </Field>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className={spanClass("third")}>
                         <Field>
-                            <FieldLabel htmlFor="product-pcs">Jumlah PCS / unit</FieldLabel>
-                            <Input
+                            <FieldHeading htmlFor="product-pcs" icon={BoxesIcon} label="Jumlah PCS / unit" />
+                            <TextControl
                                 id="product-pcs"
+                                icon={BoxesIcon}
                                 type="number"
                                 value={draft.pcs_per_unit}
                                 onChange={(event) =>
@@ -813,54 +1141,53 @@ function ProductPage({ bootstrap }) {
                                 }
                             />
                         </Field>
+                    </div>
+                    <div className={spanClass("third")}>
                         <Field>
-                            <FieldLabel htmlFor="product-cost">Harga Modal</FieldLabel>
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <InputGroupText>Rp</InputGroupText>
-                                </InputGroupAddon>
-                                <InputGroupInput
-                                    id="product-cost"
-                                    value={draft.cost_price}
-                                    onChange={(event) =>
-                                        setDraft((current) => ({
-                                            ...current,
-                                            cost_price: formatCurrencyInput(event.target.value),
-                                        }))
-                                    }
-                                />
-                            </InputGroup>
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor="product-sell">Harga Jual</FieldLabel>
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <InputGroupText>Rp</InputGroupText>
-                                </InputGroupAddon>
-                                <InputGroupInput
-                                    id="product-sell"
-                                    value={draft.sell_price}
-                                    onChange={(event) =>
-                                        setDraft((current) => ({
-                                            ...current,
-                                            sell_price: formatCurrencyInput(event.target.value),
-                                        }))
-                                    }
-                                />
-                            </InputGroup>
+                            <FieldHeading htmlFor="product-cost" icon={WalletIcon} label="Harga Modal" />
+                            <MoneyControl
+                                id="product-cost"
+                                icon={WalletIcon}
+                                value={draft.cost_price}
+                                onChange={(event) =>
+                                    setDraft((current) => ({
+                                        ...current,
+                                        cost_price: formatCurrencyInput(event.target.value),
+                                    }))
+                                }
+                            />
                         </Field>
                     </div>
-                    <Field>
-                        <FieldLabel htmlFor="product-notes">Catatan</FieldLabel>
-                        <Textarea
-                            id="product-notes"
-                            value={draft.notes}
-                            onChange={(event) =>
-                                setDraft((current) => ({ ...current, notes: event.target.value }))
-                            }
-                        />
-                    </Field>
-                </FieldGroup>
+                    <div className={spanClass("third")}>
+                        <Field>
+                            <FieldHeading htmlFor="product-sell" icon={CircleDollarSignIcon} label="Harga Jual" />
+                            <MoneyControl
+                                id="product-sell"
+                                icon={CircleDollarSignIcon}
+                                value={draft.sell_price}
+                                onChange={(event) =>
+                                    setDraft((current) => ({
+                                        ...current,
+                                        sell_price: formatCurrencyInput(event.target.value),
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("full")}>
+                        <Field>
+                            <FieldHeading htmlFor="product-notes" icon={FileTextIcon} label="Catatan" />
+                            <TextareaControl
+                                id="product-notes"
+                                icon={FileTextIcon}
+                                value={draft.notes}
+                                onChange={(event) =>
+                                    setDraft((current) => ({ ...current, notes: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                </FormGrid>
             </DialogShell>
 
             <AlertDialog open={Boolean(confirmDelete)} onOpenChange={() => setConfirmDelete(null)}>
@@ -930,20 +1257,134 @@ function TransactionPage({ bootstrap, mode }) {
     const columns =
         mode === "sale"
             ? [
-                  { key: "invoice_no", title: "Invoice", sortKey: "invoice_no", render: (row) => <span>{stripHtml(row.invoice_no)}</span> },
-                  { key: "sale_date", title: "Tanggal", sortKey: "sale_date", render: (row) => stripHtml(row.sale_date) },
-                  { key: "customer", title: "Pelanggan", sortKey: "customer" },
-                  { key: "total", title: "Total", render: (row) => stripHtml(row.total) },
-                  { key: "paid", title: "Terbayar", render: (row) => stripHtml(row.paid) },
-                  { key: "items_count", title: "Item", render: (row) => stripHtml(row.items_count) },
+                  {
+                      key: "invoice_no",
+                      title: "Invoice",
+                      icon: FileCode2Icon,
+                      sortKey: "invoice_no",
+                      required: true,
+                      filterable: true,
+                      render: (row) => (
+                          <TableMetaCell
+                              icon={FileCode2Icon}
+                              value={row.invoice_no}
+                              truncate
+                              maxLength={28}
+                              textClassName="font-medium text-foreground"
+                          />
+                      ),
+                  },
+                  {
+                      key: "sale_date",
+                      title: "Tanggal",
+                      icon: CalendarDaysIcon,
+                      sortKey: "sale_date",
+                      filterable: true,
+                      render: (row) => (
+                          <TableMetaCell icon={CalendarDaysIcon} value={row.sale_date} textClassName="font-medium" />
+                      ),
+                  },
+                  {
+                      key: "customer",
+                      title: "Pelanggan",
+                      icon: UserRoundIcon,
+                      sortKey: "customer",
+                      filterable: true,
+                      render: (row) => (
+                          <TableMetaCell
+                              icon={UserRoundIcon}
+                              value={row.customer}
+                              truncate
+                              maxLength={24}
+                              textClassName="font-medium text-foreground"
+                          />
+                      ),
+                  },
+                  {
+                      key: "total",
+                      title: "Total",
+                      icon: WalletIcon,
+                      render: (row) => <MoneyValueCell value={row.total} tone="balance" />,
+                  },
+                  {
+                      key: "paid",
+                      title: "Terbayar",
+                      icon: WalletCardsIcon,
+                      render: (row) => <MoneyValueCell value={row.paid} tone="credit" />,
+                  },
+                  {
+                      key: "items_count",
+                      title: "Item",
+                      icon: BoxesIcon,
+                      render: (row) => (
+                          <TableMetaCell icon={BoxesIcon} value={row.items_count} textClassName="text-[13px]" />
+                      ),
+                  },
               ]
             : [
-                  { key: "reference_no", title: "Referensi", sortKey: "reference_no", render: (row) => stripHtml(row.reference_no) },
-                  { key: "purchase_date", title: "Tanggal", sortKey: "purchase_date", render: (row) => stripHtml(row.purchase_date) },
-                  { key: "supplier", title: "Supplier", sortKey: "supplier" },
-                  { key: "total", title: "Total", render: (row) => stripHtml(row.total) },
-                  { key: "paid", title: "Terbayar", render: (row) => stripHtml(row.paid) },
-                  { key: "items_count", title: "Item", render: (row) => stripHtml(row.items_count) },
+                  {
+                      key: "reference_no",
+                      title: "Referensi",
+                      icon: ReceiptTextIcon,
+                      sortKey: "reference_no",
+                      required: true,
+                      filterable: true,
+                      render: (row) => (
+                          <TableMetaCell
+                              icon={ReceiptTextIcon}
+                              value={row.reference_no}
+                              truncate
+                              maxLength={28}
+                              textClassName="font-medium text-foreground"
+                          />
+                      ),
+                  },
+                  {
+                      key: "purchase_date",
+                      title: "Tanggal",
+                      icon: CalendarDaysIcon,
+                      sortKey: "purchase_date",
+                      filterable: true,
+                      render: (row) => (
+                          <TableMetaCell icon={CalendarDaysIcon} value={row.purchase_date} textClassName="font-medium" />
+                      ),
+                  },
+                  {
+                      key: "supplier",
+                      title: "Supplier",
+                      icon: Building2Icon,
+                      sortKey: "supplier",
+                      filterable: true,
+                      render: (row) => (
+                          <TableMetaCell
+                              icon={Building2Icon}
+                              value={row.supplier}
+                              truncate
+                              maxLength={24}
+                              textClassName="font-medium text-foreground"
+                          />
+                      ),
+                  },
+                  {
+                      key: "total",
+                      title: "Total",
+                      icon: WalletIcon,
+                      render: (row) => <MoneyValueCell value={row.total} tone="balance" />,
+                  },
+                  {
+                      key: "paid",
+                      title: "Terbayar",
+                      icon: WalletCardsIcon,
+                      render: (row) => <MoneyValueCell value={row.paid} tone="credit" />,
+                  },
+                  {
+                      key: "items_count",
+                      title: "Item",
+                      icon: BoxesIcon,
+                      render: (row) => (
+                          <TableMetaCell icon={BoxesIcon} value={row.items_count} textClassName="text-[13px]" />
+                      ),
+                  },
               ];
 
     const total = draft.items.reduce(
@@ -966,14 +1407,44 @@ function TransactionPage({ bootstrap, mode }) {
             />
 
             <AdminDataTable
-                title={mode === "sale" ? "Daftar penjualan" : "Daftar pembelian"}
-                description="List tetap memakai endpoint datatable existing."
+                title={mode === "sale" ? "Penjualan" : "Pembelian"}
+                description={mode === "sale" ? "Riwayat invoice dan pembayaran." : "Riwayat referensi dan pembayaran pembelian."}
                 rows={rows}
                 isLoading={loading}
                 searchFields={
                     mode === "sale"
                         ? ["invoice_no", "customer", "sale_date"]
                         : ["reference_no", "supplier", "purchase_date"]
+                }
+                rowActionMode="quick-detail"
+                getRowTitle={(row) =>
+                    mode === "sale" ? stripHtml(row.invoice_no) : stripHtml(row.reference_no)
+                }
+                getRowSubtitle={(row) =>
+                    mode === "sale"
+                        ? `${stripHtml(row.sale_date)} · ${stripHtml(row.customer || "-")}`
+                        : `${stripHtml(row.purchase_date)} · ${stripHtml(row.supplier || "-")}`
+                }
+                getRowSummary={(row) =>
+                    mode === "sale"
+                        ? [
+                              { label: "Invoice", value: stripHtml(row.invoice_no), icon: FileCode2Icon },
+                              { label: "Tanggal", value: stripHtml(row.sale_date), icon: CalendarDaysIcon },
+                              { label: "Pelanggan", value: stripHtml(row.customer || "-"), icon: UserRoundIcon },
+                              { label: "Total", value: stripHtml(row.total), icon: WalletIcon },
+                              { label: "Terbayar", value: stripHtml(row.paid), icon: WalletCardsIcon },
+                              { label: "Item", value: stripHtml(row.items_count), icon: BoxesIcon },
+                              { label: "Catatan", value: stripHtml(row.note || "-"), icon: FileTextIcon },
+                          ]
+                        : [
+                              { label: "Referensi", value: stripHtml(row.reference_no), icon: ReceiptTextIcon },
+                              { label: "Tanggal", value: stripHtml(row.purchase_date), icon: CalendarDaysIcon },
+                              { label: "Supplier", value: stripHtml(row.supplier || "-"), icon: Building2Icon },
+                              { label: "Total", value: stripHtml(row.total), icon: WalletIcon },
+                              { label: "Terbayar", value: stripHtml(row.paid), icon: WalletCardsIcon },
+                              { label: "Item", value: stripHtml(row.items_count), icon: BoxesIcon },
+                              { label: "Catatan", value: stripHtml(row.note || "-"), icon: FileTextIcon },
+                          ]
                 }
                 columns={columns}
             />
@@ -991,55 +1462,68 @@ function TransactionPage({ bootstrap, mode }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <div className="grid gap-4 md:grid-cols-3">
-                        <Field>
-                            <FieldLabel htmlFor={`${mode}-number`}>
-                                {mode === "sale" ? "Invoice" : "Referensi"}
-                            </FieldLabel>
-                            <Input
-                                id={`${mode}-number`}
-                                value={mode === "sale" ? draft.invoice_no : draft.reference_no}
-                                onChange={(event) =>
-                                    setDraft((current) => ({
-                                        ...current,
-                                        [mode === "sale" ? "invoice_no" : "reference_no"]:
-                                            event.target.value,
-                                    }))
-                                }
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${mode}-date`}>Tanggal</FieldLabel>
-                            <Input
-                                id={`${mode}-date`}
-                                type="date"
-                                value={mode === "sale" ? draft.sale_date : draft.purchase_date}
-                                onChange={(event) =>
-                                    setDraft((current) => ({
-                                        ...current,
-                                        [mode === "sale" ? "sale_date" : "purchase_date"]:
-                                            event.target.value,
-                                    }))
-                                }
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel htmlFor={`${mode}-partner`}>
-                                {mode === "sale" ? "Pelanggan" : "Supplier"}
-                            </FieldLabel>
-                            <Input
-                                id={`${mode}-partner`}
-                                value={draft.partner}
-                                onChange={(event) =>
-                                    setDraft((current) => ({
-                                        ...current,
-                                        partner: event.target.value,
-                                    }))
-                                }
-                            />
-                        </Field>
-                    </div>
+                <div className="flex flex-col gap-5">
+                    <FormGrid>
+                        <div className={spanClass("third")}>
+                            <Field>
+                                <FieldHeading
+                                    htmlFor={`${mode}-number`}
+                                    icon={mode === "sale" ? FileCode2Icon : ReceiptTextIcon}
+                                    label={mode === "sale" ? "Invoice" : "Referensi"}
+                                />
+                                <TextControl
+                                    id={`${mode}-number`}
+                                    icon={mode === "sale" ? FileCode2Icon : ReceiptTextIcon}
+                                    value={mode === "sale" ? draft.invoice_no : draft.reference_no}
+                                    onChange={(event) =>
+                                        setDraft((current) => ({
+                                            ...current,
+                                            [mode === "sale" ? "invoice_no" : "reference_no"]:
+                                                event.target.value,
+                                        }))
+                                    }
+                                />
+                            </Field>
+                        </div>
+                        <div className={spanClass("third")}>
+                            <Field>
+                                <FieldHeading htmlFor={`${mode}-date`} icon={CalendarDaysIcon} label="Tanggal" />
+                                <TextControl
+                                    id={`${mode}-date`}
+                                    icon={CalendarDaysIcon}
+                                    type="date"
+                                    value={mode === "sale" ? draft.sale_date : draft.purchase_date}
+                                    onChange={(event) =>
+                                        setDraft((current) => ({
+                                            ...current,
+                                            [mode === "sale" ? "sale_date" : "purchase_date"]:
+                                                event.target.value,
+                                        }))
+                                    }
+                                />
+                            </Field>
+                        </div>
+                        <div className={spanClass("third")}>
+                            <Field>
+                                <FieldHeading
+                                    htmlFor={`${mode}-partner`}
+                                    icon={UserRoundIcon}
+                                    label={mode === "sale" ? "Pelanggan" : "Supplier"}
+                                />
+                                <TextControl
+                                    id={`${mode}-partner`}
+                                    icon={UserRoundIcon}
+                                    value={draft.partner}
+                                    onChange={(event) =>
+                                        setDraft((current) => ({
+                                            ...current,
+                                            partner: event.target.value,
+                                        }))
+                                    }
+                                />
+                            </Field>
+                        </div>
+                    </FormGrid>
 
                     <div className={SUBPANEL_CLASS}>
                         <div className="mb-4 flex items-center justify-between">
@@ -1067,123 +1551,142 @@ function TransactionPage({ bootstrap, mode }) {
                             {draft.items.map((item, index) => (
                                 <div
                                     key={`item-${index}`}
-                                    className="app-panel grid gap-3 rounded-[20px] p-4 md:grid-cols-[2fr_100px_180px_120px]"
+                                    className="app-panel flex flex-col gap-4 rounded-[20px] p-4"
                                 >
-                                    <Field>
-                                        <FieldLabel>Produk</FieldLabel>
-                                        <Select
-                                            value={String(item.product_id)}
-                                            onValueChange={(value) => {
-                                                const product = pageData.products.find(
-                                                    (entry) => String(entry.id) === value
-                                                );
-                                                setDraft((current) => ({
-                                                    ...current,
-                                                    items: current.items.map((currentItem, currentIndex) =>
-                                                        currentIndex === index
-                                                            ? {
-                                                                  ...currentItem,
-                                                                  product_id: value,
-                                                                  unit: product?.unit || "",
-                                                                  price: formatCurrencyInput(
-                                                                      String(
-                                                                          mode === "sale"
-                                                                              ? product?.sell_price || 0
-                                                                              : product?.cost_price || 0
-                                                                      )
-                                                                  ),
-                                                              }
-                                                            : currentItem
-                                                    ),
-                                                }));
-                                            }}
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Pilih produk" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {pageData.products.map((product) => (
-                                                        <SelectItem key={product.id} value={String(product.id)}>
-                                                            {product.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Qty</FieldLabel>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            value={item.qty}
-                                            onChange={(event) =>
-                                                updateItemDraft(setDraft, index, "qty", event.target.value)
-                                            }
-                                        />
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>
-                                            {mode === "sale" ? "Harga Jual" : "Harga Beli"}
-                                        </FieldLabel>
-                                        <InputGroup>
-                                            <InputGroupAddon>
-                                                <InputGroupText>Rp</InputGroupText>
-                                            </InputGroupAddon>
-                                            <InputGroupInput
-                                                value={item.price}
-                                                onChange={(event) =>
-                                                    updateItemDraft(
-                                                        setDraft,
-                                                        index,
-                                                        "price",
-                                                        formatCurrencyInput(event.target.value)
-                                                    )
-                                                }
-                                            />
-                                        </InputGroup>
-                                    </Field>
-                                    <Field>
-                                        <FieldLabel>Subtotal</FieldLabel>
-                                        <div className="app-subpanel flex h-8 items-center rounded-lg px-3 text-sm font-medium text-foreground/85">
-                                            {formatCurrency(
-                                                Number(item.qty || 0) *
-                                                    Number(parseCurrencyInput(item.price) || 0)
-                                            )}
+                                    <div className="flex flex-col md:flex-row gap-3 md:items-end">
+                                        <div className="flex-1 min-w-0">
+                                            <Field>
+                                                <FieldHeading icon={Package2Icon} label="Produk" />
+                                                <SelectControl
+                                                    icon={Package2Icon}
+                                                    value={String(item.product_id)}
+                                                    onValueChange={(value) => {
+                                                        const product = pageData.products.find(
+                                                            (entry) => String(entry.id) === value
+                                                        );
+                                                        setDraft((current) => ({
+                                                            ...current,
+                                                            items: current.items.map((currentItem, currentIndex) =>
+                                                                currentIndex === index
+                                                                    ? {
+                                                                          ...currentItem,
+                                                                          product_id: value,
+                                                                          unit: product?.unit || "",
+                                                                          price: formatCurrencyInput(
+                                                                              String(
+                                                                                  Math.floor(
+                                                                                      Number(
+                                                                                          mode === "sale"
+                                                                                              ? product?.sell_price || 0
+                                                                                              : product?.cost_price || 0
+                                                                                      )
+                                                                                  )
+                                                                              )
+                                                                          ),
+                                                                      }
+                                                                    : currentItem
+                                                            ),
+                                                        }));
+                                                    }}
+                                                    placeholder="Pilih produk"
+                                                    triggerClassName="!h-[44px]"
+                                                >
+                                                    <SelectGroup>
+                                                        {pageData.products.map((product) => (
+                                                            <SelectItem key={product.id} value={String(product.id)}>
+                                                                {product.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectGroup>
+                                                </SelectControl>
+                                            </Field>
                                         </div>
-                                    </Field>
-                                    <div className="md:col-span-4">
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() =>
-                                                setDraft((current) => ({
-                                                    ...current,
-                                                    items:
-                                                        current.items.length === 1
-                                                            ? current.items
-                                                            : current.items.filter((_, currentIndex) => currentIndex !== index),
-                                                }))
-                                            }
-                                        >
-                                            <Trash2Icon data-icon="inline-start" />
-                                            Hapus baris
-                                        </Button>
+                                        <div className="w-full md:w-[150px] shrink-0">
+                                            <Field>
+                                                <FieldHeading icon={BoxesIcon} label="Qty" />
+                                                <TextControl
+                                                    icon={BoxesIcon}
+                                                    type="number"
+                                                    min="1"
+                                                    value={item.qty}
+                                                    className="!h-[44px]"
+                                                    onChange={(event) =>
+                                                        updateItemDraft(setDraft, index, "qty", event.target.value)
+                                                    }
+                                                />
+                                            </Field>
+                                        </div>
+                                        <div className="shrink-0 pb-0.5">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-destructive hover:bg-destructive/15 hover:text-destructive w-full md:w-11 !h-[44px]"
+                                                onClick={() =>
+                                                    setDraft((current) => ({
+                                                        ...current,
+                                                        items:
+                                                            current.items.length === 1
+                                                                ? current.items
+                                                                : current.items.filter((_, currentIndex) => currentIndex !== index),
+                                                    }))
+                                                }
+                                            >
+                                                <Trash2Icon />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col md:flex-row gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <Field>
+                                                <FieldHeading
+                                                    icon={mode === "sale" ? CircleDollarSignIcon : WalletIcon}
+                                                    label={mode === "sale" ? "Harga Jual" : "Harga Beli"}
+                                                />
+                                                <MoneyControl
+                                                    icon={mode === "sale" ? CircleDollarSignIcon : WalletIcon}
+                                                    value={item.price}
+                                                    className="!h-[44px]"
+                                                    onChange={(event) =>
+                                                        updateItemDraft(
+                                                            setDraft,
+                                                            index,
+                                                            "price",
+                                                            formatCurrencyInput(event.target.value)
+                                                        )
+                                                    }
+                                                />
+                                            </Field>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <Field>
+                                                <FieldHeading icon={ReceiptTextIcon} label="Subtotal" />
+                                                <ReadonlyField
+                                                    icon={ReceiptTextIcon}
+                                                    className="!h-[44px]"
+                                                    value={formatCurrency(
+                                                        Number(item.qty || 0) *
+                                                            Number(parseCurrencyInput(item.price) || 0)
+                                                    )}
+                                                />
+                                            </Field>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <Field>
-                            <FieldLabel>{mode === "sale" ? "Dibayar" : "Terbayar"}</FieldLabel>
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <InputGroupText>Rp</InputGroupText>
-                                </InputGroupAddon>
-                                <InputGroupInput
+                    <FormGrid>
+                        <div className={spanClass("half")}>
+                            <Field>
+                                <FieldHeading
+                                    htmlFor={`${mode}-paid`}
+                                    icon={WalletIcon}
+                                    label={mode === "sale" ? "Dibayar" : "Terbayar"}
+                                />
+                                <MoneyControl
+                                    id={`${mode}-paid`}
+                                    icon={WalletIcon}
                                     value={draft.paid}
                                     onChange={(event) =>
                                         setDraft((current) => ({
@@ -1192,23 +1695,22 @@ function TransactionPage({ bootstrap, mode }) {
                                         }))
                                     }
                                 />
-                            </InputGroup>
-                        </Field>
-                        <Field>
-                            <FieldLabel>Akun kas</FieldLabel>
-                            <Select
-                                value={String(draft.cash_account_id)}
-                                onValueChange={(value) =>
-                                    setDraft((current) => ({
-                                        ...current,
-                                        cash_account_id: value,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Pilih akun kas" />
-                                </SelectTrigger>
-                                <SelectContent>
+                            </Field>
+                        </div>
+                        <div className={spanClass("half")}>
+                            <Field>
+                                <FieldHeading icon={LandmarkIcon} label="Akun kas" />
+                                <SelectControl
+                                    icon={LandmarkIcon}
+                                    value={String(draft.cash_account_id)}
+                                    onValueChange={(value) =>
+                                        setDraft((current) => ({
+                                            ...current,
+                                            cash_account_id: value,
+                                        }))
+                                    }
+                                    placeholder="Pilih akun kas"
+                                >
                                     <SelectGroup>
                                         {pageData.cashAccounts.map((account) => (
                                             <SelectItem key={account.id} value={String(account.id)}>
@@ -1216,15 +1718,15 @@ function TransactionPage({ bootstrap, mode }) {
                                             </SelectItem>
                                         ))}
                                     </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                    </div>
+                                </SelectControl>
+                            </Field>
+                        </div>
+                    </FormGrid>
 
                     <div className="app-soft-accent rounded-[20px] px-4 py-3 text-sm font-medium">
                         Total transaksi: {formatCurrency(total)}
                     </div>
-                </FieldGroup>
+                </div>
             </DialogShell>
         </>
     );
@@ -1271,26 +1773,65 @@ function CashAccountsPage({ bootstrap }) {
             />
 
             <AdminDataTable
-                title="Daftar akun kas"
-                description="Data diambil dari endpoint `/cash` dengan mode AJAX."
+                title="Akun kas"
+                description="Saldo dan kode akun kas aktif."
                 rows={rows}
                 isLoading={loading}
                 searchFields={["name", "code"]}
-                columns={[
-                    { key: "name", title: "Nama Akun", sortKey: "name" },
-                    { key: "code", title: "Kode", sortKey: "code" },
-                    { key: "balance", title: "Saldo", render: (row) => <span>{stripHtml(row.balance)}</span> },
+                rowActionMode="action-dialog"
+                getRowTitle={(row) => stripHtml(row.name || "-")}
+                getRowSubtitle={(row) => stripHtml(row.code || "-")}
+                getRowSummary={(row) => [
+                    { label: "Nama Akun", value: stripHtml(row.name || "-"), icon: LandmarkIcon },
+                    { label: "Kode", value: stripHtml(row.code || "-"), icon: HashIcon },
+                    { label: "Saldo", value: stripHtml(row.balance || "-"), icon: WalletIcon },
+                ]}
+                getRowActions={(row) => [
                     {
-                        key: "action",
-                        title: "Aksi",
+                        key: "detail",
+                        label: "Lihat Detail",
+                        icon: EyeIcon,
+                        tone: "primary",
+                        href: `/cash/${row.id}/transactions`,
+                    },
+                ]}
+                columns={[
+                    {
+                        key: "name",
+                        title: "Nama Akun",
+                        icon: LandmarkIcon,
+                        sortKey: "name",
+                        required: true,
+                        filterable: true,
                         render: (row) => (
-                            <Button variant="outline" size="sm" asChild>
-                                <a href={`/cash/${row.id}/transactions`}>
-                                    <EyeIcon data-icon="inline-start" />
-                                    Detail
-                                </a>
-                            </Button>
+                            <TableMetaCell
+                                icon={LandmarkIcon}
+                                value={row.name}
+                                truncate
+                                maxLength={24}
+                                textClassName="font-medium text-foreground"
+                            />
                         ),
+                    },
+                    {
+                        key: "code",
+                        title: "Kode",
+                        icon: HashIcon,
+                        sortKey: "code",
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={HashIcon}
+                                value={row.code}
+                                textClassName="font-medium tracking-[0.02em] text-muted-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "balance",
+                        title: "Saldo",
+                        icon: WalletIcon,
+                        render: (row) => <MoneyValueCell value={row.balance} tone="balance" />,
                     },
                 ]}
             />
@@ -1308,35 +1849,39 @@ function CashAccountsPage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel htmlFor="cash-name">Nama akun</FieldLabel>
-                        <Input
-                            id="cash-name"
-                            value={draft.name}
-                            onChange={(event) =>
-                                setDraft((current) => ({ ...current, name: event.target.value }))
-                            }
-                        />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="cash-code">Kode akun</FieldLabel>
-                        <Input
-                            id="cash-code"
-                            value={draft.code}
-                            onChange={(event) =>
-                                setDraft((current) => ({ ...current, code: event.target.value }))
-                            }
-                        />
-                    </Field>
-                    <Field>
-                        <FieldLabel htmlFor="cash-balance">Saldo awal</FieldLabel>
-                        <InputGroup>
-                            <InputGroupAddon>
-                                <InputGroupText>Rp</InputGroupText>
-                            </InputGroupAddon>
-                            <InputGroupInput
+                <FormGrid>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading htmlFor="cash-name" icon={LandmarkIcon} label="Nama akun" />
+                            <TextControl
+                                id="cash-name"
+                                icon={LandmarkIcon}
+                                value={draft.name}
+                                onChange={(event) =>
+                                    setDraft((current) => ({ ...current, name: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading htmlFor="cash-code" icon={HashIcon} label="Kode akun" />
+                            <TextControl
+                                id="cash-code"
+                                icon={HashIcon}
+                                value={draft.code}
+                                onChange={(event) =>
+                                    setDraft((current) => ({ ...current, code: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("full")}>
+                        <Field>
+                            <FieldHeading htmlFor="cash-balance" icon={WalletIcon} label="Saldo awal" />
+                            <MoneyControl
                                 id="cash-balance"
+                                icon={WalletIcon}
                                 value={draft.balance}
                                 onChange={(event) =>
                                     setDraft((current) => ({
@@ -1345,9 +1890,9 @@ function CashAccountsPage({ bootstrap }) {
                                     }))
                                 }
                             />
-                        </InputGroup>
-                    </Field>
-                </FieldGroup>
+                        </Field>
+                    </div>
+                </FormGrid>
             </DialogShell>
         </>
     );
@@ -1407,18 +1952,94 @@ function CashTransactionsPage({ bootstrap }) {
             />
 
             <AdminDataTable
-                title="Riwayat transaksi"
-                description="Debit, kredit, dan saldo berjalan akun kas."
+                title="Transaksi kas"
+                description="Debit, kredit, dan saldo berjalan."
                 rows={rows}
                 isLoading={loading}
                 searchFields={["description", "reference", "created_at"]}
+                rowActionMode="quick-detail"
+                getRowTitle={(row) => stripHtml(row.description || row.reference || "Transaksi kas")}
+                getRowSubtitle={(row) => `${stripHtml(row.created_at)} · ${stripHtml(row.type_label || "-")}`}
+                getRowSummary={(row) => [
+                    { label: "Tanggal", value: stripHtml(row.created_at), icon: CalendarDaysIcon },
+                    {
+                        label: "Tipe",
+                        value: <TransactionTypeBadge value={row.type_label || "-"} />,
+                        icon: CircleDotIcon,
+                        tone: getTransactionTone(row.type_label),
+                    },
+                    {
+                        label: "Nominal",
+                        value: <MoneyValueCell value={row.amount || "-"} tone={getTransactionTone(row.type_label)} />,
+                        icon: WalletIcon,
+                        tone: getTransactionTone(row.type_label),
+                    },
+                    {
+                        label: "Saldo Setelah",
+                        value: <MoneyValueCell value={row.saldo_after || "-"} tone="balance" />,
+                        icon: WalletCardsIcon,
+                        tone: "balance",
+                    },
+                    { label: "Referensi", value: stripHtml(row.reference || "-"), icon: HashIcon },
+                    { label: "Deskripsi", value: stripHtml(row.description || "-"), icon: FileTextIcon },
+                ]}
                 columns={[
-                    { key: "created_at", title: "Tanggal", render: (row) => stripHtml(row.created_at) },
-                    { key: "type_label", title: "Tipe", render: (row) => stripHtml(row.type_label) },
-                    { key: "description", title: "Deskripsi" },
-                    { key: "amount", title: "Nominal", render: (row) => stripHtml(row.amount) },
-                    { key: "saldo_after", title: "Saldo Setelah", render: (row) => stripHtml(row.saldo_after) },
-                    { key: "reference", title: "Referensi" },
+                    {
+                        key: "created_at",
+                        title: "Tanggal",
+                        icon: CalendarDaysIcon,
+                        filterable: true,
+                        render: (row) => stripHtml(row.created_at),
+                    },
+                    {
+                        key: "type_label",
+                        title: "Tipe",
+                        icon: CircleDotIcon,
+                        filterable: true,
+                        render: (row) => <TransactionTypeBadge value={row.type_label} />,
+                    },
+                    {
+                        key: "description",
+                        title: "Deskripsi",
+                        icon: FileTextIcon,
+                        required: true,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={FileTextIcon}
+                                value={row.description}
+                                truncate
+                                maxLength={20}
+                                textClassName="text-[13px]"
+                            />
+                        ),
+                    },
+                    {
+                        key: "amount",
+                        title: "Nominal",
+                        icon: WalletIcon,
+                        render: (row) => (
+                            <MoneyValueCell
+                                value={row.amount}
+                                tone={getTransactionTone(row.type_label)}
+                            />
+                        ),
+                    },
+                    {
+                        key: "saldo_after",
+                        title: "Saldo Setelah",
+                        icon: WalletCardsIcon,
+                        render: (row) => <MoneyValueCell value={row.saldo_after} tone="balance" />,
+                    },
+                    {
+                        key: "reference",
+                        title: "Referensi",
+                        icon: HashIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell icon={HashIcon} value={row.reference} textClassName="text-[13px]" />
+                        ),
+                    },
                 ]}
             />
 
@@ -1435,83 +2056,80 @@ function CashTransactionsPage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <div className="grid gap-4 md:grid-cols-2">
+                <FormGrid>
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel>Tipe</FieldLabel>
-                            <Select
+                            <FieldHeading icon={CircleDotIcon} label="Tipe" />
+                            <SelectControl
+                                icon={CircleDotIcon}
                                 value={draft.type}
                                 onValueChange={(value) =>
                                     setDraft((current) => ({ ...current, type: value }))
                                 }
                             >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectItem value="in">Masuk</SelectItem>
-                                        <SelectItem value="out">Keluar</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </Field>
-                        <Field>
-                            <FieldLabel>Nominal</FieldLabel>
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <InputGroupText>Rp</InputGroupText>
-                                </InputGroupAddon>
-                                <InputGroupInput
-                                    value={draft.amount}
-                                    onChange={(event) =>
-                                        setDraft((current) => ({
-                                            ...current,
-                                            amount: formatCurrencyInput(event.target.value),
-                                        }))
-                                    }
-                                />
-                            </InputGroup>
+                                <SelectGroup>
+                                    <SelectItem value="in">Masuk</SelectItem>
+                                    <SelectItem value="out">Keluar</SelectItem>
+                                </SelectGroup>
+                            </SelectControl>
                         </Field>
                     </div>
-                    <Field>
-                        <FieldLabel>Deskripsi</FieldLabel>
-                        <Textarea
-                            value={draft.description}
-                            onChange={(event) =>
-                                setDraft((current) => ({
-                                    ...current,
-                                    description: event.target.value,
-                                }))
-                            }
-                        />
-                    </Field>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel>Kode referensi</FieldLabel>
-                            <Select
+                            <FieldHeading icon={WalletIcon} label="Nominal" />
+                            <MoneyControl
+                                icon={WalletIcon}
+                                value={draft.amount}
+                                onChange={(event) =>
+                                    setDraft((current) => ({
+                                        ...current,
+                                        amount: formatCurrencyInput(event.target.value),
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("full")}>
+                        <Field>
+                            <FieldHeading icon={FileTextIcon} label="Deskripsi" />
+                            <TextareaControl
+                                icon={FileTextIcon}
+                                value={draft.description}
+                                onChange={(event) =>
+                                    setDraft((current) => ({
+                                        ...current,
+                                        description: event.target.value,
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={BadgeInfoIcon} label="Kode referensi" />
+                            <SelectControl
+                                icon={BadgeInfoIcon}
                                 value={draft.refCode}
                                 onValueChange={(value) =>
                                     setDraft((current) => ({ ...current, refCode: value }))
                                 }
+                                placeholder="Pilih kode"
                             >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Pilih kode" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {["PUR", "GTG", "IUR", "BUY", "SELL"].map((code) => (
-                                            <SelectItem key={code} value={code}>
-                                                {code}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                                <SelectGroup>
+                                    {["PUR", "GTG", "IUR", "BUY", "SELL"].map((code) => (
+                                        <SelectItem key={code} value={code}>
+                                            {code}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectControl>
                         </Field>
+                    </div>
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel>Nilai referensi</FieldLabel>
-                            <Input
+                            <FieldHeading icon={HashIcon} label="Nilai referensi" />
+                            <TextControl
+                                icon={HashIcon}
                                 value={draft.refValue}
                                 onChange={(event) =>
                                     setDraft((current) => ({
@@ -1528,7 +2146,7 @@ function CashTransactionsPage({ bootstrap }) {
                             </FieldDescription>
                         </Field>
                     </div>
-                </FieldGroup>
+                </FormGrid>
             </DialogShell>
         </>
     );
@@ -1604,50 +2222,126 @@ function ProjectTargetsPage({ bootstrap }) {
             />
 
             <AdminDataTable
-                title="Daftar target"
-                description="Menggunakan endpoint proyek yang ada."
+                title="Target proyek"
+                description="Progress dana dan status target aktif."
                 rows={rows}
                 isLoading={loading}
                 searchFields={["name", "status"]}
-                columns={[
-                    { key: "name", title: "Nama Proyek", sortKey: "name" },
-                    { key: "target_amount", title: "Target Dana", render: (row) => formatCurrency(row.target_amount) },
-                    { key: "target_date", title: "Target", render: (row) => isoToIndoDate(row.target_date) },
-                    { key: "cash_account_name", title: "Kas", render: (row) => row.cash_account?.name || row.cash_account_name },
-                    { key: "achievement", title: "Pencapaian", render: (row) => <Badge variant="secondary">{row.achievement}%</Badge> },
-                    { key: "status", title: "Status", render: (row) => <Badge>{row.status}</Badge> },
+                rowActionMode="action-dialog"
+                getRowTitle={(row) => stripHtml(row.name || "-")}
+                getRowSubtitle={(row) => `${isoToIndoDate(row.target_date)} · ${stripHtml(row.status || "-")}`}
+                getRowSummary={(row) => [
+                    { label: "Nama Proyek", value: stripHtml(row.name || "-"), icon: TargetIcon },
+                    { label: "Target Dana", value: formatCurrency(row.target_amount), icon: WalletIcon },
+                    { label: "Target", value: isoToIndoDate(row.target_date), icon: CalendarDaysIcon },
                     {
-                        key: "actions",
-                        title: "Aksi",
+                        label: "Kas",
+                        value: stripHtml(row.cash_account?.name || row.cash_account_name || "-"),
+                        icon: LandmarkIcon,
+                    },
+                    { label: "Pencapaian", value: `${row.achievement}%`, icon: BadgeInfoIcon },
+                    { label: "Status", value: stripHtml(row.status || "-"), icon: BadgeInfoIcon },
+                ]}
+                getRowActions={(row) => [
+                    {
+                        key: "delete",
+                        label: "Hapus",
+                        icon: Trash2Icon,
+                        tone: "destructive",
+                        onSelect: () => setConfirmDelete(row),
+                    },
+                    {
+                        key: "edit",
+                        label: "Edit Target",
+                        icon: PencilIcon,
+                        tone: "primary",
+                        onSelect: () => {
+                            setDraft({
+                                id: row.id,
+                                name: row.name,
+                                target_amount: formatCurrencyInput(row.target_amount),
+                                target_date: row.target_date,
+                                cash_account_id: String(row.cash_account_id || row.cash_account?.id || ""),
+                                notes: row.notes || "",
+                            });
+                            setOpen(true);
+                        },
+                    },
+                ]}
+                columns={[
+                    {
+                        key: "name",
+                        title: "Nama Proyek",
+                        icon: TargetIcon,
+                        sortKey: "name",
+                        required: true,
+                        filterable: true,
                         render: (row) => (
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        setDraft({
-                                            id: row.id,
-                                            name: row.name,
-                                            target_amount: formatCurrencyInput(row.target_amount),
-                                            target_date: row.target_date,
-                                            cash_account_id: String(row.cash_account_id || row.cash_account?.id || ""),
-                                            notes: row.notes || "",
-                                        });
-                                        setOpen(true);
-                                    }}
-                                >
-                                    <PencilIcon data-icon="inline-start" />
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => setConfirmDelete(row)}
-                                >
-                                    <Trash2Icon data-icon="inline-start" />
-                                    Hapus
-                                </Button>
-                            </div>
+                            <TableMetaCell
+                                icon={TargetIcon}
+                                value={row.name}
+                                truncate
+                                maxLength={28}
+                                textClassName="font-medium text-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "target_amount",
+                        title: "Target Dana",
+                        icon: WalletIcon,
+                        render: (row) => (
+                            <MoneyValueCell value={formatCurrency(row.target_amount)} tone="balance" />
+                        ),
+                    },
+                    {
+                        key: "target_date",
+                        title: "Target",
+                        icon: CalendarDaysIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={CalendarDaysIcon}
+                                value={isoToIndoDate(row.target_date)}
+                                textClassName="font-medium"
+                            />
+                        ),
+                    },
+                    {
+                        key: "cash_account_name",
+                        title: "Kas",
+                        icon: LandmarkIcon,
+                        filterable: true,
+                        filterAccessor: (row) => row.cash_account?.name || row.cash_account_name,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={LandmarkIcon}
+                                value={row.cash_account?.name || row.cash_account_name}
+                                truncate
+                                maxLength={24}
+                                textClassName="font-medium text-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "achievement",
+                        title: "Pencapaian",
+                        icon: BadgeInfoIcon,
+                        render: (row) => (
+                            <Badge variant="secondary" className="font-semibold">
+                                {row.achievement}%
+                            </Badge>
+                        ),
+                    },
+                    {
+                        key: "status",
+                        title: "Status",
+                        icon: BadgeInfoIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <Badge variant="outline" className="font-semibold">
+                                {row.status}
+                            </Badge>
                         ),
                     },
                 ]}
@@ -1666,37 +2360,39 @@ function ProjectTargetsPage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel>Nama proyek</FieldLabel>
-                        <Input
-                            value={draft.name}
-                            onChange={(event) =>
-                                setDraft((current) => ({ ...current, name: event.target.value }))
-                            }
-                        />
-                    </Field>
-                    <div className="grid gap-4 md:grid-cols-2">
+                <FormGrid>
+                    <div className={spanClass("full")}>
                         <Field>
-                            <FieldLabel>Target dana</FieldLabel>
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <InputGroupText>Rp</InputGroupText>
-                                </InputGroupAddon>
-                                <InputGroupInput
-                                    value={draft.target_amount}
-                                    onChange={(event) =>
-                                        setDraft((current) => ({
-                                            ...current,
-                                            target_amount: formatCurrencyInput(event.target.value),
-                                        }))
-                                    }
-                                />
-                            </InputGroup>
+                            <FieldHeading icon={TargetIcon} label="Nama proyek" />
+                            <TextControl
+                                icon={TargetIcon}
+                                value={draft.name}
+                                onChange={(event) =>
+                                    setDraft((current) => ({ ...current, name: event.target.value }))
+                                }
+                            />
                         </Field>
+                    </div>
+                    <div className={spanClass("half")}>
                         <Field>
-                            <FieldLabel>Tanggal target</FieldLabel>
-                            <Input
+                            <FieldHeading icon={WalletIcon} label="Target dana" />
+                            <MoneyControl
+                                icon={WalletIcon}
+                                value={draft.target_amount}
+                                onChange={(event) =>
+                                    setDraft((current) => ({
+                                        ...current,
+                                        target_amount: formatCurrencyInput(event.target.value),
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={CalendarDaysIcon} label="Tanggal target" />
+                            <TextControl
+                                icon={CalendarDaysIcon}
                                 type="date"
                                 value={draft.target_date}
                                 onChange={(event) =>
@@ -1708,18 +2404,17 @@ function ProjectTargetsPage({ bootstrap }) {
                             />
                         </Field>
                     </div>
-                    <Field>
-                        <FieldLabel>Sumber kas</FieldLabel>
-                        <Select
-                            value={String(draft.cash_account_id)}
-                            onValueChange={(value) =>
-                                setDraft((current) => ({ ...current, cash_account_id: value }))
-                            }
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Pilih kas" />
-                            </SelectTrigger>
-                            <SelectContent>
+                    <div className={spanClass("full")}>
+                        <Field>
+                            <FieldHeading icon={LandmarkIcon} label="Sumber kas" />
+                            <SelectControl
+                                icon={LandmarkIcon}
+                                value={String(draft.cash_account_id)}
+                                onValueChange={(value) =>
+                                    setDraft((current) => ({ ...current, cash_account_id: value }))
+                                }
+                                placeholder="Pilih kas"
+                            >
                                 <SelectGroup>
                                     {bootstrap.pageData.cashAccounts.map((account) => (
                                         <SelectItem key={account.id} value={String(account.id)}>
@@ -1727,19 +2422,22 @@ function ProjectTargetsPage({ bootstrap }) {
                                         </SelectItem>
                                     ))}
                                 </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                    <Field>
-                        <FieldLabel>Catatan</FieldLabel>
-                        <Textarea
-                            value={draft.notes}
-                            onChange={(event) =>
-                                setDraft((current) => ({ ...current, notes: event.target.value }))
-                            }
-                        />
-                    </Field>
-                </FieldGroup>
+                            </SelectControl>
+                        </Field>
+                    </div>
+                    <div className={spanClass("full")}>
+                        <Field>
+                            <FieldHeading icon={FileTextIcon} label="Catatan" />
+                            <TextareaControl
+                                icon={FileTextIcon}
+                                value={draft.notes}
+                                onChange={(event) =>
+                                    setDraft((current) => ({ ...current, notes: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                </FormGrid>
             </DialogShell>
 
             <AlertDialog open={Boolean(confirmDelete)} onOpenChange={() => setConfirmDelete(null)}>
@@ -1791,8 +2489,22 @@ function ReportsPage({ bootstrap }) {
                 description="Laporan mutasi stok berbasis periode dengan saldo awal, masuk, keluar, dan saldo akhir."
                 actions={
                     <>
-                        <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
-                        <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+                        <div className="w-full sm:w-[180px]">
+                            <TextControl
+                                icon={CalendarDaysIcon}
+                                type="date"
+                                value={from}
+                                onChange={(event) => setFrom(event.target.value)}
+                            />
+                        </div>
+                        <div className="w-full sm:w-[180px]">
+                            <TextControl
+                                icon={CalendarDaysIcon}
+                                type="date"
+                                value={to}
+                                onChange={(event) => setTo(event.target.value)}
+                            />
+                        </div>
                         <Button onClick={load}>
                             <EyeIcon data-icon="inline-start" />
                             Tampilkan
@@ -1802,18 +2514,117 @@ function ReportsPage({ bootstrap }) {
             />
 
             <AdminDataTable
-                title="Laporan stok"
+                title="Rekap stok"
                 rows={rows}
                 isLoading={loading}
                 searchFields={["product", "sku", "unit"]}
+                rowActionMode="quick-detail"
+                getRowTitle={(row) => stripHtml(row.product || "-")}
+                getRowSubtitle={(row) => `${stripHtml(row.sku || "-")} · ${stripHtml(row.unit || "-")}`}
+                getRowSummary={(row) => [
+                    { label: "Produk", value: stripHtml(row.product || "-"), icon: Package2Icon },
+                    { label: "SKU", value: stripHtml(row.sku || "-"), icon: HashIcon },
+                    { label: "Saldo Awal", value: stripHtml(row.saldo_awal || "-"), icon: BoxesIcon },
+                    { label: "Masuk", value: stripHtml(row.masuk || "-"), icon: BoxesIcon },
+                    { label: "Keluar", value: stripHtml(row.keluar || "-"), icon: BoxesIcon },
+                    { label: "Saldo Akhir", value: stripHtml(row.saldo_akhir || "-"), icon: BoxesIcon },
+                    { label: "Unit", value: stripHtml(row.unit || "-"), icon: BoxesIcon },
+                ]}
                 columns={[
-                    { key: "product", title: "Produk", render: (row) => stripHtml(row.product) },
-                    { key: "sku", title: "SKU", render: (row) => stripHtml(row.sku) },
-                    { key: "saldo_awal", title: "Saldo Awal", render: (row) => stripHtml(row.saldo_awal) },
-                    { key: "masuk", title: "Masuk", render: (row) => stripHtml(row.masuk) },
-                    { key: "keluar", title: "Keluar", render: (row) => stripHtml(row.keluar) },
-                    { key: "saldo_akhir", title: "Saldo Akhir", render: (row) => stripHtml(row.saldo_akhir) },
-                    { key: "unit", title: "Unit", render: (row) => stripHtml(row.unit) },
+                    {
+                        key: "product",
+                        title: "Produk",
+                        icon: Package2Icon,
+                        required: true,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={Package2Icon}
+                                value={row.product}
+                                truncate
+                                maxLength={26}
+                                textClassName="font-medium text-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "sku",
+                        title: "SKU",
+                        icon: HashIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={HashIcon}
+                                value={row.sku}
+                                textClassName="font-medium tracking-[0.02em] text-muted-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "saldo_awal",
+                        title: "Saldo Awal",
+                        icon: BoxesIcon,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={BoxesIcon}
+                                value={row.saldo_awal}
+                                tone="balance"
+                                textClassName="font-medium"
+                            />
+                        ),
+                    },
+                    {
+                        key: "masuk",
+                        title: "Masuk",
+                        icon: BoxesIcon,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={ArrowUpRightIcon}
+                                value={row.masuk}
+                                tone="credit"
+                                textClassName="font-medium"
+                            />
+                        ),
+                    },
+                    {
+                        key: "keluar",
+                        title: "Keluar",
+                        icon: BoxesIcon,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={ArrowDownLeftIcon}
+                                value={row.keluar}
+                                tone="debit"
+                                textClassName="font-medium"
+                            />
+                        ),
+                    },
+                    {
+                        key: "saldo_akhir",
+                        title: "Saldo Akhir",
+                        icon: BoxesIcon,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={BoxesIcon}
+                                value={row.saldo_akhir}
+                                tone="balance"
+                                textClassName="font-semibold"
+                            />
+                        ),
+                    },
+                    {
+                        key: "unit",
+                        title: "Unit",
+                        icon: BoxesIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={BoxesIcon}
+                                value={row.unit}
+                                textClassName="font-medium lowercase text-muted-foreground"
+                            />
+                        ),
+                    },
                 ]}
             />
         </>
@@ -1822,12 +2633,81 @@ function ReportsPage({ bootstrap }) {
 
 function RolesIndexPage({ bootstrap }) {
     const pageData = bootstrap.pageData;
+    const authUserId = String(bootstrap.authUser?.id ?? "");
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
     const [openRole, setOpenRole] = useState(false);
     const [openUserRole, setOpenUserRole] = useState(false);
     const [draftRole, setDraftRole] = useState({ id: "", name: "", permissions: [] });
     const [draftUserRole, setDraftUserRole] = useState({ role_id: "", user_id: "" });
+
+    const roleItems = pageData.roles || [];
+    const permissionItems = pageData.permissions || [];
+    const availableUsers = pageData.users || [];
+    const allPermissionNames = permissionItems.map((permission) => permission.name);
+    const hasAssignableUsers = availableUsers.length > 0;
+
+    const permissionGroups = useMemo(() => {
+        const grouped = permissionItems.reduce((accumulator, permission) => {
+            const [groupKey, ...rest] = permission.name.split(".");
+            const actionKey = rest.join(".") || permission.name;
+            if (!accumulator[groupKey]) {
+                accumulator[groupKey] = [];
+            }
+            accumulator[groupKey].push({
+                ...permission,
+                actionLabel: actionKey.replaceAll(".", " "),
+            });
+            return accumulator;
+        }, {});
+
+        return Object.entries(grouped).map(([group, items]) => ({
+            group,
+            title: group.replaceAll("-", " "),
+            items,
+        }));
+    }, [permissionItems]);
+
+    const normalizePermissionNames = (permissions) => {
+        if (Array.isArray(permissions)) {
+            return permissions.map((item) => String(item));
+        }
+
+        if (permissions && typeof permissions === "object") {
+            return Object.values(permissions).map((item) => String(item));
+        }
+
+        return [];
+    };
+
+    const overviewItems = useMemo(
+        () => [
+            {
+                title: "Role aktif",
+                value: formatNumber(roleItems.length),
+                hint: "Kelompok akses yang tersedia di workspace admin.",
+                icon: ShieldCheckIcon,
+                tone: "violet",
+            },
+            {
+                title: "Permission tersedia",
+                value: formatNumber(permissionItems.length),
+                hint: "Hak akses granular yang bisa dipasang ke role.",
+                icon: FileCode2Icon,
+                tone: "sky",
+            },
+            {
+                title: "User belum ditetapkan",
+                value: formatNumber(availableUsers.length),
+                hint: hasAssignableUsers
+                    ? "Siap dimasukkan ke role yang sesuai."
+                    : "Semua user sudah punya role aktif.",
+                icon: UserPlus2Icon,
+                tone: hasAssignableUsers ? "emerald" : "rose",
+            },
+        ],
+        [availableUsers.length, hasAssignableUsers, permissionItems.length, roleItems.length]
+    );
 
     const loadUsers = async () => {
         setLoading(true);
@@ -1844,6 +2724,28 @@ function RolesIndexPage({ bootstrap }) {
     useEffect(() => {
         loadUsers();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const openRoleEditor = async (role) => {
+        try {
+            const payload = await fetchJson(`/roles/${role.id}/permissions`);
+            setDraftRole({
+                id: role.id,
+                name: role.name,
+                permissions: normalizePermissionNames(payload.permissions),
+            });
+            setOpenRole(true);
+        } catch (error) {
+            toast.error(error.message);
+        }
+    };
+
+    const openUserRoleDialog = (roleId = "") => {
+        setDraftUserRole({
+            role_id: roleId ? String(roleId) : roleItems[0]?.id ? String(roleItems[0].id) : "",
+            user_id: availableUsers[0]?.id ? String(availableUsers[0].id) : "",
+        });
+        setOpenUserRole(true);
+    };
 
     const submitRole = async () => {
         try {
@@ -1879,22 +2781,44 @@ function RolesIndexPage({ bootstrap }) {
         }
     };
 
+    const hasAllPermissions =
+        allPermissionNames.length > 0 &&
+        allPermissionNames.every((permissionName) => draftRole.permissions.includes(permissionName));
+
+    const togglePermission = (permissionName, checked) => {
+        setDraftRole((current) => ({
+            ...current,
+            permissions: checked
+                ? Array.from(new Set([...current.permissions, permissionName]))
+                : current.permissions.filter((item) => item !== permissionName),
+        }));
+    };
+
+    const statusBadgeClass = (status) => {
+        const normalized = String(status || "").toLowerCase();
+
+        if (normalized === "active") {
+            return "border-emerald-500/25 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300";
+        }
+
+        if (normalized === "pending") {
+            return "border-amber-500/25 bg-amber-500/12 text-amber-700 dark:text-amber-300";
+        }
+
+        return "border-border bg-secondary text-secondary-foreground";
+    };
+
     return (
         <>
             <PageHero
-                title="Manajemen user dan role"
-                description="Kelola role, permission, dan assignment user tanpa mengubah backend Spatie yang sudah berjalan."
+                title="RBAC management"
+                description="Kelola role, permission, dan assignment user aktif dalam satu workspace akses yang lebih rapih."
                 actions={
                     <>
                         <Button
                             variant="outline"
-                            onClick={() => {
-                                setDraftUserRole({
-                                    role_id: pageData.roles[0]?.id ? String(pageData.roles[0].id) : "",
-                                    user_id: pageData.users[0]?.id ? String(pageData.users[0].id) : "",
-                                });
-                                setOpenUserRole(true);
-                            }}
+                            disabled={!hasAssignableUsers || roleItems.length === 0}
+                            onClick={() => openUserRoleDialog()}
                         >
                             <UserPlus2Icon data-icon="inline-start" />
                             Tambah User ke Role
@@ -1906,97 +2830,210 @@ function RolesIndexPage({ bootstrap }) {
                             }}
                         >
                             <PlusIcon data-icon="inline-start" />
-                            Add Role
+                            Tambah Role
                         </Button>
                     </>
                 }
             />
 
-            <section className="grid gap-4 lg:grid-cols-3">
-                {pageData.roles.map((role) => (
-                    <Card key={role.id} className={PAGE_CARD_CLASS}>
-                        <CardHeader>
-                            <CardTitle className="flex items-center justify-between gap-2">
-                                <span>{role.name}</span>
-                                <Badge variant="secondary">{role.users_count} user</Badge>
-                            </CardTitle>
-                            <CardDescription>
-                                Role untuk akses menu dan fitur tertentu.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex items-center justify-between gap-3">
-                            <div className="flex -space-x-3">
-                                {(role.users || []).slice(0, 4).map((user) => (
-                                    <Avatar key={user.id} className="size-10 border-2 border-background">
-                                        <AvatarImage src={user.foto_profile_url} alt={user.name} />
-                                        <AvatarFallback>{initials(user.name)}</AvatarFallback>
-                                    </Avatar>
-                                ))}
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={async () => {
-                                    try {
-                                        const payload = await fetchJson(
-                                            `/roles/${role.id}/permissions`
-                                        );
-                                        setDraftRole({
-                                            id: role.id,
-                                            name: role.name,
-                                            permissions: payload.permissions || [],
-                                        });
-                                        setOpenRole(true);
-                                    } catch (error) {
-                                        toast.error(error.message);
-                                    }
-                                }}
-                            >
-                                <PencilIcon data-icon="inline-start" />
-                                Edit
-                            </Button>
-                        </CardContent>
-                    </Card>
+            <section className="grid gap-4 xl:grid-cols-3">
+                {overviewItems.map((item) => (
+                    <MetricCard
+                        key={item.title}
+                        title={item.title}
+                        value={item.value}
+                        hint={item.hint}
+                        icon={item.icon}
+                        tone={item.tone}
+                    />
                 ))}
             </section>
 
+            <section className={`${PAGE_CARD_CLASS} p-5 md:p-6`}>
+                <div className="flex flex-col gap-4 border-b border-border/70 pb-5 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-2xl">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                            Access groups
+                        </p>
+                        <h2 className="mt-2 text-xl font-semibold text-foreground">Role aktif</h2>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                            Setiap role merangkum hak akses dan anggota yang menjalankan alur operasional tertentu.
+                        </p>
+                    </div>
+                    <Badge variant="outline" className="h-8 rounded-full px-3 text-[11px] uppercase tracking-[0.18em]">
+                        {formatNumber(roleItems.length)} role tersedia
+                    </Badge>
+                </div>
+
+                <div className="mt-5 grid gap-4 xl:grid-cols-3">
+                    {roleItems.map((role) => (
+                        <article key={role.id} className="app-subpanel rounded-[24px] border border-border/70 p-5">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                        Access group
+                                    </p>
+                                    <h3 className="mt-2 truncate text-lg font-semibold text-foreground">
+                                        {role.name}
+                                    </h3>
+                                </div>
+                                <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_oklab,var(--accent)_52%,transparent)] text-primary dark:bg-[color-mix(in_oklab,var(--accent)_28%,transparent)]">
+                                    <ShieldCheckIcon className="size-5" />
+                                </span>
+                            </div>
+
+                            <div className="mt-5 grid grid-cols-2 gap-3">
+                                <div className="rounded-2xl border border-border/70 bg-[color-mix(in_oklab,var(--surface)_98%,transparent)] px-3 py-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                        User
+                                    </p>
+                                    <p className="mt-1 text-lg font-semibold text-foreground">
+                                        {formatNumber(role.users_count || 0)}
+                                    </p>
+                                </div>
+                                <div className="rounded-2xl border border-border/70 bg-[color-mix(in_oklab,var(--surface)_98%,transparent)] px-3 py-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                        Permission
+                                    </p>
+                                    <p className="mt-1 text-lg font-semibold text-foreground">
+                                        {formatNumber(role.permissions_count || 0)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                        Anggota role
+                                    </p>
+                                    {(role.users || []).length ? (
+                                        <div className="mt-2 flex -space-x-3">
+                                            {(role.users || []).slice(0, 5).map((user) => (
+                                                <Avatar
+                                                    key={user.id}
+                                                    className="size-10 border-2 border-background shadow-sm"
+                                                >
+                                                    <AvatarImage src={user.foto_profile_url} alt={user.name} />
+                                                    <AvatarFallback>{initials(user.name)}</AvatarFallback>
+                                                </Avatar>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            Belum ada user di role ini.
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex shrink-0 flex-col gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => openRoleEditor(role)}>
+                                        <PencilIcon data-icon="inline-start" />
+                                        Edit Role
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        disabled={!hasAssignableUsers}
+                                        onClick={() => openUserRoleDialog(role.id)}
+                                    >
+                                        <UserPlus2Icon data-icon="inline-start" />
+                                        Tambah User
+                                    </Button>
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
             <AdminDataTable
-                title="User role matrix"
-                description="List user diambil dari endpoint server-side lama dan difilter di sisi React."
+                title="Assignment user"
+                description="Pantau role aktif per user dan buka profil pribadi bila diperlukan."
                 rows={rows}
                 isLoading={loading}
-                searchFields={["full_name", "email", "role"]}
+                searchFields={["full_name", "email", "role", "status_label"]}
+                rowActionMode="action-dialog"
+                getRowTitle={(row) => stripHtml(row.full_name || "-")}
+                getRowSubtitle={(row) => stripHtml(row.email || "-")}
+                getRowSummary={(row) => [
+                    { label: "Nama", value: stripHtml(row.full_name || "-"), icon: UserRoundIcon },
+                    { label: "Email", value: stripHtml(row.email || "-"), icon: FileTextIcon },
+                    { label: "Role", value: stripHtml(row.role || "-"), icon: ShieldCheckIcon },
+                    { label: "Status", value: stripHtml(row.status_label || "-"), icon: BadgeInfoIcon },
+                    {
+                        label: "Foto Profil",
+                        value: row.foto_profile_url ? "Tersedia" : "Belum ada",
+                        icon: ImageIcon,
+                    },
+                    {
+                        label: "Foto Rumah",
+                        value: row.foto_rumah_url ? "Tersedia" : "Belum ada",
+                        icon: HouseIcon,
+                    },
+                ]}
+                getRowActions={(row) =>
+                    String(row.id) === authUserId
+                        ? [
+                              {
+                                  key: "profile",
+                                  label: "Buka Profil",
+                                  icon: EyeIcon,
+                                  tone: "primary",
+                                  href: `/roles/user/${row.id}`,
+                              },
+                          ]
+                        : []
+                }
                 columns={[
                     {
                         key: "user",
                         title: "User",
+                        icon: UserRoundIcon,
+                        required: true,
+                        filterable: true,
+                        filterAccessor: (row) => `${row.full_name} ${row.email}`,
                         render: (row) => (
-                            <div className="flex items-center gap-3">
-                                <Avatar className="size-10 rounded-2xl">
+                            <div className="flex items-center gap-2.5">
+                                <Avatar className="size-9 rounded-2xl">
                                     <AvatarImage src={row.foto_profile_url} alt={row.full_name} />
                                     <AvatarFallback className="rounded-2xl">
                                         {initials(row.full_name)}
                                     </AvatarFallback>
                                 </Avatar>
-                                <div>
-                                    <p className="font-medium text-foreground">{row.full_name}</p>
-                                    <p className="text-xs text-muted-foreground">{row.email}</p>
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-medium text-foreground">{row.full_name}</p>
+                                    <p className="truncate text-[11px] text-muted-foreground">{row.email}</p>
                                 </div>
                             </div>
                         ),
                     },
-                    { key: "role", title: "Role", sortKey: "role" },
-                    { key: "status", title: "Status", render: (row) => <Badge variant="secondary">{row.status}</Badge> },
                     {
-                        key: "actions",
-                        title: "Aksi",
+                        key: "role",
+                        title: "Role",
+                        icon: ShieldCheckIcon,
+                        sortKey: "role",
+                        filterable: true,
                         render: (row) => (
-                            <Button variant="outline" size="sm" asChild>
-                                <a href={`/roles/user/${row.id}`}>
-                                    <EyeIcon data-icon="inline-start" />
-                                    Profil
-                                </a>
-                            </Button>
+                            <TableMetaCell
+                                icon={ShieldCheckIcon}
+                                value={stripHtml(row.role || "Belum ada role")}
+                                truncate
+                                maxLength={22}
+                                textClassName="font-medium text-foreground"
+                            />
+                        ),
+                    },
+                    {
+                        key: "status",
+                        title: "Status",
+                        icon: BadgeInfoIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <span
+                                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${statusBadgeClass(
+                                    row.status_label
+                                )}`}
+                            >
+                                {row.status_label || "Active"}
+                            </span>
                         ),
                     },
                 ]}
@@ -2006,7 +3043,7 @@ function RolesIndexPage({ bootstrap }) {
                 open={openRole}
                 onOpenChange={setOpenRole}
                 title={draftRole.id ? "Edit role" : "Tambah role"}
-                description="Pilih permission yang memang diperlukan."
+                description="Tentukan nama role dan permission yang memang diperlukan untuk alur kerja ini."
                 footer={
                     <ResourceDialogFooter
                         submitLabel={draftRole.id ? "Simpan Role" : "Tambah Role"}
@@ -2015,10 +3052,12 @@ function RolesIndexPage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
+                <div className="flex flex-col gap-5">
                     <Field>
-                        <FieldLabel>Nama role</FieldLabel>
-                        <Input
+                        <FieldHeading htmlFor="role-name" icon={ShieldCheckIcon} label="Nama role" />
+                        <TextControl
+                            id="role-name"
+                            icon={ShieldCheckIcon}
                             value={draftRole.name}
                             onChange={(event) =>
                                 setDraftRole((current) => ({
@@ -2026,43 +3065,74 @@ function RolesIndexPage({ bootstrap }) {
                                     name: event.target.value,
                                 }))
                             }
+                            placeholder="Contoh: Bendahara, Admin, Kasir"
                         />
                     </Field>
+
                     <div className={SUBPANEL_CLASS}>
-                        <p className="mb-3 text-sm font-medium text-muted-foreground">Permissions</p>
-                        <div className="grid gap-3 md:grid-cols-2">
-                            {pageData.permissions.map((permission) => (
-                                <label
-                                    key={permission.name}
-                                    className="app-panel flex items-center gap-3 rounded-2xl px-4 py-3 text-sm"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={draftRole.permissions.includes(permission.name)}
-                                        onChange={(event) =>
-                                            setDraftRole((current) => ({
-                                                ...current,
-                                                permissions: event.target.checked
-                                                    ? [...current.permissions, permission.name]
-                                                    : current.permissions.filter(
-                                                          (item) => item !== permission.name
-                                                      ),
-                                            }))
-                                        }
-                                    />
-                                    <span>{permission.label}</span>
-                                </label>
+                        <div className="flex flex-col gap-4 border-b border-border/70 pb-4 md:flex-row md:items-start md:justify-between">
+                            <div className="max-w-xl">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                    Permission matrix
+                                </p>
+                                <h3 className="mt-2 text-base font-semibold text-foreground">Hak akses role</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Grouping permission mengikuti modul agar lebih mudah discan dan diverifikasi.
+                                </p>
+                            </div>
+                            <PermissionCheck
+                                label="Pilih semua permission"
+                                checked={hasAllPermissions}
+                                onChange={(event) =>
+                                    setDraftRole((current) => ({
+                                        ...current,
+                                        permissions: event.target.checked ? allPermissionNames : [],
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                            {permissionGroups.map((group) => (
+                                <div key={group.group} className="rounded-2xl border border-border/70 bg-[color-mix(in_oklab,var(--surface)_99%,transparent)] p-4">
+                                    <div className="mb-3 flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                                Modul
+                                            </p>
+                                            <h4 className="mt-1 text-sm font-semibold capitalize text-foreground">
+                                                {group.title}
+                                            </h4>
+                                        </div>
+                                        <Badge variant="outline" className="rounded-full">
+                                            {group.items.length} izin
+                                        </Badge>
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        {group.items.map((permission) => (
+                                            <PermissionCheck
+                                                key={permission.name}
+                                                label={permission.actionLabel}
+                                                checked={draftRole.permissions.includes(permission.name)}
+                                                onChange={(event) =>
+                                                    togglePermission(permission.name, event.target.checked)
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
-                </FieldGroup>
+                </div>
             </DialogShell>
 
             <DialogShell
                 open={openUserRole}
                 onOpenChange={setOpenUserRole}
                 title="Tambah user ke role"
-                description="Action ini tetap memakai endpoint `/roles/add-user`."
+                description="Pilih role tujuan dan user yang belum ditetapkan ke role agar struktur akses tetap rapi."
                 footer={
                     <ResourceDialogFooter
                         submitLabel="Tambahkan User"
@@ -2071,52 +3141,85 @@ function RolesIndexPage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel>Role</FieldLabel>
-                        <Select
-                            value={draftUserRole.role_id}
-                            onValueChange={(value) =>
-                                setDraftUserRole((current) => ({ ...current, role_id: value }))
-                            }
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Pilih role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    {pageData.roles.map((role) => (
-                                        <SelectItem key={role.id} value={String(role.id)}>
-                                            {role.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                    <Field>
-                        <FieldLabel>User</FieldLabel>
-                        <Select
-                            value={draftUserRole.user_id}
-                            onValueChange={(value) =>
-                                setDraftUserRole((current) => ({ ...current, user_id: value }))
-                            }
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Pilih user" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    {pageData.users.map((user) => (
-                                        <SelectItem key={user.id} value={String(user.id)}>
-                                            {user.name} ({user.email})
-                                        </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                </FieldGroup>
+                <div className="flex flex-col gap-5">
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <div className="rounded-2xl border border-border/70 bg-[color-mix(in_oklab,var(--surface)_98%,transparent)] px-4 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                Role aktif
+                            </p>
+                            <p className="mt-1 text-base font-semibold text-foreground">{formatNumber(roleItems.length)}</p>
+                        </div>
+                        <div className="rounded-2xl border border-border/70 bg-[color-mix(in_oklab,var(--surface)_98%,transparent)] px-4 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                User tersedia
+                            </p>
+                            <p className="mt-1 text-base font-semibold text-foreground">{formatNumber(availableUsers.length)}</p>
+                        </div>
+                        <div className="rounded-2xl border border-border/70 bg-[color-mix(in_oklab,var(--surface)_98%,transparent)] px-4 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                Status
+                            </p>
+                            <p className="mt-1 text-base font-semibold text-foreground">
+                                {hasAssignableUsers ? "Siap assign" : "Tidak ada user tersisa"}
+                            </p>
+                        </div>
+                    </div>
+
+                    <FormGrid>
+                        <div className={spanClass("half")}>
+                            <Field>
+                                <FieldHeading icon={ShieldCheckIcon} label="Role" />
+                                <SelectControl
+                                    icon={ShieldCheckIcon}
+                                    value={draftUserRole.role_id}
+                                    onValueChange={(value) =>
+                                        setDraftUserRole((current) => ({ ...current, role_id: value }))
+                                    }
+                                    placeholder="Pilih role"
+                                >
+                                    <SelectGroup>
+                                        {roleItems.map((role) => (
+                                            <SelectItem key={role.id} value={String(role.id)}>
+                                                {role.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectControl>
+                            </Field>
+                        </div>
+                        <div className={spanClass("half")}>
+                            <Field>
+                                <FieldHeading icon={UserRoundIcon} label="User" />
+                                <SelectControl
+                                    icon={UserRoundIcon}
+                                    value={draftUserRole.user_id}
+                                    onValueChange={(value) =>
+                                        setDraftUserRole((current) => ({ ...current, user_id: value }))
+                                    }
+                                    placeholder="Pilih user"
+                                >
+                                    <SelectGroup>
+                                        {availableUsers.map((user) => (
+                                            <SelectItem key={user.id} value={String(user.id)}>
+                                                {user.name} ({user.email})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectControl>
+                            </Field>
+                        </div>
+                    </FormGrid>
+
+                    {!hasAssignableUsers ? (
+                        <Alert>
+                            <AlertTriangleIcon className="size-4" />
+                            <AlertTitle>Tidak ada user tersedia</AlertTitle>
+                            <AlertDescription>
+                                Semua user yang terdeteksi saat ini sudah memiliki role aktif.
+                            </AlertDescription>
+                        </Alert>
+                    ) : null}
+                </div>
             </DialogShell>
         </>
     );
@@ -2259,29 +3362,98 @@ function RoleProfilePage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    {Object.entries({
-                        name: "Nama Lengkap",
-                        username: "Username",
-                        phone_number: "Nomor HP",
-                        perumahan: "Perumahan",
-                        blok_rumah: "Blok",
-                        no_rumah: "Nomor Rumah",
-                    }).map(([key, label]) => (
-                        <Field key={key}>
-                            <FieldLabel>{label}</FieldLabel>
-                            <Input
-                                value={draftProfile[key]}
+                <FormGrid>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={UserRoundIcon} label="Nama Lengkap" />
+                            <TextControl
+                                icon={UserRoundIcon}
+                                value={draftProfile.name}
                                 onChange={(event) =>
                                     setDraftProfile((current) => ({
                                         ...current,
-                                        [key]: event.target.value,
+                                        name: event.target.value,
                                     }))
                                 }
                             />
                         </Field>
-                    ))}
-                </FieldGroup>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={HashIcon} label="Username" />
+                            <TextControl
+                                icon={HashIcon}
+                                value={draftProfile.username}
+                                onChange={(event) =>
+                                    setDraftProfile((current) => ({
+                                        ...current,
+                                        username: event.target.value,
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={PhoneIcon} label="Nomor HP" />
+                            <TextControl
+                                icon={PhoneIcon}
+                                value={draftProfile.phone_number}
+                                onChange={(event) =>
+                                    setDraftProfile((current) => ({
+                                        ...current,
+                                        phone_number: event.target.value,
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={Building2Icon} label="Perumahan" />
+                            <TextControl
+                                icon={Building2Icon}
+                                value={draftProfile.perumahan}
+                                onChange={(event) =>
+                                    setDraftProfile((current) => ({
+                                        ...current,
+                                        perumahan: event.target.value,
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={HouseIcon} label="Blok" />
+                            <TextControl
+                                icon={HouseIcon}
+                                value={draftProfile.blok_rumah}
+                                onChange={(event) =>
+                                    setDraftProfile((current) => ({
+                                        ...current,
+                                        blok_rumah: event.target.value,
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("half")}>
+                        <Field>
+                            <FieldHeading icon={HashIcon} label="Nomor Rumah" />
+                            <TextControl
+                                icon={HashIcon}
+                                value={draftProfile.no_rumah}
+                                onChange={(event) =>
+                                    setDraftProfile((current) => ({
+                                        ...current,
+                                        no_rumah: event.target.value,
+                                    }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                </FormGrid>
             </DialogShell>
 
             <DialogShell
@@ -2296,12 +3468,12 @@ function RoleProfilePage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel>File foto profil</FieldLabel>
-                        <Input type="file" accept="image/*" onChange={(event) => setProfileFile(event.target.files?.[0] || null)} />
-                    </Field>
-                </FieldGroup>
+                <UploadField
+                    label="File foto profil"
+                    helper="Unggah foto profil baru dengan format gambar yang jelas."
+                    file={profileFile}
+                    onChange={setProfileFile}
+                />
             </DialogShell>
 
             <DialogShell
@@ -2316,12 +3488,12 @@ function RoleProfilePage({ bootstrap }) {
                     />
                 }
             >
-                <FieldGroup>
-                    <Field>
-                        <FieldLabel>File foto rumah</FieldLabel>
-                        <Input type="file" accept="image/*" onChange={(event) => setHouseFile(event.target.files?.[0] || null)} />
-                    </Field>
-                </FieldGroup>
+                <UploadField
+                    label="File foto rumah"
+                    helper="Unggah foto rumah terbaru untuk data anggota."
+                    file={houseFile}
+                    onChange={setHouseFile}
+                />
             </DialogShell>
         </>
     );
@@ -2346,27 +3518,67 @@ function JournalsIndexPage({ bootstrap }) {
             />
 
             <AdminDataTable
-                title="Daftar jurnal"
+                title="Jurnal"
                 rows={rows}
                 isLoading={loading}
                 searchFields={["memo", "reference"]}
-                columns={[
-                    { key: "date", title: "Tanggal", render: (row) => stripHtml(row.date) },
-                    { key: "reference", title: "Referensi", render: (row) => stripHtml(row.reference) },
-                    { key: "memo", title: "Keterangan", render: (row) => stripHtml(row.memo) },
-                    { key: "debit_total", title: "Debit", render: (row) => stripHtml(row.debit_total) },
-                    { key: "credit_total", title: "Kredit", render: (row) => stripHtml(row.credit_total) },
+                rowActionMode="action-dialog"
+                getRowTitle={(row) => stripHtml(row.reference || "-")}
+                getRowSubtitle={(row) => stripHtml(row.date || "-")}
+                getRowSummary={(row) => [
+                    { label: "Tanggal", value: stripHtml(row.date || "-"), icon: CalendarDaysIcon },
+                    { label: "Referensi", value: stripHtml(row.reference || "-"), icon: ReceiptTextIcon },
+                    { label: "Keterangan", value: stripHtml(row.memo || "-"), icon: FileTextIcon },
+                    { label: "Debit", value: stripHtml(row.debit_total || "-"), icon: WalletIcon },
+                    { label: "Kredit", value: stripHtml(row.credit_total || "-"), icon: WalletCardsIcon },
+                ]}
+                getRowActions={(row) => [
                     {
-                        key: "action",
-                        title: "Aksi",
+                        key: "detail",
+                        label: "Buka Detail",
+                        icon: EyeIcon,
+                        tone: "primary",
+                        href: `/accounting/journals/${row.id}`,
+                    },
+                ]}
+                columns={[
+                    {
+                        key: "date",
+                        title: "Tanggal",
+                        icon: CalendarDaysIcon,
+                        filterable: true,
+                        render: (row) => stripHtml(row.date),
+                    },
+                    {
+                        key: "reference",
+                        title: "Referensi",
+                        icon: ReceiptTextIcon,
+                        required: true,
+                        filterable: true,
                         render: (row) => (
-                            <Button variant="outline" size="sm" asChild>
-                                <a href={`/accounting/journals/${row.id}`}>
-                                    <EyeIcon data-icon="inline-start" />
-                                    Detail
-                                </a>
-                            </Button>
+                            <TableMetaCell icon={ReceiptTextIcon} value={row.reference} truncate maxLength={24} />
                         ),
+                    },
+                    {
+                        key: "memo",
+                        title: "Keterangan",
+                        icon: FileTextIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell icon={FileTextIcon} value={row.memo} truncate maxLength={24} textClassName="text-[13px]" />
+                        ),
+                    },
+                    {
+                        key: "debit_total",
+                        title: "Debit",
+                        icon: WalletIcon,
+                        render: (row) => <MoneyValueCell value={row.debit_total} tone="debit" />,
+                    },
+                    {
+                        key: "credit_total",
+                        title: "Kredit",
+                        icon: WalletCardsIcon,
+                        render: (row) => <MoneyValueCell value={row.credit_total} tone="credit" />,
                     },
                 ]}
             />
@@ -2410,11 +3622,51 @@ function JournalShowPage({ bootstrap }) {
                 rows={rows}
                 isLoading={loading}
                 searchFields={["account", "description"]}
+                rowActionMode="quick-detail"
+                getRowTitle={(row) => stripHtml(row.account || "-")}
+                getRowSubtitle={(row) => stripHtml(row.description || row.note || "-")}
+                getRowSummary={(row) => [
+                    { label: "Akun", value: stripHtml(row.account || "-"), icon: LandmarkIcon },
+                    { label: "Catatan", value: stripHtml(row.description || row.note || "-"), icon: FileTextIcon },
+                    { label: "Debit", value: stripHtml(row.debit || "-"), icon: WalletIcon },
+                    { label: "Kredit", value: stripHtml(row.credit || "-"), icon: WalletCardsIcon },
+                ]}
                 columns={[
-                    { key: "account", title: "Akun", render: (row) => stripHtml(row.account) },
-                    { key: "description", title: "Catatan", render: (row) => stripHtml(row.description || row.note) },
-                    { key: "debit", title: "Debit", render: (row) => stripHtml(row.debit) },
-                    { key: "credit", title: "Kredit", render: (row) => stripHtml(row.credit) },
+                    {
+                        key: "account",
+                        title: "Akun",
+                        icon: LandmarkIcon,
+                        required: true,
+                        filterable: true,
+                        render: (row) => stripHtml(row.account),
+                    },
+                    {
+                        key: "description",
+                        title: "Catatan",
+                        icon: FileTextIcon,
+                        filterable: true,
+                        render: (row) => (
+                            <TableMetaCell
+                                icon={FileTextIcon}
+                                value={row.description || row.note}
+                                truncate
+                                maxLength={24}
+                                textClassName="text-[13px]"
+                            />
+                        ),
+                    },
+                    {
+                        key: "debit",
+                        title: "Debit",
+                        icon: WalletIcon,
+                        render: (row) => <MoneyValueCell value={row.debit} tone="debit" />,
+                    },
+                    {
+                        key: "credit",
+                        title: "Kredit",
+                        icon: WalletCardsIcon,
+                        render: (row) => <MoneyValueCell value={row.credit} tone="credit" />,
+                    },
                 ]}
             />
         </>

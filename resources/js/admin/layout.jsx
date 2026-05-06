@@ -6,8 +6,16 @@ import {
     LogOutIcon,
     MenuIcon,
     MoonStarIcon,
+    PlusIcon,
     SparklesIcon,
     SunMediumIcon,
+    LayoutDashboardIcon,
+    PackageIcon,
+    WalletIcon,
+    BarChart3Icon,
+    FileTextIcon,
+    TargetIcon,
+    ChevronUpIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -132,6 +140,132 @@ function MenuTree({ groupedMenu, authUser, onNavigate }) {
     );
 }
 
+function BottomNavbar({ groupedMenu }) {
+    const [openPopup, setOpenPopup] = useState(null); // 'transaksi' | 'keuangan'
+
+    const findItem = (groupLabel, itemLabel) => {
+        const group = groupedMenu.find(g => g.label === groupLabel);
+        if (!group) return null;
+        if (itemLabel) return group.items.find(i => i.label === itemLabel);
+        return group.items[0];
+    };
+
+    const nav = {
+        dash: findItem('Overview'),
+        stok: findItem('Master Data'),
+        penjualan: findItem('Transaksi', 'Penjualan'),
+        pembelian: findItem('Transaksi', 'Pembelian'),
+        kas: findItem('Keuangan', 'Kas & Transaksi'),
+        jurnal: findItem('Keuangan', 'Jurnal Umum'),
+        target: findItem('Keuangan', 'Target Proyek'),
+        laporan: findItem('Laporan')
+    };
+
+    const NavButton = ({ label, icon: Icon, active, onClick, href, isCenter = false }) => {
+        const content = (
+            <div className={`flex flex-col items-center gap-1 transition-all duration-300 ${active ? 'text-primary' : 'text-muted-foreground'}`}>
+                <div className={`relative flex items-center justify-center ${isCenter ? 'size-12 -mt-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 border-4 border-background' : 'size-6'}`}>
+                    <Icon className={isCenter ? "size-6" : "size-5"} />
+                </div>
+                <span className={`text-[10px] font-medium leading-none ${isCenter ? 'mt-0.5' : ''}`}>{label}</span>
+            </div>
+        );
+
+        if (href) {
+            return (
+                <a href={href} className="flex flex-1 items-center justify-center py-2">
+                    {content}
+                </a>
+            );
+        }
+
+        return (
+            <button onClick={onClick} className="flex flex-1 items-center justify-center py-2 outline-none">
+                {content}
+            </button>
+        );
+    };
+
+    const PopupMenu = ({ open, onClose, items, title }) => {
+        if (!open) return null;
+        return (
+            <>
+                <div className="fixed inset-0 z-[60] bg-background/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+                <div className="fixed bottom-24 left-4 right-4 z-[70] animate-in slide-in-from-bottom-10 fade-in duration-300 zoom-in-95">
+                    <div className="app-panel-elevated flex flex-col gap-1 rounded-[28px] p-2 shadow-2xl">
+                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{title}</div>
+                        {items.map((item, idx) => item && (
+                            <a 
+                                key={idx} 
+                                href={item.href} 
+                                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors hover:bg-muted active:scale-95"
+                            >
+                                <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                    <ChevronUpIcon className="size-4 rotate-90" />
+                                </div>
+                                {item.label}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            </>
+        );
+    };
+
+    return (
+        <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-2 lg:hidden">
+            <div className="relative mx-auto flex max-w-md items-center justify-around rounded-[32px] bg-background/80 px-2 py-1 shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.15)] backdrop-blur-xl border border-white/10">
+                <NavButton 
+                    label="Dash" 
+                    icon={LayoutDashboardIcon} 
+                    active={nav.dash?.active} 
+                    href={nav.dash?.href} 
+                />
+                <NavButton 
+                    label="Stok" 
+                    icon={PackageIcon} 
+                    active={nav.stok?.active} 
+                    href={nav.stok?.href} 
+                />
+                
+                <NavButton 
+                    label="Trans" 
+                    icon={PlusIcon} 
+                    isCenter 
+                    onClick={() => setOpenPopup(openPopup === 'trans' ? null : 'trans')}
+                />
+
+                <NavButton 
+                    label="Keu" 
+                    icon={WalletIcon} 
+                    active={nav.kas?.active || nav.jurnal?.active || nav.target?.active}
+                    onClick={() => setOpenPopup(openPopup === 'keu' ? null : 'keu')}
+                />
+                <NavButton 
+                    label="Lap" 
+                    icon={BarChart3Icon} 
+                    active={nav.laporan?.active} 
+                    href={nav.laporan?.href} 
+                />
+            </div>
+
+            <PopupMenu 
+                open={openPopup === 'trans'} 
+                onClose={() => setOpenPopup(null)}
+                title="Transaksi Cepat"
+                items={[nav.penjualan, nav.pembelian]}
+            />
+
+            <PopupMenu 
+                open={openPopup === 'keu'} 
+                onClose={() => setOpenPopup(null)}
+                title="Keuangan & Proyek"
+                items={[nav.kas, nav.jurnal, nav.target]}
+            />
+        </div>
+    );
+}
+
 function UserMenu({ authUser }) {
     return (
         <DropdownMenu>
@@ -189,18 +323,20 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                 </aside>
 
                 <div className="min-w-0">
-                    <header className="sticky top-4 z-30">
+                    <header className="relative z-30 lg:sticky lg:top-4">
                         <div className="app-toolbar rounded-[28px] px-4 py-3 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.3)]">
                             <div className="flex items-center gap-3">
-                                <Button
-                                    variant="outline"
-                                    size="icon-sm"
-                                    className="rounded-xl lg:hidden"
-                                    onClick={() => setMobileOpen(true)}
-                                >
-                                    <MenuIcon />
-                                    <span className="sr-only">Open navigation</span>
-                                </Button>
+                                <div className="hidden lg:hidden">
+                                    <Button
+                                        variant="outline"
+                                        size="icon-sm"
+                                        className="rounded-xl lg:hidden"
+                                        onClick={() => setMobileOpen(true)}
+                                    >
+                                        <MenuIcon />
+                                        <span className="sr-only">Open navigation</span>
+                                    </Button>
+                                </div>
 
                                 <div className="min-w-0 flex-1">
                                     <p className="truncate text-xs uppercase tracking-[0.22em] text-muted-foreground">
@@ -236,7 +372,7 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                         <div className="flex flex-col gap-5">{children}</div>
                     </main>
 
-                    <footer className="pb-6 pt-6">
+                    <footer className="pb-24 pt-6 lg:pb-6">
                         <Separator className="mb-4 bg-border" />
                         <div className="flex flex-col gap-2 text-sm text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
                             <p>PBRT17 KASAMBA admin console.</p>
@@ -245,6 +381,8 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                     </footer>
                 </div>
             </div>
+
+            <BottomNavbar groupedMenu={groupedMenu} />
 
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetContent side="left" className="app-overlay-panel w-[92vw] max-w-[340px] p-0">

@@ -1532,7 +1532,7 @@ function TransactionPage({ bootstrap, mode }) {
                                 onClick={() =>
                                     setDraft((current) => ({
                                         ...current,
-                                        items: [...current.items, emptyTransactionItem(pageData.products)],
+                                        items: [...current.items, emptyTransactionItem(pageData.products, mode)],
                                     }))
                                 }
                             >
@@ -3722,16 +3722,22 @@ function emptyTransaction(mode, pageData) {
         cash_account_id: pageData.cashAccounts?.[0]?.id
             ? String(pageData.cashAccounts[0].id)
             : "",
-        items: [emptyTransactionItem(pageData.products)],
+        items: [emptyTransactionItem(pageData.products, mode)],
     };
 }
 
-function emptyTransactionItem(products) {
+function emptyTransactionItem(products, mode = "sale") {
     const firstProduct = products?.[0];
+    const initialPrice = firstProduct
+        ? mode === "sale"
+            ? firstProduct.sell_price || 0
+            : firstProduct.cost_price || 0
+        : 0;
+
     return {
         product_id: firstProduct?.id ? String(firstProduct.id) : "",
         qty: "1",
-        price: "",
+        price: formatCurrencyInput(String(Math.floor(Number(initialPrice)))),
         unit: firstProduct?.unit || "",
     };
 }

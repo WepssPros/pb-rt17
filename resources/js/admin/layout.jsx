@@ -19,6 +19,9 @@ import {
     ShoppingCartIcon,
     PlusCircleIcon,
     ArrowRightLeftIcon,
+    CodeIcon,
+    CameraIcon,
+    GlobeIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,7 +35,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 
 const iconMap = {
     dashboard: SparklesIcon,
@@ -78,8 +86,12 @@ function BrandCard() {
                     PB
                 </div>
                 <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">PBRT17 Admin</p>
-                    <p className="truncate text-xs text-muted-foreground">Cashflow workspace</p>
+                    <p className="truncate text-sm font-semibold text-foreground">
+                        PBRT17 Admin
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                        Cashflow workspace
+                    </p>
                 </div>
             </div>
         </div>
@@ -94,7 +106,10 @@ function MenuTree({ groupedMenu, authUser, onNavigate }) {
                     const Icon = iconMap[group.icon] || ChevronRightIcon;
 
                     return (
-                        <section key={group.label} className="app-subpanel rounded-[24px] p-3">
+                        <section
+                            key={group.label}
+                            className="app-subpanel rounded-[24px] p-3"
+                        >
                             <div className="mb-2 flex items-center gap-2 px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                                 <Icon className="size-3.5" />
                                 {group.label}
@@ -124,7 +139,10 @@ function MenuTree({ groupedMenu, authUser, onNavigate }) {
             <div className="app-panel mt-4 rounded-[24px] p-3">
                 <div className="flex items-center gap-3">
                     <Avatar className="size-11 rounded-2xl">
-                        <AvatarImage src={authUser.avatar} alt={authUser.name} />
+                        <AvatarImage
+                            src={authUser.avatar}
+                            alt={authUser.name}
+                        />
                         <AvatarFallback className="rounded-2xl bg-muted text-muted-foreground">
                             {initialsOf(authUser.name)}
                         </AvatarFallback>
@@ -147,47 +165,68 @@ function BottomNavbar({ groupedMenu }) {
     const [openPopup, setOpenPopup] = useState(null); // 'transaksi' | 'keuangan'
 
     const findItem = (groupLabel, itemLabel) => {
-        const group = groupedMenu.find(g => g.label === groupLabel);
+        const group = groupedMenu.find((g) => g.label === groupLabel);
         if (!group) return null;
-        if (itemLabel) return group.items.find(i => i.label === itemLabel);
+        if (itemLabel) return group.items.find((i) => i.label === itemLabel);
         return group.items[0];
     };
 
     const nav = {
-        dash: findItem('Overview'),
-        stok: findItem('Master Data'),
-        penjualan: findItem('Transaksi', 'Penjualan'),
-        pembelian: findItem('Transaksi', 'Pembelian'),
-        kas: findItem('Keuangan', 'Kas & Transaksi'),
-        jurnal: findItem('Keuangan', 'Jurnal Umum'),
-        target: findItem('Keuangan', 'Target Proyek'),
-        laporan: findItem('Laporan')
+        dash: findItem("Overview"),
+        stok: findItem("Master Data"),
+        penjualan: findItem("Transaksi", "Penjualan"),
+        pembelian: findItem("Transaksi", "Pembelian"),
+        kas: findItem("Keuangan", "Kas & Transaksi"),
+        jurnal: findItem("Keuangan", "Jurnal Umum"),
+        target: findItem("Keuangan", "Target Proyek"),
+        laporan: findItem("Laporan"),
     };
 
-    const NavButton = ({ label, icon: Icon, active, onClick, href, isCenter = false }) => {
+    const NavButton = ({
+        label,
+        icon: Icon,
+        active,
+        onClick,
+        href,
+        isCenter = false,
+    }) => {
         const content = (
-            <div className={`flex flex-col items-center gap-1 transition-all duration-300 ${active ? 'text-primary' : 'text-muted-foreground'}`}>
-                <div className={`relative flex items-center justify-center transition-transform active:scale-95 ${
-                    isCenter 
-                        ? 'size-12 -mt-7 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-lg shadow-emerald-500/40 border-4 border-background' 
-                        : 'size-6'
-                }`}>
+            <div
+                className={`flex flex-col items-center gap-1 transition-all duration-300 ${active ? "text-primary" : "text-muted-foreground"}`}
+            >
+                <div
+                    className={`relative flex items-center justify-center transition-transform active:scale-95 ${
+                        isCenter
+                            ? "size-12 -mt-7 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-lg shadow-emerald-500/40 border-4 border-background"
+                            : "size-6"
+                    }`}
+                >
                     <Icon className={isCenter ? "size-6" : "size-5"} />
                 </div>
-                <span className={`text-[10px] font-medium leading-none ${isCenter ? 'mt-1' : ''}`}>{label}</span>
+                <span
+                    className={`text-[10px] font-medium leading-none ${isCenter ? "mt-1" : ""}`}
+                >
+                    {label}
+                </span>
             </div>
         );
 
         if (href) {
             return (
-                <a href={href} className="flex flex-1 items-center justify-center py-2">
+                <a
+                    href={href}
+                    className="flex flex-1 items-center justify-center py-2"
+                >
                     {content}
                 </a>
             );
         }
 
         return (
-            <button onClick={onClick} className="flex flex-1 items-center justify-center py-2 outline-none">
+            <button
+                onClick={onClick}
+                className="flex flex-1 items-center justify-center py-2 outline-none"
+            >
                 {content}
             </button>
         );
@@ -197,21 +236,27 @@ function BottomNavbar({ groupedMenu }) {
         if (!open) return null;
 
         const getColor = (idx) => {
-            if (type === 'trans') {
-                return idx === 0 ? 'bg-blue-600 shadow-blue-500/30' : 'bg-emerald-600 shadow-emerald-500/30';
+            if (type === "trans") {
+                return idx === 0
+                    ? "bg-blue-600 shadow-blue-500/30"
+                    : "bg-emerald-600 shadow-emerald-500/30";
             }
             // Keuangan colors
             const colors = [
-                'bg-violet-600 shadow-violet-500/30',
-                'bg-orange-600 shadow-orange-500/30',
-                'bg-indigo-600 shadow-indigo-500/30'
+                "bg-violet-600 shadow-violet-500/30",
+                "bg-orange-600 shadow-orange-500/30",
+                "bg-indigo-600 shadow-indigo-500/30",
             ];
             return colors[idx % colors.length];
         };
 
         const getIcon = (idx) => {
-            if (type === 'trans') {
-                return idx === 0 ? <ShoppingCartIcon className="size-5" /> : <PlusCircleIcon className="size-5" />;
+            if (type === "trans") {
+                return idx === 0 ? (
+                    <ShoppingCartIcon className="size-5" />
+                ) : (
+                    <PlusCircleIcon className="size-5" />
+                );
             }
             // Keuangan icons
             if (idx === 0) return <WalletIcon className="size-5" />;
@@ -221,23 +266,31 @@ function BottomNavbar({ groupedMenu }) {
 
         return (
             <>
-                <div className="fixed inset-0 z-[60] bg-black/40 animate-in fade-in duration-300" onClick={onClose} />
+                <div
+                    className="fixed inset-0 z-[60] bg-black/40 animate-in fade-in duration-300"
+                    onClick={onClose}
+                />
                 <div className="fixed bottom-28 left-1/2 z-[70] -translate-x-1/2 animate-in slide-in-from-bottom-5 fade-in duration-400 zoom-in-95">
                     <div className="flex items-center justify-center gap-6 px-6 py-4">
-                        {items.map((item, idx) => item && (
-                            <a 
-                                key={idx} 
-                                href={item.href} 
-                                className="group flex flex-col items-center gap-2 active:scale-95 transition-transform"
-                            >
-                                <div className={`flex size-12 items-center justify-center rounded-[18px] text-white shadow-lg transition-all duration-300 group-hover:scale-110 ${getColor(idx)}`}>
-                                    {getIcon(idx)}
-                                </div>
-                                <div className="rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-[10px] font-bold text-foreground shadow-md border border-border whitespace-nowrap">
-                                    {item.label}
-                                </div>
-                            </a>
-                        ))}
+                        {items.map(
+                            (item, idx) =>
+                                item && (
+                                    <a
+                                        key={idx}
+                                        href={item.href}
+                                        className="group flex flex-col items-center gap-2 active:scale-95 transition-transform"
+                                    >
+                                        <div
+                                            className={`flex size-12 items-center justify-center rounded-[18px] text-white shadow-lg transition-all duration-300 group-hover:scale-110 ${getColor(idx)}`}
+                                        >
+                                            {getIcon(idx)}
+                                        </div>
+                                        <div className="rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-[10px] font-bold text-foreground shadow-md border border-border whitespace-nowrap">
+                                            {item.label}
+                                        </div>
+                                    </a>
+                                ),
+                        )}
                     </div>
                 </div>
             </>
@@ -248,22 +301,30 @@ function BottomNavbar({ groupedMenu }) {
         if (!open) return null;
         return (
             <>
-                <div className="fixed inset-0 z-[60] bg-background/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+                <div
+                    className="fixed inset-0 z-[60] bg-background/40 backdrop-blur-sm animate-in fade-in duration-300"
+                    onClick={onClose}
+                />
                 <div className="fixed bottom-24 left-4 right-4 z-[70] animate-in slide-in-from-bottom-10 fade-in duration-300 zoom-in-95">
                     <div className="app-panel-elevated flex flex-col gap-1 rounded-[28px] p-2 shadow-2xl">
-                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{title}</div>
-                        {items.map((item, idx) => item && (
-                            <a 
-                                key={idx} 
-                                href={item.href} 
-                                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors hover:bg-muted active:scale-95"
-                            >
-                                <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                    <ChevronUpIcon className="size-4 rotate-90" />
-                                </div>
-                                {item.label}
-                            </a>
-                        ))}
+                        <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                            {title}
+                        </div>
+                        {items.map(
+                            (item, idx) =>
+                                item && (
+                                    <a
+                                        key={idx}
+                                        href={item.href}
+                                        className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors hover:bg-muted active:scale-95"
+                                    >
+                                        <div className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                            <ChevronUpIcon className="size-4 rotate-90" />
+                                        </div>
+                                        {item.label}
+                                    </a>
+                                ),
+                        )}
                     </div>
                 </div>
             </>
@@ -273,49 +334,57 @@ function BottomNavbar({ groupedMenu }) {
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-2 lg:hidden">
             <div className="relative mx-auto flex max-w-md items-center justify-around rounded-[32px] bg-background/80 px-2 py-1 shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.15)] backdrop-blur-xl border border-white/10">
-                <NavButton 
-                    label="Dash" 
-                    icon={LayoutDashboardIcon} 
-                    active={nav.dash?.active} 
-                    href={nav.dash?.href} 
+                <NavButton
+                    label="Dash"
+                    icon={LayoutDashboardIcon}
+                    active={nav.dash?.active}
+                    href={nav.dash?.href}
                 />
-                <NavButton 
-                    label="Stok" 
-                    icon={PackageIcon} 
-                    active={nav.stok?.active} 
-                    href={nav.stok?.href} 
-                />
-                
-                <NavButton 
-                    label="Trans" 
-                    icon={ArrowRightLeftIcon} 
-                    isCenter 
-                    onClick={() => setOpenPopup(openPopup === 'trans' ? null : 'trans')}
+                <NavButton
+                    label="Stok"
+                    icon={PackageIcon}
+                    active={nav.stok?.active}
+                    href={nav.stok?.href}
                 />
 
-                <NavButton 
-                    label="Keu" 
-                    icon={WalletIcon} 
-                    active={nav.kas?.active || nav.jurnal?.active || nav.target?.active}
-                    onClick={() => setOpenPopup(openPopup === 'keu' ? null : 'keu')}
+                <NavButton
+                    label="Trans"
+                    icon={ArrowRightLeftIcon}
+                    isCenter
+                    onClick={() =>
+                        setOpenPopup(openPopup === "trans" ? null : "trans")
+                    }
                 />
-                <NavButton 
-                    label="Lap" 
-                    icon={BarChart3Icon} 
-                    active={nav.laporan?.active} 
-                    href={nav.laporan?.href} 
+
+                <NavButton
+                    label="Keu"
+                    icon={WalletIcon}
+                    active={
+                        nav.kas?.active ||
+                        nav.jurnal?.active ||
+                        nav.target?.active
+                    }
+                    onClick={() =>
+                        setOpenPopup(openPopup === "keu" ? null : "keu")
+                    }
+                />
+                <NavButton
+                    label="Lap"
+                    icon={BarChart3Icon}
+                    active={nav.laporan?.active}
+                    href={nav.laporan?.href}
                 />
             </div>
 
-            <QuickActionMenu 
-                open={openPopup === 'trans'} 
+            <QuickActionMenu
+                open={openPopup === "trans"}
                 onClose={() => setOpenPopup(null)}
                 type="trans"
                 items={[nav.penjualan, nav.pembelian]}
             />
 
-            <QuickActionMenu 
-                open={openPopup === 'keu'} 
+            <QuickActionMenu
+                open={openPopup === "keu"}
                 onClose={() => setOpenPopup(null)}
                 type="keu"
                 items={[nav.kas, nav.jurnal, nav.target]}
@@ -330,7 +399,10 @@ function UserMenu({ authUser }) {
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="rounded-2xl px-2">
                     <Avatar className="size-8 rounded-xl">
-                        <AvatarImage src={authUser.avatar} alt={authUser.name} />
+                        <AvatarImage
+                            src={authUser.avatar}
+                            alt={authUser.name}
+                        />
                         <AvatarFallback className="rounded-xl bg-muted text-muted-foreground">
                             {initialsOf(authUser.name)}
                         </AvatarFallback>
@@ -343,7 +415,9 @@ function UserMenu({ authUser }) {
                         <a href={authUser.profileUrl}>Profil Saya</a>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        onClick={() => document.getElementById("logout-form")?.submit()}
+                        onClick={() =>
+                            document.getElementById("logout-form")?.submit()
+                        }
                     >
                         <LogOutIcon data-icon="inline-start" />
                         Log Out
@@ -374,7 +448,10 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                         <div className="app-panel app-panel-elevated flex h-full flex-col rounded-[32px] p-4">
                             <BrandCard />
                             <div className="mt-4 flex min-h-0 flex-1 flex-col">
-                                <MenuTree groupedMenu={groupedMenu} authUser={authUser} />
+                                <MenuTree
+                                    groupedMenu={groupedMenu}
+                                    authUser={authUser}
+                                />
                             </div>
                         </div>
                     </div>
@@ -392,7 +469,9 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                                         onClick={() => setMobileOpen(true)}
                                     >
                                         <MenuIcon />
-                                        <span className="sr-only">Open navigation</span>
+                                        <span className="sr-only">
+                                            Open navigation
+                                        </span>
                                     </Button>
                                 </div>
 
@@ -407,7 +486,7 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
 
                                 <div className="hidden items-center gap-2 sm:flex">
                                     <Badge className="app-accent-badge rounded-full px-3 py-1 shadow-none">
-                                        Hybrid React + Laravel
+                                        PB RT 17 MEMBANGUN
                                     </Badge>
                                 </div>
 
@@ -416,7 +495,9 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                                         theme={theme}
                                         onToggle={() =>
                                             onThemeChange((current) =>
-                                                current === "dark" ? "light" : "dark"
+                                                current === "dark"
+                                                    ? "light"
+                                                    : "dark",
                                             )
                                         }
                                     />
@@ -430,11 +511,61 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                         <div className="flex flex-col gap-5">{children}</div>
                     </main>
 
-                    <footer className="pb-24 pt-6 lg:pb-6">
-                        <Separator className="mb-4 bg-border" />
-                        <div className="flex flex-col gap-2 text-sm text-muted-foreground lg:flex-row lg:items-center lg:justify-between">
-                            <p>PBRT17 KASAMBA admin console.</p>
-                            <p>Theme light/dark konsisten tanpa mengubah logika transaksi Laravel.</p>
+                    <footer className="pb-28 pt-10 lg:pb-10">
+                        <Separator className="mb-8 bg-border" />
+                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="app-accent-badge flex size-8 items-center justify-center rounded-xl text-[10px] font-bold">
+                                        PB
+                                    </div>
+                                    <span className="text-sm font-bold tracking-tight">
+                                        KASAMBA Admin Console
+                                    </span>
+                                </div>
+                                <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+                                    Sistem Manajemen Kas & Operasional
+                                    Shuttlecock PBRT17 dikembangkan untuk
+                                    transparansi dan efisiensi pengelolaan
+                                    keuangan klub secara digital dan
+                                    terintegrasi.
+                                </p>
+                                <div className="flex items-center gap-4 pt-2">
+                                    <a
+                                        href="#"
+                                        className="text-muted-foreground transition-colors hover:text-primary"
+                                    >
+                                        <CameraIcon className="size-5" />
+                                    </a>
+                                    <a
+                                        href="#"
+                                        className="text-muted-foreground transition-colors hover:text-primary"
+                                    >
+                                        <CodeIcon className="size-5" />
+                                    </a>
+                                    <a
+                                        href="#"
+                                        className="text-muted-foreground transition-colors hover:text-primary"
+                                    >
+                                        <GlobeIcon className="size-5" />
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col justify-end space-y-4 lg:items-end">
+                                <div className="text-sm">
+                                    <span className="text-muted-foreground">
+                                        Developed by{" "}
+                                    </span>
+                                    <span className="font-semibold text-foreground transition-colors hover:text-primary cursor-default">
+                                        M .Reyhan Dwi Amberta
+                                    </span>
+                                </div>
+                                <p className="text-[11px] uppercase tracking-widest text-muted-foreground/60">
+                                    © {new Date().getFullYear()} PBRT17 · All
+                                    rights reserved.
+                                </p>
+                            </div>
                         </div>
                     </footer>
                 </div>
@@ -443,7 +574,10 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
             <BottomNavbar groupedMenu={groupedMenu} />
 
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetContent side="left" className="app-overlay-panel w-[92vw] max-w-[340px] p-0">
+                <SheetContent
+                    side="left"
+                    className="app-overlay-panel w-[92vw] max-w-[340px] p-0"
+                >
                     <SheetHeader className="border-b border-border px-4 py-4">
                         <SheetTitle>Navigasi Admin</SheetTitle>
                     </SheetHeader>
@@ -460,8 +594,17 @@ export function AdminLayout({ bootstrap, theme, onThemeChange, children }) {
                 </SheetContent>
             </Sheet>
 
-            <form id="logout-form" action={bootstrap.logoutUrl} method="POST" className="hidden">
-                <input type="hidden" name="_token" value={bootstrap.csrfToken} />
+            <form
+                id="logout-form"
+                action={bootstrap.logoutUrl}
+                method="POST"
+                className="hidden"
+            >
+                <input
+                    type="hidden"
+                    name="_token"
+                    value={bootstrap.csrfToken}
+                />
             </form>
         </div>
     );

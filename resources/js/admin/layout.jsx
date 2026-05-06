@@ -16,6 +16,9 @@ import {
     FileTextIcon,
     TargetIcon,
     ChevronUpIcon,
+    ShoppingCartIcon,
+    PlusCircleIcon,
+    ArrowRightLeftIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -164,10 +167,14 @@ function BottomNavbar({ groupedMenu }) {
     const NavButton = ({ label, icon: Icon, active, onClick, href, isCenter = false }) => {
         const content = (
             <div className={`flex flex-col items-center gap-1 transition-all duration-300 ${active ? 'text-primary' : 'text-muted-foreground'}`}>
-                <div className={`relative flex items-center justify-center ${isCenter ? 'size-12 -mt-6 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 border-4 border-background' : 'size-6'}`}>
+                <div className={`relative flex items-center justify-center transition-transform active:scale-95 ${
+                    isCenter 
+                        ? 'size-12 -mt-7 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-lg shadow-emerald-500/40 border-4 border-background' 
+                        : 'size-6'
+                }`}>
                     <Icon className={isCenter ? "size-6" : "size-5"} />
                 </div>
-                <span className={`text-[10px] font-medium leading-none ${isCenter ? 'mt-0.5' : ''}`}>{label}</span>
+                <span className={`text-[10px] font-medium leading-none ${isCenter ? 'mt-1' : ''}`}>{label}</span>
             </div>
         );
 
@@ -183,6 +190,57 @@ function BottomNavbar({ groupedMenu }) {
             <button onClick={onClick} className="flex flex-1 items-center justify-center py-2 outline-none">
                 {content}
             </button>
+        );
+    };
+
+    const QuickActionMenu = ({ open, onClose, items, type }) => {
+        if (!open) return null;
+
+        const getColor = (idx) => {
+            if (type === 'trans') {
+                return idx === 0 ? 'bg-blue-600 shadow-blue-500/30' : 'bg-emerald-600 shadow-emerald-500/30';
+            }
+            // Keuangan colors
+            const colors = [
+                'bg-violet-600 shadow-violet-500/30',
+                'bg-orange-600 shadow-orange-500/30',
+                'bg-indigo-600 shadow-indigo-500/30'
+            ];
+            return colors[idx % colors.length];
+        };
+
+        const getIcon = (idx) => {
+            if (type === 'trans') {
+                return idx === 0 ? <ShoppingCartIcon className="size-5" /> : <PlusCircleIcon className="size-5" />;
+            }
+            // Keuangan icons
+            if (idx === 0) return <WalletIcon className="size-5" />;
+            if (idx === 1) return <FileTextIcon className="size-5" />;
+            return <TargetIcon className="size-5" />;
+        };
+
+        return (
+            <>
+                <div className="fixed inset-0 z-[60] bg-black/40 animate-in fade-in duration-300" onClick={onClose} />
+                <div className="fixed bottom-28 left-1/2 z-[70] -translate-x-1/2 animate-in slide-in-from-bottom-5 fade-in duration-400 zoom-in-95">
+                    <div className="flex items-center justify-center gap-6 px-6 py-4">
+                        {items.map((item, idx) => item && (
+                            <a 
+                                key={idx} 
+                                href={item.href} 
+                                className="group flex flex-col items-center gap-2 active:scale-95 transition-transform"
+                            >
+                                <div className={`flex size-12 items-center justify-center rounded-[18px] text-white shadow-lg transition-all duration-300 group-hover:scale-110 ${getColor(idx)}`}>
+                                    {getIcon(idx)}
+                                </div>
+                                <div className="rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-[10px] font-bold text-foreground shadow-md border border-border whitespace-nowrap">
+                                    {item.label}
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            </>
         );
     };
 
@@ -230,7 +288,7 @@ function BottomNavbar({ groupedMenu }) {
                 
                 <NavButton 
                     label="Trans" 
-                    icon={PlusIcon} 
+                    icon={ArrowRightLeftIcon} 
                     isCenter 
                     onClick={() => setOpenPopup(openPopup === 'trans' ? null : 'trans')}
                 />
@@ -249,17 +307,17 @@ function BottomNavbar({ groupedMenu }) {
                 />
             </div>
 
-            <PopupMenu 
+            <QuickActionMenu 
                 open={openPopup === 'trans'} 
                 onClose={() => setOpenPopup(null)}
-                title="Transaksi Cepat"
+                type="trans"
                 items={[nav.penjualan, nav.pembelian]}
             />
 
-            <PopupMenu 
+            <QuickActionMenu 
                 open={openPopup === 'keu'} 
                 onClose={() => setOpenPopup(null)}
-                title="Keuangan & Proyek"
+                type="keu"
                 items={[nav.kas, nav.jurnal, nav.target]}
             />
         </div>

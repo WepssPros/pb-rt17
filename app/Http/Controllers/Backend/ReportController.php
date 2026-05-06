@@ -16,6 +16,9 @@ class ReportController extends Controller
     public function stockData(Request $request)
     {
         if ($request->ajax()) {
+            $from = $request->from ? \Carbon\Carbon::parse($request->from)->startOfDay() : now()->startOfMonth();
+            $to = $request->to ? \Carbon\Carbon::parse($request->to)->endOfDay() : now()->endOfMonth();
+
             $stocks = Stock::with('product')->orderBy('id', 'asc');
 
             return datatables()->of($stocks)
@@ -28,9 +31,7 @@ class ReportController extends Controller
                 ->addColumn('sku', function ($s) {
                     return '<i class="bx bx-barcode me-1"></i> ' . e($s->product->sku ?? '-');
                 })
-                ->addColumn('saldo_awal', function ($s) use ($request) {
-                    $from = $request->from ?? now()->startOfMonth();
-
+                ->addColumn('saldo_awal', function ($s) use ($from) {
                     $saldo_awal = StockMovement::where('product_id', $s->product_id)
                         ->where('created_at', '<', $from)
                         ->sum('quantity');
@@ -38,10 +39,7 @@ class ReportController extends Controller
                     return '<span class="text-primary"><i class="bx bx-arrow-from-bottom me-1"></i>'
                         . number_format($saldo_awal, 0, ',', '.') . '</span>';
                 })
-                ->addColumn('masuk', function ($s) use ($request) {
-                    $from = $request->from ?? now()->startOfMonth();
-                    $to = $request->to ?? now()->endOfMonth();
-
+                ->addColumn('masuk', function ($s) use ($from, $to) {
                     $in = StockMovement::where('product_id', $s->product_id)
                         ->whereBetween('created_at', [$from, $to])
                         ->where('quantity', '>', 0)
@@ -50,10 +48,7 @@ class ReportController extends Controller
                     return '<span class="text-success"><i class="bx bx-arrow-down-circle me-1"></i>'
                         . number_format($in, 0, ',', '.') . '</span>';
                 })
-                ->addColumn('keluar', function ($s) use ($request) {
-                    $from = $request->from ?? now()->startOfMonth();
-                    $to = $request->to ?? now()->endOfMonth();
-
+                ->addColumn('keluar', function ($s) use ($from, $to) {
                     $out = StockMovement::where('product_id', $s->product_id)
                         ->whereBetween('created_at', [$from, $to])
                         ->where('quantity', '<', 0)
@@ -62,9 +57,7 @@ class ReportController extends Controller
                     return '<span class="text-danger"><i class="bx bx-arrow-up-circle me-1"></i>'
                         . number_format(abs($out), 0, ',', '.') . '</span>';
                 })
-                ->addColumn('saldo_akhir', function ($s) use ($request) {
-                    $to = $request->to ?? now()->endOfMonth();
-
+                ->addColumn('saldo_akhir', function ($s) use ($to) {
                     $saldo_akhir = StockMovement::where('product_id', $s->product_id)
                         ->where('created_at', '<=', $to)
                         ->sum('quantity');

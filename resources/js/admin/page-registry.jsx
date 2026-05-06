@@ -1471,17 +1471,10 @@ function TransactionPage({ bootstrap, mode }) {
                                     icon={mode === "sale" ? FileCode2Icon : ReceiptTextIcon}
                                     label={mode === "sale" ? "Invoice" : "Referensi"}
                                 />
-                                <TextControl
-                                    id={`${mode}-number`}
+                                <ReadonlyField
                                     icon={mode === "sale" ? FileCode2Icon : ReceiptTextIcon}
                                     value={mode === "sale" ? draft.invoice_no : draft.reference_no}
-                                    onChange={(event) =>
-                                        setDraft((current) => ({
-                                            ...current,
-                                            [mode === "sale" ? "invoice_no" : "reference_no"]:
-                                                event.target.value,
-                                        }))
-                                    }
+                                    className="h-[44px]"
                                 />
                             </Field>
                         </div>
@@ -3714,9 +3707,14 @@ function productDraftFromRow(row) {
 }
 
 function emptyTransaction(mode, pageData) {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const dateStr = `${pad(d.getDate())}${pad(d.getMonth() + 1)}${d.getFullYear()}`;
+    const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+
     return {
-        invoice_no: "",
-        reference_no: "",
+        invoice_no: mode === "sale" ? `INV-${dateStr}-${timeStr}-SHTCOCK` : "",
+        reference_no: mode !== "sale" ? `REF-${dateStr}-${timeStr}-BUY` : "",
         sale_date: todayYmd(),
         purchase_date: todayYmd(),
         partner: "",

@@ -114,6 +114,7 @@ import {
     stripHtml,
     todayYmd,
 } from "@/admin/utils";
+import { TournamentPage } from "@/admin/tournament-page";
 
 const PAGE_CARD_CLASS = "app-panel app-panel-elevated rounded-[28px]";
 const SUBPANEL_CLASS = "app-subpanel rounded-[24px] p-4";
@@ -3777,6 +3778,7 @@ const registry = {
     cash: CashAccountsPage,
     "cash-transactions": CashTransactionsPage,
     projects: ProjectTargetsPage,
+    tournament: TournamentPage,
     reports: ReportsPage,
     roles: RolesIndexPage,
     "roles-user": RoleProfilePage,

@@ -22,6 +22,7 @@ import {
     CodeIcon,
     CameraIcon,
     GlobeIcon,
+    TrophyIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ const iconMap = {
     finance: BellIcon,
     report: CommandIcon,
     settings: CommandIcon,
+    tournament: TrophyIcon,
 };
 
 function initialsOf(name) {
@@ -180,6 +182,7 @@ function BottomNavbar({ groupedMenu }) {
         jurnal: findItem("Keuangan", "Jurnal Umum"),
         target: findItem("Keuangan", "Target Proyek"),
         laporan: findItem("Laporan"),
+        tournament: findItem("Master Data", "Tournament"),
     };
 
     const NavButton = ({
@@ -369,10 +372,10 @@ function BottomNavbar({ groupedMenu }) {
                     }
                 />
                 <NavButton
-                    label="Lap"
-                    icon={BarChart3Icon}
-                    active={nav.laporan?.active}
-                    href={nav.laporan?.href}
+                    label={nav.tournament ? "Liga" : "Lap"}
+                    icon={nav.tournament ? TrophyIcon : BarChart3Icon}
+                    active={nav.tournament?.active || nav.laporan?.active}
+                    href={nav.tournament?.href || nav.laporan?.href}
                 />
             </div>
 

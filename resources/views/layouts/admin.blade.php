@@ -40,6 +40,7 @@
         $routeName === 'cash.accounts' => 'cash',
         $routeName === 'cash.transactions' => 'cash-transactions',
         str_starts_with($routeName, 'projects.') => 'projects',
+        str_starts_with($routeName, 'tournament.') => 'tournament',
         str_starts_with($routeName, 'reports.') => 'reports',
         $routeName === 'roles.index' => 'roles',
         $routeName === 'roles.users.show' => 'roles-user',
@@ -68,6 +69,11 @@
                     'label' => 'Stok Shuttlecock',
                     'href' => route('products.index'),
                     'active' => request()->routeIs('products.*'),
+                ] : null,
+                $authUser?->can('akses tournament') ? [
+                    'label' => 'Tournament',
+                    'href' => route('tournament.index'),
+                    'active' => request()->routeIs('tournament.*'),
                 ] : null,
             ])),
         ],
@@ -212,6 +218,16 @@
             'cashAccounts' => \App\Models\CashAccount::get(['id', 'name', 'balance']),
             'routes' => [
                 'data' => route('projects.data'),
+            ],
+        ],
+        'tournament' => [
+            'routes' => [
+                'data' => route('tournament.data'),
+                'teamsStore' => route('tournament.teams.store'),
+                'teamsBase' => url('/tournament/teams'),
+                'matchesStore' => route('tournament.matches.store'),
+                'matchesBase' => url('/tournament/matches'),
+                'publicUrl' => route('ligapayo17.index'),
             ],
         ],
         'reports' => [

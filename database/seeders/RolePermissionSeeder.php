@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
             'akses laporan stok',
             'akses manajemen user',
             'akses target proyek',
+            'akses tournament',
         ];
 
         foreach ($permissions as $permission) {

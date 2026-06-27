@@ -11,6 +11,7 @@ export default defineConfig({
                 "resources/css/app.css",
                 "resources/js/app.js",
                 "resources/js/admin/main.jsx",
+                "resources/js/ligapayo17/main.jsx",
                 "resources/js/auth/login.jsx",
                 "resources/js/auth/register.jsx",
                 "resources/js/product.js",

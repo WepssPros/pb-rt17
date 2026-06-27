@@ -11,6 +11,8 @@ use App\Http\Controllers\Backend\ReportController;
 use App\Http\Controllers\Backend\RoleManagementController;
 use App\Http\Controllers\Backend\ScheduleController;
 use App\Http\Controllers\Backend\TransactionController;
+use App\Http\Controllers\Backend\TournamentController;
+use App\Http\Controllers\Ligapayo17Controller;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -27,6 +29,9 @@ use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+Route::get('/ligapayo17', [Ligapayo17Controller::class, 'index'])->name('ligapayo17.index');
+Route::get('/ligapayo17/data', [Ligapayo17Controller::class, 'data'])->name('ligapayo17.data');
 
 
 
@@ -100,6 +105,17 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
         Route::post('/', [ProjectTargetController::class, 'store'])->name('store');
         Route::patch('/{id}', [ProjectTargetController::class, 'update'])->name('update');
         Route::delete('/{id}', [ProjectTargetController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('tournament')->name('tournament.')->middleware('permission:akses tournament')->group(function () {
+        Route::get('/', [TournamentController::class, 'index'])->name('index');
+        Route::get('/data', [TournamentController::class, 'data'])->name('data');
+        Route::post('/teams', [TournamentController::class, 'storeTeam'])->name('teams.store');
+        Route::patch('/teams/{team}', [TournamentController::class, 'updateTeam'])->name('teams.update');
+        Route::delete('/teams/{team}', [TournamentController::class, 'destroyTeam'])->name('teams.destroy');
+        Route::post('/matches', [TournamentController::class, 'storeMatch'])->name('matches.store');
+        Route::patch('/matches/{match}', [TournamentController::class, 'updateMatch'])->name('matches.update');
+        Route::delete('/matches/{match}', [TournamentController::class, 'destroyMatch'])->name('matches.destroy');
     });
 
     Route::prefix('roles')->name('roles.')->middleware('permission:akses manajemen user')->group(function () {

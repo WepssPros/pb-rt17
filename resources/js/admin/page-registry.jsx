@@ -3779,6 +3779,7 @@ const registry = {
     "cash-transactions": CashTransactionsPage,
     projects: ProjectTargetsPage,
     tournament: TournamentPage,
+    "tournament.index": TournamentPage,
     reports: ReportsPage,
     roles: RolesIndexPage,
     "roles-user": RoleProfilePage,

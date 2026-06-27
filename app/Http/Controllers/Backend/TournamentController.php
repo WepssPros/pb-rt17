@@ -125,16 +125,30 @@ class TournamentController extends Controller
                 'exists:schedules,id',
                 Rule::unique('tournament_matches', 'schedule_id')->ignore($match?->id),
             ],
-            'home_team_id' => ['required', 'exists:tournament_teams,id'],
-            'away_team_id' => ['required', 'exists:tournament_teams,id', 'different:home_team_id'],
+            'event_type' => ['nullable', Rule::in(['match', 'info'])],
+            'home_team_id' => ['nullable', Rule::requiredIf($request->input('event_type', 'match') === 'match'), 'exists:tournament_teams,id'],
+            'away_team_id' => ['nullable', Rule::requiredIf($request->input('event_type', 'match') === 'match'), 'exists:tournament_teams,id', 'different:home_team_id'],
             'status' => ['required', Rule::in(['scheduled', 'finished'])],
-            'result_type' => ['nullable', Rule::requiredIf($request->input('status') === 'finished'), Rule::in(['straight', 'rubber'])],
-            'winner_team_id' => ['nullable', Rule::requiredIf($request->input('status') === 'finished'), 'exists:tournament_teams,id'],
+            'result_type' => ['nullable', Rule::requiredIf($request->input('event_type', 'match') === 'match' && $request->input('status') === 'finished'), Rule::in(['straight', 'rubber'])],
+            'winner_team_id' => ['nullable', Rule::requiredIf($request->input('event_type', 'match') === 'match' && $request->input('status') === 'finished'), 'exists:tournament_teams,id'],
             'set_scores' => ['nullable', 'array', 'max:3'],
             'set_scores.*.home' => ['nullable', 'integer', 'min:0', 'max:99'],
             'set_scores.*.away' => ['nullable', 'integer', 'min:0', 'max:99'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $data['event_type'] = $data['event_type'] ?? 'match';
+
+        if ($data['event_type'] === 'info') {
+            $data['home_team_id'] = null;
+            $data['away_team_id'] = null;
+            $data['winner_team_id'] = null;
+            $data['result_type'] = null;
+            $data['status'] = 'scheduled';
+            $data['set_scores'] = [];
+
+            return $data;
+        }
 
         if (($data['status'] ?? 'scheduled') === 'finished') {
             $winnerId = (int) ($data['winner_team_id'] ?? 0);
@@ -167,6 +181,7 @@ class TournamentController extends Controller
         return [
             'id' => $match->id,
             'schedule_id' => $match->schedule_id,
+            'event_type' => $match->event_type ?? 'match',
             'home_team_id' => $match->home_team_id,
             'away_team_id' => $match->away_team_id,
             'winner_team_id' => $match->winner_team_id,

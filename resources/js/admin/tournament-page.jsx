@@ -52,6 +52,7 @@ const emptyTeam = {
 
 const emptyMatch = {
     id: "",
+    event_type: "match",
     schedule_id: "",
     home_team_id: "",
     away_team_id: "",
@@ -120,6 +121,10 @@ function PageHeader({ publicUrl, onAddTeam, onAddMatch }) {
 }
 
 function ResultBadge({ match }) {
+    if ((match.event_type || "match") === "info") {
+        return <Badge variant="secondary" className="tournament-status-badge">Informasi</Badge>;
+    }
+
     if (match.status !== "finished") {
         return <Badge variant="outline" className="tournament-status-badge">Belum main</Badge>;
     }
@@ -265,6 +270,7 @@ function MatchPanel({ rows, loading, search, onSearch, onEdit, onDelete }) {
 
         return rows.filter((match) => [
             match.status,
+            match.event_type,
             match.result_type,
             match.schedule?.title,
             match.schedule?.location,
@@ -315,11 +321,15 @@ function MatchPanel({ rows, loading, search, onSearch, onEdit, onDelete }) {
                                 <td data-label="Match">
                                     <div className="tournament-meta">
                                         <span className="tournament-icon"><SwordsIcon className="size-4" /></span>
-                                        <strong>{match.home_team?.name || "-"} vs {match.away_team?.name || "-"}</strong>
+                                        <strong>
+                                            {(match.event_type || "match") === "info"
+                                                ? (match.schedule?.title || "Informasi Liga")
+                                                : `${match.home_team?.name || "-"} vs ${match.away_team?.name || "-"}`}
+                                        </strong>
                                     </div>
                                 </td>
                                 <td data-label="Pemenang">
-                                    <span className="tournament-muted">{match.winner_team?.name || "-"}</span>
+                                    <span className="tournament-muted">{(match.event_type || "match") === "info" ? "Informasi" : (match.winner_team?.name || "-")}</span>
                                 </td>
                                 <td data-label="Hasil">
                                     <ResultBadge match={match} />
@@ -349,6 +359,7 @@ function normalizeMatch(row) {
     return {
         ...emptyMatch,
         id: row.id || "",
+        event_type: row.event_type || "match",
         schedule_id: String(row.schedule_id || ""),
         home_team_id: String(row.home_team_id || ""),
         away_team_id: String(row.away_team_id || ""),
@@ -399,6 +410,7 @@ export function TournamentPage({ bootstrap }) {
 
     const selectedHomeId = String(matchDraft.home_team_id || "");
     const selectedAwayId = String(matchDraft.away_team_id || "");
+    const isInfoEvent = (matchDraft.event_type || "match") === "info";
 
     const openCreateTeam = () => {
         setTeamDraft(emptyTeam);
@@ -452,19 +464,22 @@ export function TournamentPage({ bootstrap }) {
         try {
             const entries = [
                 ["schedule_id", matchDraft.schedule_id],
-                ["home_team_id", matchDraft.home_team_id],
-                ["away_team_id", matchDraft.away_team_id],
-                ["status", matchDraft.status],
-                ["result_type", matchDraft.status === "finished" ? matchDraft.result_type : ""],
-                ["winner_team_id", matchDraft.status === "finished" ? matchDraft.winner_team_id : ""],
+                ["event_type", matchDraft.event_type || "match"],
+                ["home_team_id", isInfoEvent ? "" : matchDraft.home_team_id],
+                ["away_team_id", isInfoEvent ? "" : matchDraft.away_team_id],
+                ["status", isInfoEvent ? "scheduled" : matchDraft.status],
+                ["result_type", !isInfoEvent && matchDraft.status === "finished" ? matchDraft.result_type : ""],
+                ["winner_team_id", !isInfoEvent && matchDraft.status === "finished" ? matchDraft.winner_team_id : ""],
                 ["notes", matchDraft.notes],
                 ...(matchDraft.id ? [["_method", "PATCH"]] : []),
             ];
 
-            matchDraft.set_scores.forEach((set, index) => {
-                entries.push([`set_scores[${index}][home]`, set.home]);
-                entries.push([`set_scores[${index}][away]`, set.away]);
-            });
+            if (!isInfoEvent) {
+                matchDraft.set_scores.forEach((set, index) => {
+                    entries.push([`set_scores[${index}][home]`, set.home]);
+                    entries.push([`set_scores[${index}][away]`, set.away]);
+                });
+            }
 
             await sendForm(
                 matchDraft.id ? `${routes.matchesBase}/${matchDraft.id}` : routes.matchesStore,
@@ -520,7 +535,13 @@ export function TournamentPage({ bootstrap }) {
                         search={matchSearch}
                         onSearch={setMatchSearch}
                         onEdit={openEditMatch}
-                        onDelete={(row) => setDeleteTarget({ type: "match", id: row.id, name: `${row.home_team?.name} vs ${row.away_team?.name}` })}
+                        onDelete={(row) => setDeleteTarget({
+                            type: "match",
+                            id: row.id,
+                            name: (row.event_type || "match") === "info"
+                                ? (row.schedule?.title || "Informasi Liga")
+                                : `${row.home_team?.name} vs ${row.away_team?.name}`,
+                        })}
                     />
                 </TabsContent>
             </Tabs>
@@ -582,115 +603,149 @@ export function TournamentPage({ bootstrap }) {
                             </Field>
                         </div>
 
-                        <div className="tournament-form-grid">
-                            <div className="tournament-form-section">
-                                <h3>Pasangan</h3>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <Field label="Pasangan A">
-                                        <NativeSelect value={selectedHomeId} onChange={(value) => setMatchDraft((current) => ({ ...current, home_team_id: value }))}>
-                                            <option value="">Pilih pasangan</option>
-                                            {activeTeams.map((team) => (
-                                                <option key={team.id} value={team.id} disabled={String(team.id) === selectedAwayId}>{team.name}</option>
-                                            ))}
-                                        </NativeSelect>
-                                    </Field>
-                                    <Field label="Pasangan B">
-                                        <NativeSelect value={selectedAwayId} onChange={(value) => setMatchDraft((current) => ({ ...current, away_team_id: value }))}>
-                                            <option value="">Pilih pasangan</option>
-                                            {activeTeams.map((team) => (
-                                                <option key={team.id} value={team.id} disabled={String(team.id) === selectedHomeId}>{team.name}</option>
-                                            ))}
-                                        </NativeSelect>
-                                    </Field>
-                                </div>
-                            </div>
-
-                            <div className="tournament-form-section">
-                                <h3>Hasil</h3>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <Field label="Status">
-                                        <NativeSelect
-                                            value={matchDraft.status}
-                                            onChange={(value) => setMatchDraft((current) => ({
-                                                ...current,
-                                                status: value,
-                                                result_type: value === "finished" ? current.result_type : "",
-                                                winner_team_id: value === "finished" ? current.winner_team_id : "",
-                                            }))}
-                                        >
-                                            <option value="scheduled">Belum main</option>
-                                            <option value="finished">Selesai</option>
-                                        </NativeSelect>
-                                    </Field>
-                                    <Field label="Jenis hasil">
-                                        <NativeSelect
-                                            value={matchDraft.result_type}
-                                            disabled={matchDraft.status !== "finished"}
-                                            onChange={(value) => setMatchDraft((current) => ({ ...current, result_type: value }))}
-                                        >
-                                            <option value="">Pilih hasil</option>
-                                            <option value="straight">Straight - 2 poin</option>
-                                            <option value="rubber">Rubber - 1 poin</option>
-                                        </NativeSelect>
-                                    </Field>
-                                </div>
-                                <Field label="Pemenang">
+                        <div className="tournament-form-section">
+                            <h3>Jenis jadwal</h3>
+                            <div className="grid gap-4 sm:grid-cols-[minmax(0,14rem)_1fr]">
+                                <Field label="Tipe">
                                     <NativeSelect
-                                        value={matchDraft.winner_team_id}
-                                        disabled={matchDraft.status !== "finished"}
-                                        onChange={(value) => setMatchDraft((current) => ({ ...current, winner_team_id: value }))}
+                                        value={matchDraft.event_type || "match"}
+                                        onChange={(value) => setMatchDraft((current) => ({
+                                            ...current,
+                                            event_type: value,
+                                            home_team_id: value === "info" ? "" : current.home_team_id,
+                                            away_team_id: value === "info" ? "" : current.away_team_id,
+                                            winner_team_id: value === "info" ? "" : current.winner_team_id,
+                                            result_type: value === "info" ? "" : current.result_type,
+                                            status: value === "info" ? "scheduled" : current.status,
+                                            set_scores: value === "info" ? emptyMatch.set_scores : current.set_scores,
+                                        }))}
                                     >
-                                        <option value="">Pilih pemenang</option>
-                                        {activeTeams
-                                            .filter((team) => [selectedHomeId, selectedAwayId].includes(String(team.id)))
-                                            .map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
+                                        <option value="match">Pertandingan</option>
+                                        <option value="info">Informasi</option>
                                     </NativeSelect>
                                 </Field>
+                                <div className="tournament-info-hint">
+                                    {isInfoEvent
+                                        ? "Gunakan catatan untuk pengumuman, meeting, briefing, atau informasi lain. Data ini tidak masuk klasemen."
+                                        : "Pertandingan masuk jadwal liga dan hasilnya bisa menghitung klasemen jika status selesai."}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="tournament-form-section">
-                            <h3>Skor set</h3>
-                            <div className="tournament-set-grid">
-                                {matchDraft.set_scores.map((set, index) => (
-                                    <div key={index} className="tournament-set-card">
-                                        <p>Set {index + 1}</p>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <Input
-                                                className="tournament-input text-center"
-                                                type="number"
-                                                min="0"
-                                                placeholder="A"
-                                                value={set.home}
-                                                onChange={(event) => setMatchDraft((current) => {
-                                                    const next = [...current.set_scores];
-                                                    next[index] = { ...next[index], home: event.target.value };
-                                                    return { ...current, set_scores: next };
-                                                })}
-                                            />
-                                            <Input
-                                                className="tournament-input text-center"
-                                                type="number"
-                                                min="0"
-                                                placeholder="B"
-                                                value={set.away}
-                                                onChange={(event) => setMatchDraft((current) => {
-                                                    const next = [...current.set_scores];
-                                                    next[index] = { ...next[index], away: event.target.value };
-                                                    return { ...current, set_scores: next };
-                                                })}
-                                            />
+                        {!isInfoEvent ? (
+                            <>
+                                <div className="tournament-form-grid">
+                                    <div className="tournament-form-section">
+                                        <h3>Pasangan</h3>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <Field label="Pasangan A">
+                                                <NativeSelect value={selectedHomeId} onChange={(value) => setMatchDraft((current) => ({ ...current, home_team_id: value }))}>
+                                                    <option value="">Pilih pasangan</option>
+                                                    {activeTeams.map((team) => (
+                                                        <option key={team.id} value={team.id} disabled={String(team.id) === selectedAwayId}>{team.name}</option>
+                                                    ))}
+                                                </NativeSelect>
+                                            </Field>
+                                            <Field label="Pasangan B">
+                                                <NativeSelect value={selectedAwayId} onChange={(value) => setMatchDraft((current) => ({ ...current, away_team_id: value }))}>
+                                                    <option value="">Pilih pasangan</option>
+                                                    {activeTeams.map((team) => (
+                                                        <option key={team.id} value={team.id} disabled={String(team.id) === selectedHomeId}>{team.name}</option>
+                                                    ))}
+                                                </NativeSelect>
+                                            </Field>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
+
+                                    <div className="tournament-form-section">
+                                        <h3>Hasil</h3>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            <Field label="Status">
+                                                <NativeSelect
+                                                    value={matchDraft.status}
+                                                    onChange={(value) => setMatchDraft((current) => ({
+                                                        ...current,
+                                                        status: value,
+                                                        result_type: value === "finished" ? current.result_type : "",
+                                                        winner_team_id: value === "finished" ? current.winner_team_id : "",
+                                                    }))}
+                                                >
+                                                    <option value="scheduled">Belum main</option>
+                                                    <option value="finished">Selesai</option>
+                                                </NativeSelect>
+                                            </Field>
+                                            <Field label="Jenis hasil">
+                                                <NativeSelect
+                                                    value={matchDraft.result_type}
+                                                    disabled={matchDraft.status !== "finished"}
+                                                    onChange={(value) => setMatchDraft((current) => ({ ...current, result_type: value }))}
+                                                >
+                                                    <option value="">Pilih hasil</option>
+                                                    <option value="straight">Straight - 2 poin</option>
+                                                    <option value="rubber">Rubber - 1 poin</option>
+                                                </NativeSelect>
+                                            </Field>
+                                        </div>
+                                        <Field label="Pemenang">
+                                            <NativeSelect
+                                                value={matchDraft.winner_team_id}
+                                                disabled={matchDraft.status !== "finished"}
+                                                onChange={(value) => setMatchDraft((current) => ({ ...current, winner_team_id: value }))}
+                                            >
+                                                <option value="">Pilih pemenang</option>
+                                                {activeTeams
+                                                    .filter((team) => [selectedHomeId, selectedAwayId].includes(String(team.id)))
+                                                    .map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
+                                            </NativeSelect>
+                                        </Field>
+                                    </div>
+                                </div>
+
+                                <div className="tournament-form-section">
+                                    <h3>Skor set</h3>
+                                    <div className="tournament-set-grid">
+                                        {matchDraft.set_scores.map((set, index) => (
+                                            <div key={index} className="tournament-set-card">
+                                                <p>Set {index + 1}</p>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <Input
+                                                        className="tournament-input text-center"
+                                                        type="number"
+                                                        min="0"
+                                                        placeholder="A"
+                                                        value={set.home}
+                                                        onChange={(event) => setMatchDraft((current) => {
+                                                            const next = [...current.set_scores];
+                                                            next[index] = { ...next[index], home: event.target.value };
+                                                            return { ...current, set_scores: next };
+                                                        })}
+                                                    />
+                                                    <Input
+                                                        className="tournament-input text-center"
+                                                        type="number"
+                                                        min="0"
+                                                        placeholder="B"
+                                                        value={set.away}
+                                                        onChange={(event) => setMatchDraft((current) => {
+                                                            const next = [...current.set_scores];
+                                                            next[index] = { ...next[index], away: event.target.value };
+                                                            return { ...current, set_scores: next };
+                                                        })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        ) : null}
 
                         <div className="tournament-form-section">
-                            <h3>Catatan</h3>
-                            <Field label="Catatan match">
+                            <h3>{isInfoEvent ? "Informasi" : "Catatan"}</h3>
+                            <Field label={isInfoEvent ? "Isi informasi" : "Catatan match"}>
                                 <Textarea
                                     className="tournament-input min-h-24 resize-y"
+                                    placeholder={isInfoEvent ? "Contoh: Technical meeting, perubahan jadwal, atau informasi untuk peserta." : "Tulis catatan tambahan untuk match ini."}
                                     value={matchDraft.notes}
                                     onChange={(event) => setMatchDraft((current) => ({ ...current, notes: event.target.value }))}
                                 />

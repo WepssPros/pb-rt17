@@ -162,6 +162,8 @@ function MobileStandings({ rows }) {
 }
 
 function scoreLabel(match) {
+    if ((match?.event_type || "match") === "info") return "Informasi";
+
     const scores = match?.set_scores || [];
     const filled = scores
         .filter((set) => set.home !== "" && set.away !== "")
@@ -199,9 +201,13 @@ function LigaPayo17App({ endpoint }) {
 
     const hasEvents = Boolean(payload.events?.length);
     const nextMatches = useMemo(
-        () => (payload.matches || []).filter((match) => match.status !== "finished").slice(0, 3),
+        () => (payload.matches || []).filter((match) => (match.event_type || "match") === "match" && match.status !== "finished").slice(0, 3),
         [payload.matches]
     );
+    const selectedIsInfo = (selectedMatch?.event_type || "match") === "info";
+    const selectedTitle = selectedIsInfo
+        ? (selectedMatch?.schedule?.title || "Informasi Liga")
+        : `${selectedMatch?.home_team?.name || "-"} vs ${selectedMatch?.away_team?.name || "-"}`;
 
     return (
         <main className="liga-page">
@@ -324,7 +330,7 @@ function LigaPayo17App({ endpoint }) {
                 <DialogContent className="liga-event-dialog max-w-md p-0">
                     <DialogHeader className="liga-event-dialog-head">
                         <DialogTitle>
-                            {selectedMatch?.home_team?.name || "-"} vs {selectedMatch?.away_team?.name || "-"}
+                            {selectedTitle}
                         </DialogTitle>
                         <DialogDescription>Detail jadwal Liga Payo 17</DialogDescription>
                     </DialogHeader>
@@ -338,15 +344,29 @@ function LigaPayo17App({ endpoint }) {
                             <span>{selectedMatch?.schedule?.location || "Lokasi belum diisi"}</span>
                         </div>
                         <div className="liga-event-result">
-                            <span>Hasil</span>
-                            <Badge variant={selectedMatch?.status === "finished" ? "secondary" : "outline"}>
-                                {scoreLabel(selectedMatch)}
+                            <span>Jenis</span>
+                            <Badge variant={selectedIsInfo ? "secondary" : "outline"}>
+                                {selectedIsInfo ? "Informasi" : "Pertandingan"}
                             </Badge>
                         </div>
-                        {selectedMatch?.winner_team ? (
+                        {!selectedIsInfo ? (
+                            <div className="liga-event-result">
+                                <span>Hasil</span>
+                                <Badge variant={selectedMatch?.status === "finished" ? "secondary" : "outline"}>
+                                    {scoreLabel(selectedMatch)}
+                                </Badge>
+                            </div>
+                        ) : null}
+                        {!selectedIsInfo && selectedMatch?.winner_team ? (
                             <div className="liga-event-result">
                                 <span>Pemenang</span>
                                 <strong>{selectedMatch.winner_team.name}</strong>
+                            </div>
+                        ) : null}
+                        {selectedMatch?.notes ? (
+                            <div className="liga-event-note">
+                                <span>{selectedIsInfo ? "Informasi" : "Catatan"}</span>
+                                <p>{selectedMatch.notes}</p>
                             </div>
                         ) : null}
                     </div>

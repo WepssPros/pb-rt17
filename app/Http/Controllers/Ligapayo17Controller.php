@@ -40,6 +40,7 @@ class Ligapayo17Controller extends Controller
     {
         return [
             'id' => $match->id,
+            'event_type' => $match->event_type ?? 'match',
             'status' => $match->status,
             'result_type' => $match->result_type,
             'set_scores' => $match->set_scores ?? [],
@@ -60,7 +61,9 @@ class Ligapayo17Controller extends Controller
     private function formatEvent(TournamentMatch $match): array
     {
         $schedule = $match->schedule;
-        $title = trim(($match->homeTeam?->name ?? 'TBD') . ' vs ' . ($match->awayTeam?->name ?? 'TBD'));
+        $title = ($match->event_type ?? 'match') === 'info'
+            ? ($schedule?->title ?: 'Informasi Liga')
+            : trim(($match->homeTeam?->name ?? 'TBD') . ' vs ' . ($match->awayTeam?->name ?? 'TBD'));
         $start = $schedule
             ? Carbon::parse($schedule->date . ' ' . $schedule->start_time, $this->tz)->toIso8601String()
             : null;

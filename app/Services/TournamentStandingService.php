@@ -36,6 +36,7 @@ class TournamentStandingService
 
         $matches = TournamentMatch::query()
             ->with(['schedule', 'homeTeam', 'awayTeam'])
+            ->where('event_type', 'match')
             ->where('status', 'finished')
             ->whereNotNull('winner_team_id')
             ->orderByDesc(

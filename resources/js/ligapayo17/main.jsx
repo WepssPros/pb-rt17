@@ -23,6 +23,7 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -320,39 +321,41 @@ function LigaPayo17App({ endpoint }) {
             </section>
 
             <Dialog open={Boolean(selectedMatch)} onOpenChange={(open) => !open && setSelectedMatch(null)}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
+                <DialogContent className="liga-event-dialog max-w-md p-0">
+                    <DialogHeader className="liga-event-dialog-head">
                         <DialogTitle>
                             {selectedMatch?.home_team?.name || "-"} vs {selectedMatch?.away_team?.name || "-"}
                         </DialogTitle>
                         <DialogDescription>Detail jadwal Liga Payo 17</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-3 text-sm">
-                        <div className="flex items-center gap-2">
+                    <div className="liga-event-dialog-body">
+                        <div className="liga-event-line">
                             <CalendarDaysIcon className="size-4 text-muted-foreground" />
                             <span>{isoToIndoDate(selectedMatch?.schedule?.date)} · {selectedMatch?.schedule?.start_time} - {selectedMatch?.schedule?.end_time || "selesai"}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="liga-event-line">
                             <MapPinIcon className="size-4 text-muted-foreground" />
                             <span>{selectedMatch?.schedule?.location || "Lokasi belum diisi"}</span>
                         </div>
-                        <div className="flex items-center justify-between rounded-2xl bg-muted px-4 py-3">
+                        <div className="liga-event-result">
                             <span>Hasil</span>
                             <Badge variant={selectedMatch?.status === "finished" ? "secondary" : "outline"}>
                                 {scoreLabel(selectedMatch)}
                             </Badge>
                         </div>
                         {selectedMatch?.winner_team ? (
-                            <div className="flex items-center justify-between rounded-2xl bg-muted px-4 py-3">
+                            <div className="liga-event-result">
                                 <span>Pemenang</span>
                                 <strong>{selectedMatch.winner_team.name}</strong>
                             </div>
                         ) : null}
                     </div>
-                    <Button variant="outline" onClick={() => setSelectedMatch(null)}>
-                        <XIcon data-icon="inline-start" />
-                        Tutup
-                    </Button>
+                    <DialogFooter className="liga-event-dialog-footer">
+                        <Button variant="outline" onClick={() => setSelectedMatch(null)}>
+                            <XIcon data-icon="inline-start" />
+                            Tutup
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </main>

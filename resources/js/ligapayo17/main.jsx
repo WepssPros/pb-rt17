@@ -327,7 +327,7 @@ function LigaPayo17App({ endpoint }) {
             </section>
 
             <Dialog open={Boolean(selectedMatch)} onOpenChange={(open) => !open && setSelectedMatch(null)}>
-                <DialogContent className="liga-event-dialog max-w-md p-0">
+                <DialogContent className="liga-event-dialog p-0">
                     <DialogHeader className="liga-event-dialog-head">
                         <DialogTitle>
                             {selectedTitle}

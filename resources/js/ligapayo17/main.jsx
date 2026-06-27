@@ -70,12 +70,7 @@ function FormDots({ values = [] }) {
 function TeamNames({ row }) {
     return (
         <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-2">
-                <p className="truncate font-semibold text-foreground">{row.name}</p>
-                {row.position <= 4 ? (
-                    <span className="liga-final-badge">Grand Final</span>
-                ) : null}
-            </div>
+            <p className="truncate font-semibold text-foreground">{row.name}</p>
             <p className="truncate text-xs text-muted-foreground">
                 {[row.player_one, row.player_two].filter(Boolean).join(" / ") || "Ganda putra"}
             </p>
@@ -259,6 +254,10 @@ function LigaPayo17App({ endpoint }) {
                         <div>
                             <h2>Klasemen</h2>
                             <p>Menang telak 2 poin, rubber 1 poin, kalah 0 poin.</p>
+                            <div className="liga-finals-note">
+                                <i />
+                                <span>Garis kiri hijau menandai 4 besar Grand Final.</span>
+                            </div>
                         </div>
                         <div className="liga-legend">
                             <span><i className="liga-dot-win" /> W</span>

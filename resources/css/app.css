@@ -580,23 +580,26 @@
   }
 
   .liga-tabs {
-    display: inline-flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    align-items: stretch;
     gap: 0.25rem;
     margin-top: 0.75rem;
     border: 1px solid var(--border);
-    border-radius: 9999px;
+    border-radius: 1.25rem;
     background-color: color-mix(in oklab, var(--surface) 94%, transparent);
     padding: 0.25rem;
   }
 
   .liga-tabs button {
-    min-width: 7.2rem;
-    border-radius: 9999px;
+    min-width: 0;
+    border-radius: 1rem;
     padding: 0.62rem 1rem;
     color: var(--muted-foreground);
     font-size: 0.84rem;
     font-weight: 700;
+    text-align: center;
     transition: background-color 150ms ease, color 150ms ease;
   }
 
@@ -624,6 +627,25 @@
     color: var(--muted-foreground);
     font-size: 0.82rem;
     line-height: 1.5;
+  }
+
+  .liga-finals-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    margin-top: 0.55rem;
+    color: var(--muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .liga-finals-note i {
+    display: inline-block;
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--success) 72%, var(--primary) 28%);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--success) 14%, transparent);
   }
 
   .liga-legend {
@@ -692,7 +714,7 @@
     position: sticky;
     left: 0;
     z-index: 8;
-    background-color: color-mix(in oklab, var(--surface) 98%, transparent);
+    background-color: var(--surface);
   }
 
   .liga-table th:nth-child(2),
@@ -700,14 +722,14 @@
     position: sticky;
     left: 3rem;
     z-index: 8;
-    background-color: color-mix(in oklab, var(--surface) 98%, transparent);
+    background-color: var(--surface);
     box-shadow: 14px 0 22px -20px rgba(var(--app-overlay), 0.78);
   }
 
   .liga-table th:first-child,
   .liga-table th:nth-child(2) {
     z-index: 10;
-    background-color: color-mix(in oklab, var(--surface-muted) 98%, transparent);
+    background-color: var(--surface-muted);
   }
 
   .liga-table td {
@@ -724,17 +746,18 @@
     box-shadow: inset 4px 0 0 color-mix(in oklab, var(--success) 72%, var(--primary) 28%);
   }
 
-  .liga-final-badge {
-    flex-shrink: 0;
-    border-radius: 9999px;
-    background-color: color-mix(in oklab, var(--success) 14%, transparent);
-    border: 1px solid color-mix(in oklab, var(--success) 28%, var(--border) 72%);
-    color: color-mix(in oklab, var(--success) 68%, var(--foreground) 32%);
-    padding: 0.12rem 0.42rem;
-    font-size: 0.58rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+  .liga-row-final .liga-pos {
+    position: sticky;
+  }
+
+  .liga-row-final .liga-pos::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: -1px;
+    bottom: -1px;
+    width: 3px;
+    background: color-mix(in oklab, var(--success) 72%, var(--primary) 28%);
   }
 
   .liga-pos {

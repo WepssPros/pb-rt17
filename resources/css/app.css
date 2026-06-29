@@ -1000,19 +1000,18 @@
 
   .liga-banner {
     position: relative;
-    overflow: visible;
-    margin-top: 1rem;
-    padding-bottom: 1.25rem;
-  }
-
-  .liga-banner-track {
-    position: relative;
     overflow: hidden;
+    margin-top: 1rem;
     border: 1px solid var(--border);
     border-radius: 1.35rem;
     background-color: color-mix(in oklab, var(--surface) 94%, transparent);
     box-shadow: 0 22px 64px -54px rgba(var(--app-overlay), 0.38);
     aspect-ratio: 16 / 5;
+  }
+
+  .liga-banner-track {
+    position: absolute;
+    inset: 0;
   }
 
   .liga-banner-track img {
@@ -1038,34 +1037,6 @@
     height: 34%;
     background: linear-gradient(180deg, transparent, rgba(var(--app-overlay), 0.28));
     pointer-events: none;
-  }
-
-  .liga-banner-dots {
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    z-index: 2;
-    display: inline-flex;
-    transform: translateX(-50%);
-    gap: 0.42rem;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 9999px;
-    background-color: rgba(var(--app-overlay), 0.26);
-    padding: 0.35rem 0.5rem;
-    backdrop-filter: blur(10px);
-  }
-
-  .liga-banner-dots span {
-    width: 0.42rem;
-    height: 0.42rem;
-    border-radius: 9999px;
-    background-color: rgba(255, 255, 255, 0.54);
-    transition: width 180ms ease, background-color 180ms ease;
-  }
-
-  .liga-banner-dots span.is-active {
-    width: 1.25rem;
-    background-color: white;
   }
 
   .liga-section {
@@ -1731,27 +1702,8 @@
 
     .liga-banner {
       margin-top: 1rem;
-      padding-bottom: 1.15rem;
-    }
-
-    .liga-banner-track {
       border-radius: 1.15rem;
       aspect-ratio: 16 / 7.4;
-    }
-
-    .liga-banner-dots {
-      bottom: 0;
-      gap: 0.34rem;
-      padding: 0.3rem 0.42rem;
-    }
-
-    .liga-banner-dots span {
-      width: 0.36rem;
-      height: 0.36rem;
-    }
-
-    .liga-banner-dots span.is-active {
-      width: 1rem;
     }
 
     .liga-section-head {

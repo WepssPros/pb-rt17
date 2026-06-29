@@ -42,6 +42,45 @@ const formIconMap = {
     "-": MinusIcon,
 };
 
+const bannerSlides = [
+    "/assets/banner/banner1.jpeg",
+    "/assets/banner/banner2.jpeg",
+    "/assets/banner/banner3.jpeg",
+    "/assets/banner/banner4.jpeg",
+];
+
+function BannerCarousel() {
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    useEffect(() => {
+        if (bannerSlides.length <= 1) return undefined;
+
+        const timer = window.setInterval(() => {
+            setActiveIndex((current) => (current + 1) % bannerSlides.length);
+        }, 4200);
+
+        return () => window.clearInterval(timer);
+    }, []);
+
+    if (!bannerSlides.length) return null;
+
+    return (
+        <section className="liga-banner" aria-label="Banner Liga Payo 17">
+            <div className="liga-banner-track">
+                {bannerSlides.map((src, index) => (
+                    <img
+                        key={src}
+                        src={src}
+                        alt=""
+                        className={index === activeIndex ? "is-active" : ""}
+                        loading={index === 0 ? "eager" : "lazy"}
+                    />
+                ))}
+            </div>
+        </section>
+    );
+}
+
 function FormDots({ values = [] }) {
     return (
         <div className="liga-form">
@@ -237,6 +276,8 @@ function LigaPayo17App({ endpoint }) {
                         </div>
                     </div>
                 </header>
+
+                <BannerCarousel />
 
                 <nav className="liga-tabs" aria-label="Liga Payo 17 sections">
                     <button

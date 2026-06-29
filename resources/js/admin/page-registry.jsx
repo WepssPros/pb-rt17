@@ -461,6 +461,7 @@ function DashboardPage({ bootstrap }) {
         title: "",
         location: "",
         date: todayYmd(),
+        end_date: "",
         start_time: "18:00",
         end_time: "23:00",
         note: "",
@@ -476,9 +477,12 @@ function DashboardPage({ bootstrap }) {
         reloadEvents().catch((error) => toast.error(error.message));
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const selectedEvents = events.filter(
-        (event) => event?.extendedProps?.db_date === selectedDay
-    );
+    const selectedEvents = events.filter((event) => {
+        const startDate = event?.extendedProps?.db_date;
+        const endDate = event?.extendedProps?.db_end_date || startDate;
+
+        return startDate && startDate <= selectedDay && endDate >= selectedDay;
+    });
 
     const openCreate = (date = todayYmd()) => {
         setForm({
@@ -486,6 +490,7 @@ function DashboardPage({ bootstrap }) {
             title: "",
             location: "",
             date,
+            end_date: "",
             start_time: "18:00",
             end_time: "23:00",
             note: "",
@@ -499,6 +504,7 @@ function DashboardPage({ bootstrap }) {
             title: event.title || "",
             location: event.extendedProps?.location || "",
             date: event.extendedProps?.db_date || todayYmd(),
+            end_date: event.extendedProps?.db_end_date || "",
             start_time: event.extendedProps?.db_start_time || "18:00",
             end_time: event.extendedProps?.db_end_time || "23:00",
             note: event.extendedProps?.note || "",
@@ -521,6 +527,7 @@ function DashboardPage({ bootstrap }) {
                     title: form.title,
                     location: form.location,
                     date: form.date,
+                    end_date: form.end_date,
                     start_time: form.start_time,
                     end_time: form.end_time,
                     note: form.note,
@@ -798,7 +805,7 @@ function DashboardPage({ bootstrap }) {
                             />
                         </Field>
                     </div>
-                    <div className={spanClass("third")}>
+                    <div className={spanClass("quarter")}>
                         <Field>
                             <FieldHeading htmlFor="schedule-date" icon={CalendarDaysIcon} label="Tanggal" />
                             <TextControl
@@ -812,7 +819,22 @@ function DashboardPage({ bootstrap }) {
                             />
                         </Field>
                     </div>
-                    <div className={spanClass("third")}>
+                    <div className={spanClass("quarter")}>
+                        <Field>
+                            <FieldHeading htmlFor="schedule-end-date" icon={CalendarDaysIcon} label="Tanggal selesai" />
+                            <TextControl
+                                id="schedule-end-date"
+                                icon={CalendarDaysIcon}
+                                type="date"
+                                value={form.end_date}
+                                min={form.date}
+                                onChange={(event) =>
+                                    setForm((current) => ({ ...current, end_date: event.target.value }))
+                                }
+                            />
+                        </Field>
+                    </div>
+                    <div className={spanClass("quarter")}>
                         <Field>
                             <FieldHeading htmlFor="schedule-start" icon={Clock3Icon} label="Mulai" />
                             <TextControl
@@ -829,7 +851,7 @@ function DashboardPage({ bootstrap }) {
                             />
                         </Field>
                     </div>
-                    <div className={spanClass("third")}>
+                    <div className={spanClass("quarter")}>
                         <Field>
                             <FieldHeading htmlFor="schedule-end" icon={Clock3Icon} label="Selesai" />
                             <TextControl

@@ -1448,6 +1448,27 @@
     padding-inline: 0.18rem;
   }
 
+  .liga-page .fc .liga-calendar-event-match {
+    border-color: color-mix(in oklab, var(--primary) 68%, transparent) !important;
+    background-color: color-mix(in oklab, var(--primary) 86%, var(--popover) 14%) !important;
+  }
+
+  .liga-page .fc .liga-calendar-event-info {
+    border-color: color-mix(in oklab, #14b8a6 62%, var(--primary) 38%) !important;
+    background-color: color-mix(in oklab, #14b8a6 22%, var(--popover) 78%) !important;
+    color: var(--foreground) !important;
+  }
+
+  .liga-page .fc .liga-calendar-event-info .fc-event-main {
+    color: var(--foreground) !important;
+  }
+
+  .liga-page .fc .liga-calendar-event-span {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, #14b8a6 20%, transparent);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+
   .liga-page .fc .fc-daygrid-event {
     overflow: hidden;
     white-space: nowrap;

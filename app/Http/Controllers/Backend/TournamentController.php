@@ -31,7 +31,7 @@ class TournamentController extends Controller
                 ->get()
                 ->map(fn (TournamentMatch $match) => $this->formatMatch($match)),
             'schedules' => Schedule::query()
-                ->withExists('tournamentMatch')
+                ->withCount('tournamentMatches')
                 ->orderByDesc('date')
                 ->orderByDesc('start_time')
                 ->limit(120)
@@ -123,7 +123,6 @@ class TournamentController extends Controller
             'schedule_id' => [
                 'required',
                 'exists:schedules,id',
-                Rule::unique('tournament_matches', 'schedule_id')->ignore($match?->id),
             ],
             'event_type' => ['nullable', Rule::in(['match', 'info'])],
             'home_team_id' => ['nullable', Rule::requiredIf($request->input('event_type', 'match') === 'match'), 'exists:tournament_teams,id'],
@@ -203,10 +202,12 @@ class TournamentController extends Controller
             'title' => $schedule->title,
             'location' => $schedule->location,
             'date' => $schedule->date,
+            'end_date' => $schedule->end_date,
             'start_time' => substr((string) $schedule->start_time, 0, 5),
             'end_time' => $schedule->end_time ? substr((string) $schedule->end_time, 0, 5) : null,
             'note' => $schedule->note,
-            'has_tournament_match' => (bool) ($schedule->tournament_match_exists ?? false),
+            'tournament_match_count' => (int) ($schedule->tournament_matches_count ?? 0),
+            'has_tournament_match' => (int) ($schedule->tournament_matches_count ?? 0) > 0,
         ];
     }
 }

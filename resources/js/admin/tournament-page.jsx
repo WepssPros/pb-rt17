@@ -89,6 +89,22 @@ function NativeSelect({ value, onChange, children, disabled = false }) {
     );
 }
 
+function scheduleDateLabel(schedule) {
+    if (!schedule?.date) return "-";
+
+    if (schedule.end_date && schedule.end_date !== schedule.date) {
+        return `${isoToIndoDate(schedule.date)} - ${isoToIndoDate(schedule.end_date)}`;
+    }
+
+    return isoToIndoDate(schedule.date);
+}
+
+function scheduleMatchCountLabel(schedule) {
+    const count = Number(schedule?.tournament_match_count || 0);
+
+    return count > 0 ? ` (${count} partai)` : "";
+}
+
 function PageHeader({ publicUrl, onAddTeam, onAddMatch }) {
     return (
         <section className="tournament-hero">
@@ -313,7 +329,7 @@ function MatchPanel({ rows, loading, search, onSearch, onEdit, onDelete }) {
                                     <div className="tournament-meta">
                                         <span className="tournament-icon"><CalendarDaysIcon className="size-4" /></span>
                                         <div>
-                                            <strong>{isoToIndoDate(match.schedule?.date)}</strong>
+                                            <strong>{scheduleDateLabel(match.schedule)}</strong>
                                             <span>{match.schedule?.start_time || "-"} · {match.schedule?.location || "Lokasi belum diisi"}</span>
                                         </div>
                                     </div>
@@ -591,14 +607,11 @@ export function TournamentPage({ bootstrap }) {
                             <Field label="Jadwal calendar">
                                 <NativeSelect value={matchDraft.schedule_id} onChange={(value) => setMatchDraft((current) => ({ ...current, schedule_id: value }))}>
                                     <option value="">Pilih jadwal</option>
-                                    {(payload.schedules || []).map((schedule) => {
-                                        const usedByCurrent = String(schedule.id) === String(matchDraft.schedule_id);
-                                        return (
-                                            <option key={schedule.id} value={schedule.id} disabled={schedule.has_tournament_match && !usedByCurrent}>
-                                                {isoToIndoDate(schedule.date)} {schedule.start_time} · {schedule.title}{schedule.has_tournament_match && !usedByCurrent ? " (sudah dipakai)" : ""}
-                                            </option>
-                                        );
-                                    })}
+                                    {(payload.schedules || []).map((schedule) => (
+                                        <option key={schedule.id} value={schedule.id}>
+                                            {scheduleDateLabel(schedule)} {schedule.start_time} · {schedule.title}{scheduleMatchCountLabel(schedule)}
+                                        </option>
+                                    ))}
                                 </NativeSelect>
                             </Field>
                         </div>

@@ -215,6 +215,16 @@ function scoreLabel(match) {
     return match.result_type === "straight" ? "Straight" : "Rubber";
 }
 
+function scheduleRangeLabel(schedule) {
+    if (!schedule?.date) return "-";
+
+    if (schedule.end_date && schedule.end_date !== schedule.date) {
+        return `${isoToIndoDate(schedule.date)} - ${isoToIndoDate(schedule.end_date)}`;
+    }
+
+    return isoToIndoDate(schedule.date);
+}
+
 function LigaPayo17App({ endpoint }) {
     const [payload, setPayload] = useState({ league: {}, standings: [], events: [], matches: [] });
     const [loading, setLoading] = useState(true);
@@ -327,7 +337,7 @@ function LigaPayo17App({ endpoint }) {
                     <section className="liga-next">
                         {nextMatches.map((match) => (
                             <div key={match.id} className="liga-next-item">
-                                <span>{isoToIndoDate(match.schedule?.date)} · {match.schedule?.start_time}</span>
+                                <span>{scheduleRangeLabel(match.schedule)} · {match.schedule?.start_time}</span>
                                 <strong>{match.home_team?.name} vs {match.away_team?.name}</strong>
                             </div>
                         ))}
@@ -378,7 +388,7 @@ function LigaPayo17App({ endpoint }) {
                     <div className="liga-event-dialog-body">
                         <div className="liga-event-line">
                             <CalendarDaysIcon className="size-4 text-muted-foreground" />
-                            <span>{isoToIndoDate(selectedMatch?.schedule?.date)} · {selectedMatch?.schedule?.start_time} - {selectedMatch?.schedule?.end_time || "selesai"}</span>
+                            <span>{scheduleRangeLabel(selectedMatch?.schedule)} · {selectedMatch?.schedule?.start_time} - {selectedMatch?.schedule?.end_time || "selesai"}</span>
                         </div>
                         <div className="liga-event-line">
                             <MapPinIcon className="size-4 text-muted-foreground" />

@@ -52,6 +52,7 @@ class Ligapayo17Controller extends Controller
                 'title' => $match->schedule?->title,
                 'location' => $match->schedule?->location,
                 'date' => $match->schedule?->date,
+                'end_date' => $match->schedule?->end_date,
                 'start_time' => $match->schedule?->start_time ? substr((string) $match->schedule->start_time, 0, 5) : null,
                 'end_time' => $match->schedule?->end_time ? substr((string) $match->schedule->end_time, 0, 5) : null,
             ],
@@ -61,9 +62,29 @@ class Ligapayo17Controller extends Controller
     private function formatEvent(TournamentMatch $match): array
     {
         $schedule = $match->schedule;
-        $title = ($match->event_type ?? 'match') === 'info'
+        $eventType = $match->event_type ?? 'match';
+        $title = $eventType === 'info'
             ? ($schedule?->title ?: 'Informasi Liga')
             : trim(($match->homeTeam?->name ?? 'TBD') . ' vs ' . ($match->awayTeam?->name ?? 'TBD'));
+        $isMultiDayInfo = $eventType === 'info'
+            && $schedule?->end_date
+            && Carbon::parse($schedule->end_date)->greaterThan(Carbon::parse($schedule->date));
+
+        if ($isMultiDayInfo) {
+            return [
+                'id' => $match->id,
+                'title' => $title,
+                'start' => $schedule->date,
+                'end' => Carbon::parse($schedule->end_date, $this->tz)->addDay()->toDateString(),
+                'allDay' => true,
+                'display' => 'block',
+                'classNames' => ['liga-calendar-event-info', 'liga-calendar-event-span'],
+                'extendedProps' => [
+                    'match' => $this->formatMatch($match),
+                ],
+            ];
+        }
+
         $start = $schedule
             ? Carbon::parse($schedule->date . ' ' . $schedule->start_time, $this->tz)->toIso8601String()
             : null;
@@ -82,6 +103,7 @@ class Ligapayo17Controller extends Controller
             'title' => $title,
             'start' => $start,
             'end' => $end,
+            'classNames' => [$eventType === 'info' ? 'liga-calendar-event-info' : 'liga-calendar-event-match'],
             'extendedProps' => [
                 'match' => $this->formatMatch($match),
             ],

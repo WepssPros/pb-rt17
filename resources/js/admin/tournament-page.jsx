@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
     CalendarDaysIcon,
     CheckCircle2Icon,
+    EyeIcon,
     ExternalLinkIcon,
     ListOrderedIcon,
     PencilIcon,
@@ -153,9 +154,14 @@ function ResultBadge({ match }) {
     );
 }
 
-function ActionButtons({ onEdit, onDelete }) {
+function ActionButtons({ onDetail, onEdit, onDelete }) {
     return (
         <div className="tournament-row-actions">
+            {onDetail ? (
+                <button type="button" onClick={onDetail} aria-label="Lihat detail">
+                    <EyeIcon className="size-4" />
+                </button>
+            ) : null}
             <button type="button" onClick={onEdit} aria-label="Edit data">
                 <PencilIcon className="size-4" />
             </button>
@@ -164,6 +170,98 @@ function ActionButtons({ onEdit, onDelete }) {
             </button>
         </div>
     );
+}
+
+function isTournamentMatch(match) {
+    return (match?.event_type || "match") === "match";
+}
+
+function formatMatchScore(match) {
+    const score = (match?.set_scores || [])
+        .filter((set) => set.home !== "" && set.away !== "" && set.home !== null && set.away !== null)
+        .map((set) => `${set.home}-${set.away}`)
+        .join(", ");
+
+    if (score) return score;
+    if (match?.status !== "finished") return "Belum main";
+
+    return match?.result_type === "straight" ? "Straight" : "Rubber";
+}
+
+function resolveOpponent(match, teamId) {
+    const id = Number(teamId);
+
+    if (Number(match?.home_team_id) === id) return match.away_team || null;
+    if (Number(match?.away_team_id) === id) return match.home_team || null;
+
+    return null;
+}
+
+function resolveTeamOutcome(match, teamId) {
+    if (match?.status !== "finished") return "scheduled";
+
+    return Number(match?.winner_team_id) === Number(teamId) ? "win" : "loss";
+}
+
+function buildTeamMatchSummary(teams = [], matches = []) {
+    const initial = teams.reduce((carry, team) => ({
+        ...carry,
+        [team.id]: {
+            finished: 0,
+            scheduled: 0,
+            wins: 0,
+            losses: 0,
+            points: 0,
+            finishedMatches: [],
+            scheduledMatches: [],
+            opponentNames: [],
+        },
+    }), {});
+
+    matches
+        .filter(isTournamentMatch)
+        .forEach((match) => {
+            [match.home_team_id, match.away_team_id]
+                .filter(Boolean)
+                .forEach((teamId) => {
+                    if (!initial[teamId]) return;
+
+                    const opponent = resolveOpponent(match, teamId);
+                    const detail = {
+                        ...match,
+                        opponent,
+                        outcome: resolveTeamOutcome(match, teamId),
+                    };
+
+                    if (opponent?.name) {
+                        initial[teamId].opponentNames.push(opponent.name);
+                    }
+
+                    if (match.status === "finished") {
+                        initial[teamId].finished += 1;
+                        initial[teamId].finishedMatches.push(detail);
+
+                        if (Number(match.winner_team_id) === Number(teamId)) {
+                            initial[teamId].wins += 1;
+                            initial[teamId].points += match.result_type === "straight" ? 2 : 1;
+                        } else {
+                            initial[teamId].losses += 1;
+                        }
+                    } else {
+                        initial[teamId].scheduled += 1;
+                        initial[teamId].scheduledMatches.push(detail);
+                    }
+                });
+        });
+
+    Object.values(initial).forEach((summary) => {
+        const byScheduleAsc = (a, b) => `${a.schedule?.date || ""} ${a.schedule?.start_time || ""}`.localeCompare(`${b.schedule?.date || ""} ${b.schedule?.start_time || ""}`);
+        summary.finishedMatches.sort((a, b) => byScheduleAsc(b, a));
+        summary.scheduledMatches.sort(byScheduleAsc);
+        summary.opponentNames = [...new Set(summary.opponentNames)];
+    });
+
+    return initial;
 }
 
 function EmptyState({ children }) {
@@ -200,15 +298,15 @@ function PanelToolbar({ title, description, count, search, onSearch, placeholder
     );
 }
 
-function TeamPanel({ rows, loading, search, onSearch, onEdit, onDelete }) {
+function TeamPanel({ rows, summaries, loading, search, onSearch, onDetail, onEdit, onDelete }) {
     const filteredRows = useMemo(() => {
         const query = search.trim().toLowerCase();
         if (!query) return rows;
 
-        return rows.filter((team) => [team.name, team.player_one, team.player_two]
+        return rows.filter((team) => [team.name, team.player_one, team.player_two, ...(summaries[team.id]?.opponentNames || [])]
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(query)));
-    }, [rows, search]);
+    }, [rows, summaries, search]);
 
     return (
         <section className="tournament-panel">
@@ -228,6 +326,8 @@ function TeamPanel({ rows, loading, search, onSearch, onEdit, onDelete }) {
                             <th><ListOrderedIcon className="size-3.5" /> Urutan</th>
                             <th><UsersRoundIcon className="size-3.5" /> Pasangan</th>
                             <th><UserRoundIcon className="size-3.5" /> Pemain</th>
+                            <th><CheckCircle2Icon className="size-3.5" /> Main</th>
+                            <th><CalendarDaysIcon className="size-3.5" /> Scheduled</th>
                             <th><ShieldCheckIcon className="size-3.5" /> Status</th>
                             <th className="text-right">Aksi</th>
                         </tr>
@@ -235,39 +335,50 @@ function TeamPanel({ rows, loading, search, onSearch, onEdit, onDelete }) {
                     <tbody>
                         {loading ? Array.from({ length: 6 }).map((_, index) => (
                             <tr key={`loading-team-${index}`}>
-                                <td colSpan={5}><div className="tournament-skeleton" /></td>
+                                <td colSpan={7}><div className="tournament-skeleton" /></td>
                             </tr>
-                        )) : filteredRows.length ? filteredRows.map((team) => (
-                            <tr key={team.id}>
-                                <td data-label="Urutan">
-                                    <Badge variant="outline" className="tournament-order">{team.sort_order || 0}</Badge>
-                                </td>
-                                <td data-label="Pasangan">
-                                    <div className="tournament-meta">
-                                        <span className="tournament-icon"><UsersRoundIcon className="size-4" /></span>
-                                        <strong>{team.name}</strong>
-                                    </div>
-                                </td>
-                                <td data-label="Pemain">
-                                    <span className="tournament-muted">
-                                        {[team.player_one, team.player_two].filter(Boolean).join(" / ") || "-"}
-                                    </span>
-                                </td>
-                                <td data-label="Status">
-                                    <Badge variant={team.is_active ? "secondary" : "outline"} className="tournament-status-badge">
-                                        {team.is_active ? "Aktif" : "Nonaktif"}
-                                    </Badge>
-                                </td>
-                                <td data-label="Aksi">
-                                    <ActionButtons
-                                        onEdit={() => onEdit(team)}
-                                        onDelete={() => onDelete(team)}
-                                    />
-                                </td>
-                            </tr>
-                        )) : (
+                        )) : filteredRows.length ? filteredRows.map((team) => {
+                            const summary = summaries[team.id] || {};
+
+                            return (
+                                <tr key={team.id}>
+                                    <td data-label="Urutan">
+                                        <Badge variant="outline" className="tournament-order">{team.sort_order || 0}</Badge>
+                                    </td>
+                                    <td data-label="Pasangan">
+                                        <div className="tournament-meta">
+                                            <span className="tournament-icon"><UsersRoundIcon className="size-4" /></span>
+                                            <strong>{team.name}</strong>
+                                        </div>
+                                    </td>
+                                    <td data-label="Pemain">
+                                        <span className="tournament-muted">
+                                            {[team.player_one, team.player_two].filter(Boolean).join(" / ") || "-"}
+                                        </span>
+                                    </td>
+                                    <td data-label="Main">
+                                        <Badge variant="secondary" className="tournament-status-badge">{summary.finished || 0} selesai</Badge>
+                                    </td>
+                                    <td data-label="Scheduled">
+                                        <Badge variant="outline" className="tournament-status-badge">{summary.scheduled || 0} siap</Badge>
+                                    </td>
+                                    <td data-label="Status">
+                                        <Badge variant={team.is_active ? "secondary" : "outline"} className="tournament-status-badge">
+                                            {team.is_active ? "Aktif" : "Nonaktif"}
+                                        </Badge>
+                                    </td>
+                                    <td data-label="Aksi">
+                                        <ActionButtons
+                                            onDetail={() => onDetail(team)}
+                                            onEdit={() => onEdit(team)}
+                                            onDelete={() => onDelete(team)}
+                                        />
+                                    </td>
+                                </tr>
+                            );
+                        }) : (
                             <tr>
-                                <td colSpan={5}>
+                                <td colSpan={7}>
                                     <EmptyState>Belum ada pasangan yang cocok.</EmptyState>
                                 </td>
                             </tr>
@@ -276,6 +387,96 @@ function TeamPanel({ rows, loading, search, onSearch, onEdit, onDelete }) {
                 </table>
             </div>
         </section>
+    );
+}
+
+function TeamDetailDialog({ team, summary, open, onOpenChange }) {
+    const players = [team?.player_one, team?.player_two].filter(Boolean).join(" / ") || "Pemain belum lengkap";
+    const metrics = [
+        ["Selesai", summary?.finished || 0],
+        ["Scheduled", summary?.scheduled || 0],
+        ["Menang", summary?.wins || 0],
+        ["Kalah", summary?.losses || 0],
+        ["Poin", summary?.points || 0],
+    ];
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="tournament-dialog tournament-team-detail-dialog max-h-[88svh] max-w-[760px] p-0">
+                <DialogHeader className="tournament-dialog-head">
+                    <DialogTitle>{team?.name || "Detail pasangan"}</DialogTitle>
+                    <DialogDescription>{players}</DialogDescription>
+                </DialogHeader>
+                <div className="tournament-dialog-body">
+                    <div className="tournament-detail-summary">
+                        {metrics.map(([label, value]) => (
+                            <div key={label} className="tournament-detail-metric">
+                                <span>{label}</span>
+                                <strong>{value}</strong>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="tournament-detail-section">
+                        <div className="tournament-detail-section-head">
+                            <h3>Sudah bertanding</h3>
+                            <Badge variant="secondary" className="tournament-status-badge">{summary?.finished || 0} match</Badge>
+                        </div>
+                        {summary?.finishedMatches?.length ? (
+                            <div className="tournament-ledger-list">
+                                {summary.finishedMatches.map((match) => (
+                                    <div key={`finished-${match.id}`} className="tournament-ledger-row">
+                                        <div>
+                                            <strong>{match.opponent?.name || "Lawan belum diisi"}</strong>
+                                            <span>{scheduleDateLabel(match.schedule)} · {match.schedule?.start_time || "-"}</span>
+                                        </div>
+                                        <div className="tournament-ledger-result">
+                                            <Badge
+                                                variant={match.outcome === "win" ? "secondary" : "outline"}
+                                                className={`tournament-status-badge ${match.outcome === "win" ? "is-win" : "is-loss"}`}
+                                            >
+                                                {match.outcome === "win" ? "Menang" : "Kalah"}
+                                            </Badge>
+                                            <span>{formatMatchScore(match)}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <EmptyState>Belum ada match selesai.</EmptyState>
+                        )}
+                    </div>
+
+                    <div className="tournament-detail-section">
+                        <div className="tournament-detail-section-head">
+                            <h3>Akan bertanding</h3>
+                            <Badge variant="outline" className="tournament-status-badge">{summary?.scheduled || 0} scheduled</Badge>
+                        </div>
+                        {summary?.scheduledMatches?.length ? (
+                            <div className="tournament-ledger-list">
+                                {summary.scheduledMatches.map((match) => (
+                                    <div key={`scheduled-${match.id}`} className="tournament-ledger-row">
+                                        <div>
+                                            <strong>{match.opponent?.name || "Lawan belum diisi"}</strong>
+                                            <span>{scheduleDateLabel(match.schedule)} · {match.schedule?.start_time || "-"} · {match.schedule?.location || "Lokasi belum diisi"}</span>
+                                        </div>
+                                        <div className="tournament-ledger-result">
+                                            <Badge variant="outline" className="tournament-status-badge">Belum main</Badge>
+                                            <span>{match.schedule?.title || "Jadwal liga"}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <EmptyState>Belum ada jadwal berikutnya.</EmptyState>
+                        )}
+                    </div>
+                </div>
+                <DialogFooter className="tournament-dialog-footer">
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Tutup</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 
@@ -402,6 +603,7 @@ export function TournamentPage({ bootstrap }) {
     const [matchSearch, setMatchSearch] = useState("");
     const [teamDraft, setTeamDraft] = useState(emptyTeam);
     const [matchDraft, setMatchDraft] = useState(emptyMatch);
+    const [detailTeam, setDetailTeam] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
     const load = async () => {
@@ -423,10 +625,15 @@ export function TournamentPage({ bootstrap }) {
         () => (payload.teams || []).filter((team) => team.is_active),
         [payload.teams]
     );
+    const teamSummaries = useMemo(
+        () => buildTeamMatchSummary(payload.teams || [], payload.matches || []),
+        [payload.teams, payload.matches]
+    );
 
     const selectedHomeId = String(matchDraft.home_team_id || "");
     const selectedAwayId = String(matchDraft.away_team_id || "");
     const isInfoEvent = (matchDraft.event_type || "match") === "info";
+    const detailSummary = detailTeam ? teamSummaries[detailTeam.id] : null;
 
     const openCreateTeam = () => {
         setTeamDraft(emptyTeam);
@@ -536,9 +743,11 @@ export function TournamentPage({ bootstrap }) {
                 <TabsContent value="teams" className="mt-3">
                     <TeamPanel
                         rows={payload.teams || []}
+                        summaries={teamSummaries}
                         loading={loading}
                         search={teamSearch}
                         onSearch={setTeamSearch}
+                        onDetail={setDetailTeam}
                         onEdit={openEditTeam}
                         onDelete={(row) => setDeleteTarget({ type: "team", id: row.id, name: row.name })}
                     />
@@ -594,6 +803,13 @@ export function TournamentPage({ bootstrap }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <TeamDetailDialog
+                team={detailTeam}
+                summary={detailSummary}
+                open={Boolean(detailTeam)}
+                onOpenChange={(open) => !open && setDetailTeam(null)}
+            />
 
             <Dialog open={matchOpen} onOpenChange={setMatchOpen}>
                 <DialogContent className="tournament-dialog tournament-match-dialog max-h-[88svh] max-w-[860px] p-0">

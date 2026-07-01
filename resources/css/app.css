@@ -615,7 +615,7 @@
 
   .tournament-table {
     width: 100%;
-    min-width: 760px;
+    min-width: 860px;
     border-collapse: collapse;
     font-size: 0.87rem;
   }
@@ -702,6 +702,18 @@
     white-space: nowrap;
   }
 
+  .tournament-status-badge.is-win {
+    border-color: color-mix(in oklab, #22c55e 24%, var(--border) 76%);
+    background-color: color-mix(in oklab, #22c55e 12%, var(--accent) 88%);
+    color: color-mix(in oklab, #16a34a 74%, var(--foreground) 26%);
+  }
+
+  .tournament-status-badge.is-loss {
+    border-color: color-mix(in oklab, var(--destructive) 26%, var(--border) 74%);
+    background-color: color-mix(in oklab, var(--destructive) 9%, var(--surface-muted) 91%);
+    color: color-mix(in oklab, var(--destructive) 76%, var(--foreground) 24%);
+  }
+
   .tournament-row-actions {
     display: flex;
     justify-content: flex-end;
@@ -767,6 +779,10 @@
     max-width: min(calc(100vw - 1.5rem), 860px);
   }
 
+  .tournament-team-detail-dialog {
+    max-width: min(calc(100vw - 1.5rem), 760px);
+  }
+
   .tournament-dialog-head {
     border-bottom: 1px solid var(--border);
     padding: 1.1rem 1.2rem 0.95rem;
@@ -785,6 +801,94 @@
     border-top: 1px solid var(--border);
     background-color: color-mix(in oklab, var(--popover) 98%, transparent);
     padding: 0.95rem 1.2rem;
+  }
+
+  .tournament-detail-summary {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .tournament-detail-metric {
+    display: grid;
+    gap: 0.18rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background-color: color-mix(in oklab, var(--surface-muted) 94%, transparent);
+    padding: 0.75rem 0.85rem;
+  }
+
+  .tournament-detail-metric span {
+    color: var(--muted-foreground);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .tournament-detail-metric strong {
+    color: var(--foreground);
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .tournament-detail-section {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .tournament-detail-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .tournament-detail-section-head h3 {
+    color: var(--foreground);
+    font-size: 0.95rem;
+    font-weight: 750;
+  }
+
+  .tournament-ledger-list {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+  }
+
+  .tournament-ledger-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.82rem 0.9rem;
+  }
+
+  .tournament-ledger-row + .tournament-ledger-row {
+    border-top: 1px solid var(--border);
+  }
+
+  .tournament-ledger-row > div:first-child,
+  .tournament-ledger-result {
+    display: grid;
+    gap: 0.18rem;
+  }
+
+  .tournament-ledger-row strong {
+    color: var(--foreground);
+    font-size: 0.92rem;
+    font-weight: 750;
+  }
+
+  .tournament-ledger-row span {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+  }
+
+  .tournament-ledger-result {
+    justify-items: end;
+    text-align: right;
   }
 
   .tournament-field {
@@ -1658,6 +1762,22 @@
 
     .tournament-table td[colspan]::before {
       content: none;
+    }
+
+    .tournament-detail-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tournament-ledger-row {
+      grid-template-columns: 1fr;
+      gap: 0.65rem;
+    }
+
+    .tournament-ledger-result {
+      align-items: center;
+      grid-template-columns: auto minmax(0, 1fr);
+      justify-items: start;
+      text-align: left;
     }
 
     .tournament-meta {

@@ -149,6 +149,12 @@ class TournamentController extends Controller
             return $data;
         }
 
+        if ($this->pairAlreadyExists((int) $data['home_team_id'], (int) $data['away_team_id'], $match)) {
+            throw ValidationException::withMessages([
+                'away_team_id' => 'Pasangan ini sudah pernah dijadwalkan bertanding.',
+            ]);
+        }
+
         if (($data['status'] ?? 'scheduled') === 'finished') {
             $winnerId = (int) ($data['winner_team_id'] ?? 0);
             $teamIds = [(int) $data['home_team_id'], (int) $data['away_team_id']];
@@ -173,6 +179,27 @@ class TournamentController extends Controller
             ->all();
 
         return $data;
+    }
+
+    private function pairAlreadyExists(int $homeTeamId, int $awayTeamId, ?TournamentMatch $currentMatch = null): bool
+    {
+        return TournamentMatch::query()
+            ->where('event_type', 'match')
+            ->when($currentMatch, fn ($query) => $query->whereKeyNot($currentMatch->id))
+            ->where(function ($query) use ($homeTeamId, $awayTeamId) {
+                $query
+                    ->where(function ($direct) use ($homeTeamId, $awayTeamId) {
+                        $direct
+                            ->where('home_team_id', $homeTeamId)
+                            ->where('away_team_id', $awayTeamId);
+                    })
+                    ->orWhere(function ($reverse) use ($homeTeamId, $awayTeamId) {
+                        $reverse
+                            ->where('home_team_id', $awayTeamId)
+                            ->where('away_team_id', $homeTeamId);
+                    });
+            })
+            ->exists();
     }
 
     private function formatMatch(TournamentMatch $match): array

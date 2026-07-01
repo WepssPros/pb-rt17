@@ -24,6 +24,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -68,6 +75,8 @@ const emptyMatch = {
     notes: "",
 };
 
+const EMPTY_SELECT_VALUE = "__empty__";
+
 function Field({ label, children, className = "" }) {
     return (
         <label className={`tournament-field ${className}`}>
@@ -77,16 +86,20 @@ function Field({ label, children, className = "" }) {
     );
 }
 
-function NativeSelect({ value, onChange, children, disabled = false }) {
+function TournamentSelect({ value, onChange, placeholder = "Pilih opsi", disabled = false, children }) {
     return (
-        <select
-            value={value}
+        <Select
+            value={value ? String(value) : EMPTY_SELECT_VALUE}
             disabled={disabled}
-            onChange={(event) => onChange(event.target.value)}
-            className="tournament-input"
+            onValueChange={(nextValue) => onChange(nextValue === EMPTY_SELECT_VALUE ? "" : nextValue)}
         >
-            {children}
-        </select>
+            <SelectTrigger className="tournament-select-trigger">
+                <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent position="popper" className="tournament-select-content">
+                {children}
+            </SelectContent>
+        </Select>
     );
 }
 
@@ -174,6 +187,58 @@ function ActionButtons({ onDetail, onEdit, onDelete }) {
 
 function isTournamentMatch(match) {
     return (match?.event_type || "match") === "match";
+}
+
+function pairKey(homeId, awayId) {
+    const ids = [Number(homeId), Number(awayId)]
+        .filter(Boolean)
+        .sort((a, b) => a - b);
+
+    return ids.length === 2 ? ids.join(":") : "";
+}
+
+function isPairUsed(homeId, awayId, currentMatchId, matches = []) {
+    return Boolean(findPairMatch(homeId, awayId, currentMatchId, matches));
+}
+
+function findPairMatch(homeId, awayId, currentMatchId, matches = []) {
+    const targetPair = pairKey(homeId, awayId);
+    if (!targetPair) return null;
+
+    return matches
+        .filter(isTournamentMatch)
+        .find((match) => {
+            if (currentMatchId && Number(match.id) === Number(currentMatchId)) return false;
+
+            return pairKey(match.home_team_id, match.away_team_id) === targetPair;
+        }) || null;
+}
+
+function isTeamDisabledForOpponent(candidateId, opponentId, currentMatchId, matches = []) {
+    if (!candidateId || !opponentId) return false;
+    if (String(candidateId) === String(opponentId)) return true;
+
+    return isPairUsed(candidateId, opponentId, currentMatchId, matches);
+}
+
+function teamSelectLabel(team) {
+    return [team?.name, [team?.player_one, team?.player_two].filter(Boolean).join(" / ")]
+        .filter(Boolean)
+        .join(" - ");
+}
+
+function teamPlayersLabel(team) {
+    return [team?.player_one, team?.player_two].filter(Boolean).join(" / ") || "Pemain belum diisi";
+}
+
+function lockedPairScheduleLabel(match) {
+    if (!match?.schedule) return "Sudah terjadwal";
+
+    return [
+        scheduleDateLabel(match.schedule),
+        match.schedule.start_time,
+        match.schedule.location,
+    ].filter(Boolean).join(" · ");
 }
 
 function formatMatchScore(match) {
@@ -635,6 +700,34 @@ export function TournamentPage({ bootstrap }) {
     const isInfoEvent = (matchDraft.event_type || "match") === "info";
     const detailSummary = detailTeam ? teamSummaries[detailTeam.id] : null;
 
+    const updateHomeTeam = (value) => {
+        setMatchDraft((current) => {
+            const nextAwayId = isTeamDisabledForOpponent(current.away_team_id, value, current.id, payload.matches) ? "" : current.away_team_id;
+            const nextWinnerId = [value, nextAwayId].includes(current.winner_team_id) ? current.winner_team_id : "";
+
+            return {
+                ...current,
+                home_team_id: value,
+                away_team_id: nextAwayId,
+                winner_team_id: nextWinnerId,
+            };
+        });
+    };
+
+    const updateAwayTeam = (value) => {
+        setMatchDraft((current) => {
+            const nextHomeId = isTeamDisabledForOpponent(current.home_team_id, value, current.id, payload.matches) ? "" : current.home_team_id;
+            const nextWinnerId = [nextHomeId, value].includes(current.winner_team_id) ? current.winner_team_id : "";
+
+            return {
+                ...current,
+                home_team_id: nextHomeId,
+                away_team_id: value,
+                winner_team_id: nextWinnerId,
+            };
+        });
+    };
+
     const openCreateTeam = () => {
         setTeamDraft(emptyTeam);
         setTeamOpen(true);
@@ -791,10 +884,10 @@ export function TournamentPage({ bootstrap }) {
                             <Input className="tournament-input" type="number" min="0" value={teamDraft.sort_order} onChange={(event) => setTeamDraft((current) => ({ ...current, sort_order: event.target.value }))} />
                         </Field>
                         <Field label="Status">
-                            <NativeSelect value={teamDraft.is_active ? "1" : "0"} onChange={(value) => setTeamDraft((current) => ({ ...current, is_active: value === "1" }))}>
-                                <option value="1">Aktif</option>
-                                <option value="0">Nonaktif</option>
-                            </NativeSelect>
+                            <TournamentSelect value={teamDraft.is_active ? "1" : "0"} onChange={(value) => setTeamDraft((current) => ({ ...current, is_active: value === "1" }))}>
+                                <SelectItem value="1">Aktif</SelectItem>
+                                <SelectItem value="0">Nonaktif</SelectItem>
+                            </TournamentSelect>
                         </Field>
                     </div>
                     <DialogFooter className="tournament-dialog-footer">
@@ -812,7 +905,7 @@ export function TournamentPage({ bootstrap }) {
             />
 
             <Dialog open={matchOpen} onOpenChange={setMatchOpen}>
-                <DialogContent className="tournament-dialog tournament-match-dialog max-h-[88svh] max-w-[860px] p-0">
+                <DialogContent className="tournament-dialog tournament-match-dialog max-h-[90svh] p-0">
                     <DialogHeader className="tournament-dialog-head">
                         <DialogTitle>{matchDraft.id ? "Edit match" : "Tambah match"}</DialogTitle>
                         <DialogDescription>Pilih jadwal dari calendar dashboard, lalu isi pasangan dan hasil.</DialogDescription>
@@ -821,14 +914,14 @@ export function TournamentPage({ bootstrap }) {
                         <div className="tournament-form-section">
                             <h3>Jadwal</h3>
                             <Field label="Jadwal calendar">
-                                <NativeSelect value={matchDraft.schedule_id} onChange={(value) => setMatchDraft((current) => ({ ...current, schedule_id: value }))}>
-                                    <option value="">Pilih jadwal</option>
+                                <TournamentSelect value={matchDraft.schedule_id} onChange={(value) => setMatchDraft((current) => ({ ...current, schedule_id: value }))} placeholder="Pilih jadwal">
+                                    <SelectItem value={EMPTY_SELECT_VALUE}>Pilih jadwal</SelectItem>
                                     {(payload.schedules || []).map((schedule) => (
-                                        <option key={schedule.id} value={schedule.id}>
+                                        <SelectItem key={schedule.id} value={String(schedule.id)}>
                                             {scheduleDateLabel(schedule)} {schedule.start_time} · {schedule.title}{scheduleMatchCountLabel(schedule)}
-                                        </option>
+                                        </SelectItem>
                                     ))}
-                                </NativeSelect>
+                                </TournamentSelect>
                             </Field>
                         </div>
 
@@ -836,7 +929,7 @@ export function TournamentPage({ bootstrap }) {
                             <h3>Jenis jadwal</h3>
                             <div className="grid gap-4 sm:grid-cols-[minmax(0,14rem)_1fr]">
                                 <Field label="Tipe">
-                                    <NativeSelect
+                                    <TournamentSelect
                                         value={matchDraft.event_type || "match"}
                                         onChange={(value) => setMatchDraft((current) => ({
                                             ...current,
@@ -849,9 +942,9 @@ export function TournamentPage({ bootstrap }) {
                                             set_scores: value === "info" ? emptyMatch.set_scores : current.set_scores,
                                         }))}
                                     >
-                                        <option value="match">Pertandingan</option>
-                                        <option value="info">Informasi</option>
-                                    </NativeSelect>
+                                        <SelectItem value="match">Pertandingan</SelectItem>
+                                        <SelectItem value="info">Informasi</SelectItem>
+                                    </TournamentSelect>
                                 </Field>
                                 <div className="tournament-info-hint">
                                     {isInfoEvent
@@ -868,29 +961,62 @@ export function TournamentPage({ bootstrap }) {
                                         <h3>Pasangan</h3>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <Field label="Pasangan A">
-                                                <NativeSelect value={selectedHomeId} onChange={(value) => setMatchDraft((current) => ({ ...current, home_team_id: value }))}>
-                                                    <option value="">Pilih pasangan</option>
-                                                    {activeTeams.map((team) => (
-                                                        <option key={team.id} value={team.id} disabled={String(team.id) === selectedAwayId}>{team.name}</option>
-                                                    ))}
-                                                </NativeSelect>
+                                                <TournamentSelect value={selectedHomeId} onChange={updateHomeTeam} placeholder="Pilih pasangan">
+                                                    <SelectItem value={EMPTY_SELECT_VALUE}>Pilih pasangan</SelectItem>
+                                                    {activeTeams.map((team) => {
+                                                        const sameTeam = selectedAwayId && String(team.id) === selectedAwayId;
+                                                        const lockedMatch = sameTeam ? null : findPairMatch(team.id, selectedAwayId, matchDraft.id, payload.matches);
+                                                        const disabled = Boolean(sameTeam || lockedMatch);
+                                                        const detail = sameTeam
+                                                            ? "Pasangan lawan sedang dipilih"
+                                                            : lockedMatch
+                                                                ? `Sudah terjadwal: ${lockedPairScheduleLabel(lockedMatch)}`
+                                                                : teamPlayersLabel(team);
+
+                                                        return (
+                                                            <SelectItem key={team.id} value={String(team.id)} disabled={disabled} textValue={`${teamSelectLabel(team)} ${detail}`}>
+                                                                <span className={`tournament-select-row ${disabled ? "is-disabled" : ""}`}>
+                                                                    <strong>{team.name}</strong>
+                                                                    <small>{detail}</small>
+                                                                </span>
+                                                            </SelectItem>
+                                                        );
+                                                    })}
+                                                </TournamentSelect>
                                             </Field>
                                             <Field label="Pasangan B">
-                                                <NativeSelect value={selectedAwayId} onChange={(value) => setMatchDraft((current) => ({ ...current, away_team_id: value }))}>
-                                                    <option value="">Pilih pasangan</option>
-                                                    {activeTeams.map((team) => (
-                                                        <option key={team.id} value={team.id} disabled={String(team.id) === selectedHomeId}>{team.name}</option>
-                                                    ))}
-                                                </NativeSelect>
+                                                <TournamentSelect value={selectedAwayId} onChange={updateAwayTeam} placeholder="Pilih pasangan">
+                                                    <SelectItem value={EMPTY_SELECT_VALUE}>Pilih pasangan</SelectItem>
+                                                    {activeTeams.map((team) => {
+                                                        const sameTeam = selectedHomeId && String(team.id) === selectedHomeId;
+                                                        const lockedMatch = sameTeam ? null : findPairMatch(team.id, selectedHomeId, matchDraft.id, payload.matches);
+                                                        const disabled = Boolean(sameTeam || lockedMatch);
+                                                        const detail = sameTeam
+                                                            ? "Pasangan lawan sedang dipilih"
+                                                            : lockedMatch
+                                                                ? `Sudah terjadwal: ${lockedPairScheduleLabel(lockedMatch)}`
+                                                                : teamPlayersLabel(team);
+
+                                                        return (
+                                                            <SelectItem key={team.id} value={String(team.id)} disabled={disabled} textValue={`${teamSelectLabel(team)} ${detail}`}>
+                                                                <span className={`tournament-select-row ${disabled ? "is-disabled" : ""}`}>
+                                                                    <strong>{team.name}</strong>
+                                                                    <small>{detail}</small>
+                                                                </span>
+                                                            </SelectItem>
+                                                        );
+                                                    })}
+                                                </TournamentSelect>
                                             </Field>
                                         </div>
+                                        <p className="tournament-field-hint">Lawan yang sudah terjadwal otomatis dikunci agar pairing liga tidak dobel.</p>
                                     </div>
 
                                     <div className="tournament-form-section">
                                         <h3>Hasil</h3>
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <Field label="Status">
-                                                <NativeSelect
+                                                <TournamentSelect
                                                     value={matchDraft.status}
                                                     onChange={(value) => setMatchDraft((current) => ({
                                                         ...current,
@@ -899,33 +1025,39 @@ export function TournamentPage({ bootstrap }) {
                                                         winner_team_id: value === "finished" ? current.winner_team_id : "",
                                                     }))}
                                                 >
-                                                    <option value="scheduled">Belum main</option>
-                                                    <option value="finished">Selesai</option>
-                                                </NativeSelect>
+                                                    <SelectItem value="scheduled">Belum main</SelectItem>
+                                                    <SelectItem value="finished">Selesai</SelectItem>
+                                                </TournamentSelect>
                                             </Field>
                                             <Field label="Jenis hasil">
-                                                <NativeSelect
+                                                <TournamentSelect
                                                     value={matchDraft.result_type}
                                                     disabled={matchDraft.status !== "finished"}
                                                     onChange={(value) => setMatchDraft((current) => ({ ...current, result_type: value }))}
+                                                    placeholder="Pilih hasil"
                                                 >
-                                                    <option value="">Pilih hasil</option>
-                                                    <option value="straight">Straight - 2 poin</option>
-                                                    <option value="rubber">Rubber - 1 poin</option>
-                                                </NativeSelect>
+                                                    <SelectItem value={EMPTY_SELECT_VALUE}>Pilih hasil</SelectItem>
+                                                    <SelectItem value="straight">Straight - 2 poin</SelectItem>
+                                                    <SelectItem value="rubber">Rubber - 1 poin</SelectItem>
+                                                </TournamentSelect>
                                             </Field>
                                         </div>
                                         <Field label="Pemenang">
-                                            <NativeSelect
+                                            <TournamentSelect
                                                 value={matchDraft.winner_team_id}
                                                 disabled={matchDraft.status !== "finished"}
                                                 onChange={(value) => setMatchDraft((current) => ({ ...current, winner_team_id: value }))}
+                                                placeholder="Pilih pemenang"
                                             >
-                                                <option value="">Pilih pemenang</option>
+                                                <SelectItem value={EMPTY_SELECT_VALUE}>Pilih pemenang</SelectItem>
                                                 {activeTeams
                                                     .filter((team) => [selectedHomeId, selectedAwayId].includes(String(team.id)))
-                                                    .map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
-                                            </NativeSelect>
+                                                    .map((team) => (
+                                                        <SelectItem key={team.id} value={String(team.id)}>
+                                                            {team.name}
+                                                        </SelectItem>
+                                                    ))}
+                                            </TournamentSelect>
                                         </Field>
                                     </div>
                                 </div>

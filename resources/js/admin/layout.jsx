@@ -180,7 +180,7 @@ function MenuTree({ groupedMenu, authUser, onNavigate }) {
 }
 
 function BottomNavbar({ groupedMenu }) {
-    const [openPopup, setOpenPopup] = useState(null); // 'transaksi' | 'keuangan'
+    const [openPopup, setOpenPopup] = useState(null); // 'stok' | 'trans' | 'keu'
 
     const findItem = (groupLabel, itemLabel) => {
         const group = groupedMenu.find((g) => g.label === groupLabel);
@@ -193,7 +193,8 @@ function BottomNavbar({ groupedMenu }) {
         dash: findItem("Overview"),
         stok: findItem("Master Data"),
         penjualan: findItem("Transaksi", "Penjualan"),
-        pembelian: findItem("Transaksi", "Pembelian"),
+            pembelian: findItem("Transaksi", "Pembelian"),
+        laporanStok: findItem("Laporan", "Rekap Stok"),
         kas: findItem("Keuangan", "Kas & Transaksi"),
         jurnal: findItem("Keuangan", "Jurnal Umum"),
         target: findItem("Keuangan", "Target Proyek"),
@@ -260,6 +261,11 @@ function BottomNavbar({ groupedMenu }) {
                     ? "bg-blue-600 shadow-blue-500/30"
                     : "bg-emerald-600 shadow-emerald-500/30";
             }
+            if (type === "stok") {
+                return idx === 0
+                    ? "bg-sky-600 shadow-sky-500/30"
+                    : "bg-amber-600 shadow-amber-500/30";
+            }
             // Keuangan colors
             const colors = [
                 "bg-violet-600 shadow-violet-500/30",
@@ -275,6 +281,13 @@ function BottomNavbar({ groupedMenu }) {
                     <ShoppingCartIcon className="size-5" />
                 ) : (
                     <PlusCircleIcon className="size-5" />
+                );
+            }
+            if (type === "stok") {
+                return idx === 0 ? (
+                    <PackageIcon className="size-5" />
+                ) : (
+                    <BarChart3Icon className="size-5" />
                 );
             }
             // Keuangan icons
@@ -362,8 +375,10 @@ function BottomNavbar({ groupedMenu }) {
                 <NavButton
                     label="Stok"
                     icon={PackageIcon}
-                    active={nav.stok?.active}
-                    href={nav.stok?.href}
+                    active={nav.stok?.active || nav.laporanStok?.active}
+                    onClick={() =>
+                        setOpenPopup(openPopup === "stok" ? null : "stok")
+                    }
                 />
 
                 <NavButton
@@ -390,10 +405,17 @@ function BottomNavbar({ groupedMenu }) {
                 <NavButton
                     label={nav.tournament ? "Liga" : "Lap"}
                     icon={nav.tournament ? TrophyIcon : BarChart3Icon}
-                    active={nav.tournament?.active || nav.laporan?.active}
+                    active={nav.tournament?.active || (!nav.tournament && nav.laporan?.active)}
                     href={nav.tournament?.href || nav.laporan?.href}
                 />
             </div>
+
+            <QuickActionMenu
+                open={openPopup === "stok"}
+                onClose={() => setOpenPopup(null)}
+                type="stok"
+                items={[nav.stok, nav.laporanStok]}
+            />
 
             <QuickActionMenu
                 open={openPopup === "trans"}
@@ -489,7 +511,12 @@ function UserMenu({ authUser }) {
                     ["current_password", passwordDraft.current_password],
                     ["password", passwordDraft.password],
                     ["password_confirmation", passwordDraft.password_confirmation],
-                ])
+                ]),
+                {
+                    headers: {
+                        Accept: "application/json",
+                    },
+                }
             );
 
             toast.success(payload?.message || "Password berhasil diperbarui.");

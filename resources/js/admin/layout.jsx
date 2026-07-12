@@ -3,7 +3,10 @@ import {
     BellIcon,
     ChevronRightIcon,
     CommandIcon,
+    EyeIcon,
+    EyeOffIcon,
     LogOutIcon,
+    LockKeyholeIcon,
     MenuIcon,
     MoonStarIcon,
     PlusIcon,
@@ -31,10 +34,20 @@ import {
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
     Sheet,
@@ -42,6 +55,9 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
+import { toast } from "sonner";
+
+import { buildNestedParams, sendForm } from "@/admin/utils";
 
 const iconMap = {
     dashboard: SparklesIcon,
@@ -396,38 +412,198 @@ function BottomNavbar({ groupedMenu }) {
     );
 }
 
-function UserMenu({ authUser }) {
+function PasswordField({ id, label, value, onChange, autoComplete }) {
+    const [visible, setVisible] = useState(false);
+
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-2xl px-2">
-                    <Avatar className="size-8 rounded-xl">
-                        <AvatarImage
-                            src={authUser.avatar}
-                            alt={authUser.name}
-                        />
-                        <AvatarFallback className="rounded-xl bg-muted text-muted-foreground">
-                            {initialsOf(authUser.name)}
-                        </AvatarFallback>
-                    </Avatar>
+        <label className="grid gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                {label}
+            </span>
+            <div className="relative">
+                <Input
+                    id={id}
+                    type={visible ? "text" : "password"}
+                    value={value}
+                    onChange={(event) => onChange(event.target.value)}
+                    autoComplete={autoComplete}
+                    className="app-input h-12 rounded-2xl pr-12"
+                    required
+                />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl text-muted-foreground hover:text-foreground"
+                    onClick={() => setVisible((current) => !current)}
+                >
+                    {visible ? <EyeOffIcon /> : <EyeIcon />}
+                    <span className="sr-only">
+                        {visible ? "Sembunyikan password" : "Tampilkan password"}
+                    </span>
                 </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60 rounded-2xl">
-                <DropdownMenuGroup>
-                    <DropdownMenuItem asChild>
-                        <a href={authUser.profileUrl}>Profil Saya</a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() =>
-                            document.getElementById("logout-form")?.submit()
-                        }
-                    >
-                        <LogOutIcon data-icon="inline-start" />
-                        Log Out
-                    </DropdownMenuItem>
-                </DropdownMenuGroup>
-            </DropdownMenuContent>
-        </DropdownMenu>
+            </div>
+        </label>
+    );
+}
+
+function UserMenu({ authUser }) {
+    const [openPassword, setOpenPassword] = useState(false);
+    const [savingPassword, setSavingPassword] = useState(false);
+    const [passwordDraft, setPasswordDraft] = useState({
+        current_password: "",
+        password: "",
+        password_confirmation: "",
+    });
+
+    const resetPasswordDraft = () => {
+        setPasswordDraft({
+            current_password: "",
+            password: "",
+            password_confirmation: "",
+        });
+    };
+
+    const updatePasswordDraft = (key, value) => {
+        setPasswordDraft((current) => ({
+            ...current,
+            [key]: value,
+        }));
+    };
+
+    const submitPassword = async (event) => {
+        event.preventDefault();
+
+        if (!authUser.passwordUrl || authUser.passwordUrl === "#") {
+            toast.error("Route ubah password tidak tersedia.");
+            return;
+        }
+
+        setSavingPassword(true);
+
+        try {
+            const payload = await sendForm(
+                authUser.passwordUrl,
+                buildNestedParams([
+                    ["_method", "PUT"],
+                    ["current_password", passwordDraft.current_password],
+                    ["password", passwordDraft.password],
+                    ["password_confirmation", passwordDraft.password_confirmation],
+                ])
+            );
+
+            toast.success(payload?.message || "Password berhasil diperbarui.");
+            resetPasswordDraft();
+            setOpenPassword(false);
+        } catch (error) {
+            toast.error(error.message || "Password gagal diperbarui.");
+        } finally {
+            setSavingPassword(false);
+        }
+    };
+
+    return (
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="rounded-2xl px-2">
+                        <Avatar className="size-8 rounded-xl">
+                            <AvatarImage
+                                src={authUser.avatar}
+                                alt={authUser.name}
+                            />
+                            <AvatarFallback className="rounded-xl bg-muted text-muted-foreground">
+                                {initialsOf(authUser.name)}
+                            </AvatarFallback>
+                        </Avatar>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 rounded-2xl">
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem asChild>
+                            <a href={authUser.profileUrl}>Profil Saya</a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setOpenPassword(true)}>
+                            <LockKeyholeIcon data-icon="inline-start" />
+                            Ubah Password
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={() =>
+                                document.getElementById("logout-form")?.submit()
+                            }
+                        >
+                            <LogOutIcon data-icon="inline-start" />
+                            Log Out
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Dialog
+                open={openPassword}
+                onOpenChange={(nextOpen) => {
+                    setOpenPassword(nextOpen);
+                    if (!nextOpen) resetPasswordDraft();
+                }}
+            >
+                <DialogContent className="max-w-[calc(100vw-1.5rem)] rounded-[28px] p-0 sm:max-w-md">
+                    <form onSubmit={submitPassword}>
+                        <DialogHeader className="border-b border-border px-5 py-5">
+                            <div className="flex items-start gap-3 pr-8">
+                                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                                    <LockKeyholeIcon className="size-5" />
+                                </span>
+                                <div className="min-w-0">
+                                    <DialogTitle>Ubah Password</DialogTitle>
+                                    <DialogDescription className="mt-1.5">
+                                        Masukkan password lama, lalu buat password baru untuk akun ini.
+                                    </DialogDescription>
+                                </div>
+                            </div>
+                        </DialogHeader>
+
+                        <div className="grid gap-4 px-5 py-5">
+                            <PasswordField
+                                id="current_password"
+                                label="Password Lama"
+                                value={passwordDraft.current_password}
+                                onChange={(value) => updatePasswordDraft("current_password", value)}
+                                autoComplete="current-password"
+                            />
+                            <PasswordField
+                                id="password"
+                                label="Password Baru"
+                                value={passwordDraft.password}
+                                onChange={(value) => updatePasswordDraft("password", value)}
+                                autoComplete="new-password"
+                            />
+                            <PasswordField
+                                id="password_confirmation"
+                                label="Konfirmasi Password Baru"
+                                value={passwordDraft.password_confirmation}
+                                onChange={(value) => updatePasswordDraft("password_confirmation", value)}
+                                autoComplete="new-password"
+                            />
+                        </div>
+
+                        <DialogFooter className="px-5 py-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setOpenPassword(false)}
+                                disabled={savingPassword}
+                            >
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={savingPassword}>
+                                {savingPassword ? "Menyimpan..." : "Simpan Password"}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
 

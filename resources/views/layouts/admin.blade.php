@@ -325,6 +325,7 @@
             'email' => $authUser?->email,
             'avatar' => $authUser?->foto_profile_url ?: asset('be_view/assets/img/avatars/default.png'),
             'profileUrl' => $authUser ? route('roles.users.show', $authUser->id) : '#',
+            'passwordUrl' => $authUser ? route('users.updatePassword', $authUser->id) : '#',
         ],
         'permissions' => $authUser?->getAllPermissions()->pluck('name')->values() ?? [],
         'flash' => [

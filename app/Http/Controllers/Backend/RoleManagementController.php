@@ -7,8 +7,10 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 
 class RoleManagementController extends Controller
@@ -220,6 +222,31 @@ class RoleManagementController extends Controller
         ]));
 
         return back()->with('success', 'Profil user berhasil diperbarui');
+    }
+
+    public function updatePassword(Request $request, User $user)
+    {
+        abort_if(auth()->id() !== $user->id, 403, 'Akses ditolak. Anda tidak diperbolehkan mengganti password user lain.');
+
+        $validated = $request->validate([
+            'current_password' => ['required', 'string', 'current_password:web'],
+            'password' => ['required', 'string', Password::default(), 'confirmed'],
+        ], [
+            'current_password.current_password' => 'Password lama tidak sesuai.',
+            'password.confirmed' => 'Konfirmasi password baru tidak sama.',
+        ]);
+
+        $user->forceFill([
+            'password' => Hash::make($validated['password']),
+        ])->save();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Password berhasil diperbarui.',
+            ]);
+        }
+
+        return back()->with('success', 'Password berhasil diperbarui.');
     }
 
     public function updatePhotoProfile(Request $request, User $user)

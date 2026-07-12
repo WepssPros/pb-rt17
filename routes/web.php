@@ -143,6 +143,7 @@ Route::middleware(['auth', 'roleAny'])->group(function () {
     });
 
     Route::put('/users/{user}/profile', [RoleManagementController::class, 'updateProfile'])->name('users.updateProfile');
+    Route::put('/users/{user}/password', [RoleManagementController::class, 'updatePassword'])->name('users.updatePassword');
     Route::put('/users/{user}/photo-profile', [RoleManagementController::class, 'updatePhotoProfile'])->name('users.updatePhotoProfile');
     Route::put('/users/{user}/photo-house', [RoleManagementController::class, 'updatePhotoHouse'])->name('users.updatePhotoHouse');
     // web.php

@@ -193,7 +193,7 @@ function BottomNavbar({ groupedMenu }) {
         dash: findItem("Overview"),
         stok: findItem("Master Data"),
         penjualan: findItem("Transaksi", "Penjualan"),
-            pembelian: findItem("Transaksi", "Pembelian"),
+        pembelian: findItem("Transaksi", "Pembelian"),
         laporanStok: findItem("Laporan", "Rekap Stok"),
         kas: findItem("Keuangan", "Kas & Transaksi"),
         jurnal: findItem("Keuangan", "Jurnal Umum"),

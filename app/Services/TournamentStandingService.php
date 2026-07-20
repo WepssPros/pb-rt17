@@ -64,14 +64,14 @@ class TournamentStandingService
                 $rows[$match->home_team_id]['w']++;
                 $rows[$match->home_team_id]['points'] += $winnerPoints;
                 $rows[$match->away_team_id]['l']++;
-                array_unshift($rows[$match->home_team_id]['form'], $match->result_type === 'rubber' ? 'R' : 'W');
-                array_unshift($rows[$match->away_team_id]['form'], 'L');
+                $rows[$match->home_team_id]['form'][] = $match->result_type === 'rubber' ? 'R' : 'W';
+                $rows[$match->away_team_id]['form'][] = 'L';
             } elseif ($awayWon) {
                 $rows[$match->away_team_id]['w']++;
                 $rows[$match->away_team_id]['points'] += $winnerPoints;
                 $rows[$match->home_team_id]['l']++;
-                array_unshift($rows[$match->away_team_id]['form'], $match->result_type === 'rubber' ? 'R' : 'W');
-                array_unshift($rows[$match->home_team_id]['form'], 'L');
+                $rows[$match->away_team_id]['form'][] = $match->result_type === 'rubber' ? 'R' : 'W';
+                $rows[$match->home_team_id]['form'][] = 'L';
             }
 
             [$homeSets, $awaySets] = $this->setTotals($match);
@@ -84,7 +84,6 @@ class TournamentStandingService
         return collect($rows)
             ->map(function (array $row) {
                 $row['set_diff'] = $row['set_for'] - $row['set_against'];
-                $row['form'] = array_slice($row['form'], 0, 5);
 
                 return $row;
             })

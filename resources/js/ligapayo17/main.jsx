@@ -128,8 +128,12 @@ function StandingsTable({ rows }) {
         );
     }
 
+    const formColumnCount = Math.max(...rows.map((row) => row.form?.length || 0), 0);
+    const formColumnLabel = formColumnCount ? `Form ${formColumnCount}` : "Form";
+    const formColumnWidth = `${Math.max(6.8, (formColumnCount || 1) * 1.55 + 2.8)}rem`;
+
     return (
-        <div className="liga-table-wrap">
+        <div className="liga-table-wrap" style={{ "--liga-form-column-width": formColumnWidth }}>
             <table className="liga-table">
                 <colgroup>
                     <col className="liga-col-pos" />
@@ -150,7 +154,7 @@ function StandingsTable({ rows }) {
                         <th>L</th>
                         <th>Set</th>
                         <th className="text-right">Pts</th>
-                        <th>Last 5</th>
+                        <th>{formColumnLabel}</th>
                     </tr>
                 </thead>
                 <tbody>

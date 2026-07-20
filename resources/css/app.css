@@ -1441,7 +1441,7 @@
   }
 
   .liga-last-five {
-    min-width: 10.75rem;
+    min-width: var(--liga-form-column-width, 10.75rem);
     text-align: center;
   }
 
@@ -1453,6 +1453,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.42rem;
+    min-width: min-content;
   }
 
   .liga-form-dot {
@@ -2015,13 +2016,13 @@
     }
 
     .liga-table .liga-last-five {
-      min-width: 6.8rem;
+      min-width: var(--liga-form-column-width, 6.8rem);
       padding-right: 0.65rem;
       text-align: center;
     }
 
     .liga-table .liga-form {
-      min-width: 5.7rem;
+      min-width: min-content;
       justify-content: center;
     }
 

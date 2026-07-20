@@ -129,7 +129,7 @@ function StandingsTable({ rows }) {
     }
 
     const formColumnCount = Math.max(...rows.map((row) => row.form?.length || 0), 0);
-    const formColumnLabel = formColumnCount ? `Form ${formColumnCount}` : "Form";
+    const formColumnLabel = "Total Result";
     const formColumnWidth = `${Math.max(6.8, (formColumnCount || 1) * 1.55 + 2.8)}rem`;
 
     return (

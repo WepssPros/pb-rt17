@@ -1082,6 +1082,7 @@
 
   .liga-page {
     min-height: 100vh;
+    overflow-x: clip;
     background:
       radial-gradient(circle at top left, rgba(var(--app-glow), 0.1), transparent 24rem),
       linear-gradient(180deg, color-mix(in oklab, var(--background) 100%, white 0%) 0%, color-mix(in oklab, var(--background) 96%, var(--accent) 4%) 100%);
@@ -1089,6 +1090,7 @@
 
   .liga-shell {
     width: min(1040px, calc(100% - 1.5rem));
+    min-width: 0;
     margin-inline: auto;
     padding-block: 1rem 2rem;
   }
@@ -1234,6 +1236,7 @@
   }
 
   .liga-section {
+    min-width: 0;
     margin-top: 1rem;
     border: 1px solid var(--border);
     border-radius: 1.25rem;
@@ -1340,15 +1343,19 @@
   .liga-dot-loss { background: var(--destructive); }
 
   .liga-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     overscroll-behavior-x: contain;
     scrollbar-gutter: stable;
     -webkit-overflow-scrolling: touch;
   }
 
   .liga-table {
-    width: 100%;
-    min-width: 740px;
+    width: max-content;
+    min-width: max(100%, 740px);
     border-collapse: collapse;
     font-size: 0.86rem;
   }
@@ -1358,7 +1365,7 @@
   .liga-col-stat { width: 4.2rem; }
   .liga-col-set { width: 5.4rem; }
   .liga-col-pts { width: 4.6rem; }
-  .liga-col-last { width: 11rem; }
+  .liga-col-last { width: var(--liga-form-column-width, 11rem); }
 
   .liga-table th {
     height: 2.45rem;
@@ -1949,9 +1956,9 @@
     }
 
     .liga-table {
-      min-width: 590px;
+      width: max-content;
+      min-width: max(100%, 590px);
       font-size: 0.82rem;
-      table-layout: fixed;
     }
 
     .liga-col-pos { width: 2.35rem; }
@@ -1959,7 +1966,7 @@
     .liga-col-stat { width: 2.7rem; }
     .liga-col-set { width: 3.15rem; }
     .liga-col-pts { width: 3rem; }
-    .liga-col-last { width: 7rem; }
+    .liga-col-last { width: var(--liga-form-column-width, 7rem); }
 
     .liga-table th {
       height: 2.35rem;

@@ -1354,10 +1354,10 @@
   }
 
   .liga-table {
-    width: max-content;
-    min-width: max(100%, 740px);
+    width: max(100%, calc(3rem + 18rem + 4.2rem + 4.2rem + 4.2rem + 5.4rem + 4.6rem + var(--liga-form-column-width, 11rem)));
     border-collapse: collapse;
     font-size: 0.86rem;
+    table-layout: fixed;
   }
 
   .liga-col-pos { width: 3rem; }
@@ -1438,6 +1438,8 @@
   .liga-team-cell {
     width: 18rem;
     min-width: 18rem;
+    max-width: 18rem;
+    overflow: hidden;
   }
 
   .liga-points {
@@ -1448,7 +1450,9 @@
   }
 
   .liga-last-five {
+    width: var(--liga-form-column-width, 10.75rem);
     min-width: var(--liga-form-column-width, 10.75rem);
+    max-width: var(--liga-form-column-width, 10.75rem);
     text-align: center;
   }
 
@@ -1956,9 +1960,9 @@
     }
 
     .liga-table {
-      width: max-content;
-      min-width: max(100%, 590px);
+      width: max(100%, calc(2.35rem + 8.8rem + 2.7rem + 2.7rem + 2.7rem + 3.15rem + 3rem + var(--liga-form-column-width, 7rem)));
       font-size: 0.82rem;
+      table-layout: fixed;
     }
 
     .liga-col-pos { width: 2.35rem; }
@@ -1980,8 +1984,10 @@
     }
 
     .liga-team-cell {
-      width: 6.9rem;
-      min-width: 6.9rem;
+      width: 8.8rem;
+      min-width: 8.8rem;
+      max-width: 8.8rem;
+      overflow: hidden;
     }
 
     .liga-table th:nth-child(3),
@@ -2023,7 +2029,9 @@
     }
 
     .liga-table .liga-last-five {
+      width: var(--liga-form-column-width, 6.8rem);
       min-width: var(--liga-form-column-width, 6.8rem);
+      max-width: var(--liga-form-column-width, 6.8rem);
       padding-right: 0.65rem;
       text-align: center;
     }
